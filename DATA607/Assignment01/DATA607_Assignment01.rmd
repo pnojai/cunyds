@@ -2,29 +2,344 @@
 title: "Assignment 1 - Mushroom Data"
 author: "Jai Jeffryes"
 date: "8/31/2019"
-output: pdf_document
+output:
+  html_document:
+    df_print: paged
+    keep_md: true
 ---
 
-```{r setup, include=FALSE}
+## A beginning is a delicate time
+![](data/frank-herbert.jpg)
+
+Would that I heeded these wise words of Frank Herbert, author of *Dune*.
+
+Gets me every time. The root directory in Markdown defaults to the one in which the RMD file sits. If you want to refer to paths relative to an R Project, you have to configure that.
+
+
+**AND** the command is knitr::opts_knit$set, not knitr::opts_chunk.
+
+cf. [StackOverflow](https://stackoverflow.com/questions/30237310/setting-work-directory-in-knitr-using-opts-chunksetroot-dir-doesnt-wor).
+
+```{r setup, include=TRUE}
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "./../..")
+
+library(data.table) # fread()
+library(dplyr) # mutate()
+
+assign_dir <- "./DATA607/Assignment01"
+assign_data <- paste(assign_dir, "data", sep = "/")
 ```
 
-## R Markdown
+## Get data
+I like to code my data downloads and log the operation. It makes data acquisition reproducible, or at least accountable, as web pages have a habit of changing. Here's a function that I reuse for data acquisition.
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+```{r log_download}
+log_download <- function(DLurl, DLfile, Logfile) {
+	if (!file.exists(DLfile) | Overwrite == TRUE) {
+		download.file(DLurl, DLfile)
+		DLdate <- date()
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+		DLfileMsg <- paste0("Download file: ", DLfile)
+		DLurlMsg <- paste0("URL: ", DLurl)
+		DLdateMsg <- paste0("Download date: ", DLdate)
 
-```{r cars}
-summary(cars)
+		cat(paste(" ", DLfileMsg, DLurlMsg, DLdateMsg, sep = "\n"),
+			file = Logfile, sep = "\n", append = TRUE)
+	} else {
+		print("File exists. Download skipped.")
+	}
+}
 ```
 
-## Including Plots
+I looked through the files on the site and decided I only wanted two of them.
 
-You can also embed plots, for example:
+```{r download}
+Logfile <- paste(assign_data, "Download.log", sep = "/")
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+# Mushroom data from the UCI Machine Learning Archive.
+#   Data file
+DLurl <- "https://archive.ics.uci.edu/ml/machine-learning-databases/mushroom/agaricus-lepiota.data"
+DLfile <- paste(assign_data, "agaricus-lepiota.data", sep = "/")
+Overwrite <- FALSE
+log_download(DLurl, DLfile, Logfile)
+
+#   Names file
+DLurl <- "https://archive.ics.uci.edu/ml/machine-learning-databases/mushroom/agaricus-lepiota.names"
+DLfile <- paste(assign_data, "agaricus-lepiota.names", sep = "/")
+Overwrite <- FALSE
+log_download(DLurl, DLfile, Logfile)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## Look at it
+Before reading data into variables I want to check out what's in those files. I'm looking for:
+
+- Text vs. binary.
+- Encoding.
+- Structure.
+- Headers.
+- Delimiters.
+- Missing attribute signifier.
+
+This work is *ad hoc*, not coded. You __can__ open files in RStudio, but only if they are very small. It's pretty easy to make RStudio hang and then you have to force quit. (Hope you saved your work.)
+
+My favorite tools are:
+
+- Linux command prompt: *cat* piped to *less*, as in: cat *filename* | less
+- Emacs. Is there any other plaintext editor? (Yes, I'm one of **those** guys.)
+
+As Nigel says, "Look, but don't touch!"
+
+![](data/nigel_dont_touch.jpg)
+
+#### Non-assignment sidebar
+In Markdown, inline images must be referenced relative to the .MD file. You can't use a complete path from the project root, even if it was configured correctly in set up.
+
+- Working directory. knitr points correctly to my project root.
+  - `r getwd()`
+- My data directory path includes the image I want to display. Here are the directory contents.
+  - `r dir(assign_data)`
+
+Nevertheless, I still had to use a relative path to present the image.
+
+And the people, they were very sad.
+
+### Data file conclusions
+- agaricus-lepiota.data:
+  - Text file
+  - No header
+  - Comma delimited
+  - Missing values indicated by "?"
+- agaricus-lepiota.names:
+  - Text file
+  - Unstructured. Code book. You could scrape it with regex's if you cared, but really this is for human reading.
+
+## Read it
+- I like to put paths and file names in variables, in effect making them *constants* so maintenance is easier.
+- I like fread() because it's _fast_ (though that isn't critical with this data set). When you have to read a half million rows, you'll thank me.
+
+```{r read}
+assign_dir <- "./DATA607/Assignment01"
+dat_fil <- "agaricus-lepiota.data"
+
+dat <- fread(file = paste(assign_dir, "data", dat_fil, sep = "/"),
+      sep = ",",
+      header = FALSE,
+      na.strings = "?")
+```
+
+## Know it
+Okay, now you can look. Top o' the file to you...
+
+`r head(dat)`
+
+This data file has no header. What does it all mean? Paragraph #7 in file agaricus-lepiota.names lists 22 variables. Yummy, it also provides decodes of all those single-character factors.
+
+Single-char codes? Ugly, those are. I mean how much storage savings do you get out of that in an 8K-line file? This thing could even have been formatted in XML tags, a pretty weighty format, and you could still email it to all your friends.
+
+> 1. cap-shape
+> 2. cap-surface
+> 3. cap-color
+> 4. bruises?
+> 5. odor
+> 6. gill-attachment
+> 7. gill-spacing
+> 8. gill-size
+> 9. gill-color
+> 10. stalk-shape
+> 11. stalk-root
+> 12. stalk-surface-above-ring
+> 13. stalk-surface-below-ring
+> 14. stalk-color-above-ring
+> 15. stalk-color-below-ring
+> 16. veil-type
+> 17. veil-color
+> 18. ring-number
+> 19. ring-type
+> 20. spore-print-color
+> 21. population
+> 22. habitat
+
+#### Sidebar
+And how did I scrub out the codebook and add blockquote tags to that excerpt so deftly? Emacs macros! Took me about 45 seconds. Just sayin'.
+
+### Back to regularly scheduled programming
+Is that really the codebook? How many columns are in that data frame?
+
+I mean, I can see it in RStudio, but I always forget I can use dim(), so here.
+
+Data dimensions: `r dim(dat)`
+
+Hey, the codebook says there are 22 variables, but this data frame has 23 columns.
+
+Not only that, but I read in the codebook that missing values are represented by the character, "?". I didn't see that in my manual review. Circling back to update my reviewing step and maintain the data read. fread() has a parameter for na.strings.
+
+#### Sidebar
+There's a lesson here. Need a systematic way to survey for NAs.
+
+### Tracking down the extra attribute
+Aha! Although the codebook says there are 22 attributes in the data set, the first line of the attribute information says:
+
+> 7. Attribute Information: (classes: edible=e, poisonous=p)
+
+So the first column in the data frame is class. Now it makes sense, and it is corroborated by a shift to the right of the other columns. For example, the codebook says the only column with missing values is column number 11, but I found them in column 12 of the data frame. I surveyed the unique values in a few other columns and they match the code book, offset by one.
+
+cf. agaricus-lepiota.names, paragraph 7 for the distinct values coded in these columns.
+
+```{r values}
+# Cool trick for finding missing values.
+sum(is.na(dat$V12))
+unique(dat$V1)
+unique(dat$V2)
+unique(dat$V3)
+unique(dat$V4)
+unique(dat$V5)
+```
+
+## Name it
+Name these columns. I still have that scrubbed column list hanging out in an Emacs buffer. It took me longer to write down what I did than it took for me to do it. Emacs macros did this for me in about a minute of work. *Mwaa haaa*. (That's a sentence.)
+
+- Change all the hyphens to underscores. We hate hyphens. One hyphen in the middle of a sea of variable names or file names makes you an hour late getting home for dinner with your wife.
+- Use an Emacs macro again to:
+  - strip off the numeric description before the attribute name
+  - add the commas for concatenation in the naming code
+  - wrap the new names in double-quotes
+- Oh yeah, and don't forget that class variable up top.
+
+```{r colnames}
+names(dat) = c(
+	"class",
+	"cap_shape",
+	"cap_surface",
+	"cap_color",
+	"bruises",
+	"odor",
+	"gill_attachment",
+	"gill_spacing",
+	"gill_size",
+	"gill_color",
+	"stalk_shape",
+	"stalk_root",
+	"stalk_surface_above_ring",
+	"stalk_surface_below_ring",
+	"stalk_color_above_ring",
+	"stalk_color_below_ring",
+	"veil_type",
+	"veil_color",
+	"ring_number",
+	"ring_type",
+	"spore_print_color",
+	"population",
+	"habitat"
+)
+```
+
+## Subset
+My least favorite thing in R is subsetting. Why? Because I'm a SQL guy, because ANSI SQL is so easy, and because in R, there are approximately eleventy-three ways to do it.
+
+When I *DO* find something I actually understand about subsetting in R and when it's friendly enough to make me pipe down with my grousing about how easy this would have been in SQL, I take a huge note! And I use icons in my notes to help me remember them with a visual tag. My icon for subsetting is a submarine!
+
+![](data/sub.jpg)
+
+It's fun and helps me remember.
+
+### This
+This article recommended on Blackboard is *exactly* what I needed. The author highlights the "Klingon" notation I hate, and shows a better way with the base subset() function.
+
+[Subsetting Data - AKA Just say no to Klingons](https://www.quantumforest.com/2013/05/07/subsetting-data/)
+
+![](data/worf.jpg)
+
+So let's select the rows indicating edible mushrooms, first the subset() way, and then the Klingon way that used to make me complain, but this is the last time I'll write it!
+
+I want mushrooms that:
+
+- Are edible
+- Have bruises
+- And either their gill color is black or their habitat is meadows
+
+```{r subset}
+# Easy, as easy as a WHERE clause in SQL.
+subset(dat, class == "e" & bruises == "t" & (gill_color == "k" | habitat == "m"))
+
+# Now isnt that ever so much nicer than
+dat[(dat$class == "e" & dat$bruises == "t" & (dat$gill_color == "k" | dat$habitat == "m")), ]
+```
+
+### Let's talk
+But can we look at the assignment again? It asks for a "subset" of the columns. Ahh, this usage of the word "subset" is cringe-worthy to database folk. Subsetting (like in the base R subset() function) refers to filtering, a set operation that reduces rows. This assignment, strictly speaking, is about selection (a column operation), not subsetting (a filtering, or row operation).
+
+Save the data to a new data frame. I like non-destructive editing so I can retrace my tracks easily and iterate through development changes. Here we go.
+
+```{r}
+dat_reduced_cols <- dat[ , 1:5]
+```
+
+That's it! No subsetting required.
+
+## Decode
+Time to fill in those hateful single-char codes with something we can read. What I **really** want (and you probably guessed already) is a SQL UPDATE statement. The closest thing I've found comes from that SQL-wannabe package, dplyr. It now has a CASE option for the mutate() function. I look for every opportunity to use it that I can find, so I can practice it. I feel so peacesul when I can just update what I want.
+
+### Mappings
+Mappings are documented in the file, agaricus-lepiota.names.
+
+```{r update}
+# Reference.
+# Attribute Information: (classes: edible=e, poisonous=p)
+#  1. cap-shape:                bell=b,conical=c,convex=x,flat=f,
+#                               knobbed=k,sunken=s
+#  2. cap-surface:              fibrous=f,grooves=g,scaly=y,smooth=s
+#  3. cap-color:                brown=n,buff=b,cinnamon=c,gray=g,green=r,
+#                               pink=p,purple=u,red=e,white=w,yellow=y
+#  4. bruises?:                 bruises=t,no=f.
+#                               JJ Note: I removed the question mark from the column name, and mapped
+#                               it to logical values.
+
+dat_reduced_cols <- dat_reduced_cols %>%
+	mutate(
+		class = case_when(
+			class == "e" ~ "edible",
+			class == "p" ~ "poisonous"),
+		cap_shape = case_when(
+			cap_shape == "b" ~ "bell",
+			cap_shape == "c" ~ "conical",
+			cap_shape == "x" ~ "convex",
+			cap_shape == "f" ~ "flat",
+			cap_shape == "k" ~ "knobbed",
+			cap_shape == "s" ~ "sunken"),
+		cap_surface = case_when(
+			cap_surface == "f" ~ "fibrous",
+			cap_surface == "g" ~ "grooves",
+			cap_surface == "y" ~ "scaly",
+			cap_surface == "s" ~ "smooth"),
+		cap_color = case_when(
+			cap_color == "n" ~ "brown",
+			cap_color == "b" ~ "buff",
+			cap_color == "c" ~ "cinnamon",
+			cap_color == "g" ~ "gray",
+			cap_color == "r" ~ "green",
+			cap_color == "p" ~ "pink",
+			cap_color == "u" ~ "purple",
+			cap_color == "e" ~ "red",
+			cap_color == "w" ~ "white",
+			cap_color == "y" ~ "yellow"),
+		bruises = case_when(
+			bruises == "t" ~ TRUE,
+			bruises == "f" ~ FALSE)
+	)
+		
+
+```
+
+## Results
+Here are the structure of the final data frame, its top records, and its bottom records.
+
+```{r results}
+str(dat_reduced_cols)
+head(dat_reduced_cols)
+tail(dat_reduced_cols)
+
+```
+
+## Time to go
+![](data/gameover.jpg)
