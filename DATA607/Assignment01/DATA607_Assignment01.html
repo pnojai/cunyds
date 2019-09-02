@@ -1669,7 +1669,8 @@ assign_data &lt;- paste(assign_dir, &quot;data&quot;, sep = &quot;/&quot;)</code
 <div id="get-data" class="section level2">
 <h2>Get data</h2>
 <p>I like to code my data downloads and log the operation. It makes data acquisition reproducible, or at least accountable, as web pages have a habit of changing. Here’s a function that I reuse for data acquisition.</p>
-<pre class="r"><code>log_download &lt;- function(DLurl, DLfile, Logfile) {
+<p>I noticed a bug in this function. I haven’t been passing the Overwrite variable as a parameter, so the function’s internal reference to it has been looking it up in the Global Environment. C wouldn’t let me do that. One of the things that always made me a little queasy about R.</p>
+<pre class="r"><code>log_download &lt;- function(DLurl, DLfile, Logfile, Overwrite) {
     if (!file.exists(DLfile) | Overwrite == TRUE) {
         download.file(DLurl, DLfile)
         DLdate &lt;- date()
@@ -1692,13 +1693,13 @@ assign_data &lt;- paste(assign_dir, &quot;data&quot;, sep = &quot;/&quot;)</code
 DLurl &lt;- &quot;https://archive.ics.uci.edu/ml/machine-learning-databases/mushroom/agaricus-lepiota.data&quot;
 DLfile &lt;- paste(assign_data, &quot;agaricus-lepiota.data&quot;, sep = &quot;/&quot;)
 Overwrite &lt;- FALSE
-log_download(DLurl, DLfile, Logfile)</code></pre>
+log_download(DLurl, DLfile, Logfile, Overwrite)</code></pre>
 <pre><code>## [1] &quot;File exists. Download skipped.&quot;</code></pre>
 <pre class="r"><code>#   Names file
 DLurl &lt;- &quot;https://archive.ics.uci.edu/ml/machine-learning-databases/mushroom/agaricus-lepiota.names&quot;
 DLfile &lt;- paste(assign_data, &quot;agaricus-lepiota.names&quot;, sep = &quot;/&quot;)
 Overwrite &lt;- FALSE
-log_download(DLurl, DLfile, Logfile)</code></pre>
+log_download(DLurl, DLfile, Logfile, Overwrite)</code></pre>
 <pre><code>## [1] &quot;File exists. Download skipped.&quot;</code></pre>
 </div>
 <div id="look-at-it" class="section level2">
@@ -1758,10 +1759,10 @@ log_download(DLurl, DLfile, Logfile)</code></pre>
 <h2>Read it</h2>
 <ul>
 <li>I like to put paths and file names in variables, in effect making them <em>constants</em> so maintenance is easier.</li>
+<li>I moved initialization of the variable for assignment directory path to the set up chunk.</li>
 <li>I like fread() because it’s <em>fast</em> (though that isn’t critical with this data set). When you have to read a half million rows, you’ll thank me.</li>
 </ul>
-<pre class="r"><code>assign_dir &lt;- &quot;./DATA607/Assignment01&quot;
-dat_fil &lt;- &quot;agaricus-lepiota.data&quot;
+<pre class="r"><code>dat_fil &lt;- &quot;agaricus-lepiota.data&quot;
 
 dat &lt;- fread(file = paste(assign_dir, &quot;data&quot;, dat_fil, sep = &quot;/&quot;),
       sep = &quot;,&quot;,
