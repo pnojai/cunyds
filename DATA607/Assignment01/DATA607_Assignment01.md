@@ -60,9 +60,11 @@ assign_data <- paste(assign_dir, "data", sep = "/")
 ## Get data
 I like to code my data downloads and log the operation. It makes data acquisition reproducible, or at least accountable, as web pages have a habit of changing. Here's a function that I reuse for data acquisition.
 
+I noticed a bug in this function. I haven't been passing the Overwrite variable as a parameter, so the function's internal reference to it has been looking it up in the Global Environment. C wouldn't let me do that. One of the things that always made me a little queasy about R.
+
 
 ```r
-log_download <- function(DLurl, DLfile, Logfile) {
+log_download <- function(DLurl, DLfile, Logfile, Overwrite) {
 	if (!file.exists(DLfile) | Overwrite == TRUE) {
 		download.file(DLurl, DLfile)
 		DLdate <- date()
@@ -90,7 +92,7 @@ Logfile <- paste(assign_data, "Download.log", sep = "/")
 DLurl <- "https://archive.ics.uci.edu/ml/machine-learning-databases/mushroom/agaricus-lepiota.data"
 DLfile <- paste(assign_data, "agaricus-lepiota.data", sep = "/")
 Overwrite <- FALSE
-log_download(DLurl, DLfile, Logfile)
+log_download(DLurl, DLfile, Logfile, Overwrite)
 ```
 
 ```
@@ -102,7 +104,7 @@ log_download(DLurl, DLfile, Logfile)
 DLurl <- "https://archive.ics.uci.edu/ml/machine-learning-databases/mushroom/agaricus-lepiota.names"
 DLfile <- paste(assign_data, "agaricus-lepiota.names", sep = "/")
 Overwrite <- FALSE
-log_download(DLurl, DLfile, Logfile)
+log_download(DLurl, DLfile, Logfile, Overwrite)
 ```
 
 ```
@@ -154,11 +156,11 @@ And the people, they were very sad.
 
 ## Read it
 - I like to put paths and file names in variables, in effect making them *constants* so maintenance is easier.
+- I moved initialization of the variable for assignment directory path to the set up chunk.
 - I like fread() because it's _fast_ (though that isn't critical with this data set). When you have to read a half million rows, you'll thank me.
 
 
 ```r
-assign_dir <- "./DATA607/Assignment01"
 dat_fil <- "agaricus-lepiota.data"
 
 dat <- fread(file = paste(assign_dir, "data", dat_fil, sep = "/"),
