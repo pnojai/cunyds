@@ -104,11 +104,15 @@ drinks_wk <- c(rep(0, 100), rnorm(100, mean = 4, sd =2))
 drinks_wk <- drinks_wk[drinks_wk >= 0]
 drinks_wk <- floor(drinks_wk)
 drinks_wk <- c(drinks_wk, 10, 12, 15, 25)
-hist(drinks_wk)
+hist(drinks_wk, breaks = 100)
 boxplot(drinks_wk)
 ```
 
 My fake data came out with a clear right skew. Even with my assumptions, it didn't appear bimodal. I don't know if that's because I was just wrong about that, or my approach at manufacturing the data didn't implement my assumptions.
+
+*UPDATE*
+
+When I increased the breaks in the histogram, I saw the distribution I expected.
 
 (d) Annual salaries of the employees at a Fortune 500 company where only a few high level
 executives earn much higher salaries than the all other employees.
