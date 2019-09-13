@@ -1,0 +1,84 @@
+---
+title: "DATA607 - Assignment 3 - Regular Expressions"
+author: "Jai Jeffryes"
+date: "9/12/2019"
+output:
+  html_document:
+    keep_md: yes
+---
+
+
+
+## Assignment
+- Problems 3 and 4 from chapter 8 of *Automated Data Collection in R*.
+- Problem 9 is extra credit.
+
+### My relationship with Regular Expressions
+Regular expressions and I have always rolled like this.
+
+![](img/wrestlers.jpg)
+
+### There has to be better way
+![](img/albert.jpg)
+
+I liked this quote, often attributed to Albert Einstein.
+
+> If I had only one hour to save the world, I would spend fifty-five minutes defining the problem, and only five minutes finding the solution.
+
+![](img/bowshot.jpg)
+
+And Dr. Catlin's admonition was a shot across the bow.
+
+> Master your tools to earn a place at the stakeholder table.
+
+I've spent enough time complaining and making excuses about Regular Expressions. This is why this assignment came to me. Time to commit and come to the table.
+
+### A new deal
+I think my mental block with RegEx's stems from spending insufficient time up front asking questions about what I'm looking for. Write it down! Don't be a hero and go straight for the code. Get down as many questions first. This is Software Design 101, after all.
+
+Then embrace the RegEx instead of wrestling with it. Here goes.
+
+## Problem 3
+Copy the introductory example. The vector name stores the extracted names.
+
+
+```r
+library(stringr)
+
+raw.data <-"555-1239Moe Szyslak(636) 555-0113Burns, C. Montgomery555-6542Rev. Timothy Lovejoy555 8904Ned Flanders636-555-3226Simpson, Homer5553642Dr. Julius Hibbert"
+
+# Extract information
+name <- unlist(str_extract_all(raw.data, "[[:alpha:]., ]{2,}"))
+name
+```
+
+```
+## [1] "Moe Szyslak"          "Burns, C. Montgomery" "Rev. Timothy Lovejoy"
+## [4] "Ned Flanders"         "Simpson, Homer"       "Dr. Julius Hibbert"
+```
+
+### 3a
+Use the tools of this chapter to rearrange the vector so that all elements conform to the standard first_name last_name.
+
+**Ask questions**
+
+- Find the unconforming names.
+  - How? Here, by the presence of a comma.
+  - What if there is a suffix, like ", Jr."? You wouldn't want to identify that as unconforming because of its comma. How could you differentiate that one? How about count the words before the comma. If there is one word, then it must be a last name.
+  - No, what about my wife? Her surname is two words. You get this element: "La Salle, Jan." Word counting on either side of the comma doesn't work.
+  - It would have to be an explicit list of suffixes: Jr., Sr., Ph. D., Esq.
+  - There would have to be some flexibility of the suffix format. With or without periods or spaces. How about case insensitive, too. Jr, SR, PhD.
+  - This suffix match must be complete. You can't just find the suffix in the right side of the comma. Anchor it, front and back. It must be the only string on the right side of the delimiter.
+  - Is that valid? Could there be a suffix and something else after a comma? Is there such a name as "Thurston Howell III, Jr."? No, but he could be an academic. "Thurston Howell, Sr. Ph.D".
+  - And if he's an academic and has some honorary degrees, too, well there would be more than one comma. "Thurston Howel, Jr., Ph. D., D.D". Ah! Make an additional vector with extra test cases.
+- How do you pick off first names.
+  - The requirements are already getting a little grey. One of the "first names" is really a first initial and a middle name.
+- How do you pick off last names.
+- How do you swap the pieces by position. 
+
+### 3b
+Construct a logical vector indicating whether a character has a title (i.e., Rev. and Dr.).
+
+### 3c
+a. Construct a logical vector indicating whether a character has a second name.
+
