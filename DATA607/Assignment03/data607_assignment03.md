@@ -31,6 +31,7 @@ output:
   - [Markdown internal links](#markdown-internal-links)
 - [Conclusions](#conclusions)
 - [Development plan](#development-plan)
+- [Appendix](#appendix)
 
 ### Problem 3
 Copy the introductory example. The vector name stores the extracted names.
@@ -701,3 +702,78 @@ Explaining my lessons learned here is a start. Now haunt [StackOverflow](https:/
 [Using R, getting a “Can't bind data because some arguments have the same name” using dplyr:select](https://stackoverflow.com/questions/54932063/using-r-getting-a-cant-bind-data-because-some-arguments-have-the-same-name-u)
 
 Watch the `regex` tag on StackOverflow. Make it a goal to gain reputation points by answering Regular Expression questions.
+
+#### Appendix
+Following up after submission. I started answering questions on [StackOverflow](https://stackoverflow.com). I gained a few reputation points already. But what I **really** benefitted from was seeing Michael Crenshaw's coding style on this answer.
+
+[RexEx Expression (sic) for YYYYMMDD-NNNN](https://stackoverflow.com/questions/57958628/regex-expression-for-yyyymmdd-nnnn)
+
+And then Wiktor Stribiżew's answer on this question about how to do it in R.
+
+[Breaking up a long regular question in R](https://stackoverflow.com/questions/45290615/breaking-up-a-long-regular-expression-in-r)
+
+The methods in `stringr` use the [ICU RegEx](http://userguide.icu-project.org/strings/regexp) implementation, so you can apply this coding style.
+
+
+```r
+re <- "(?x)
+# match any year
+([0-9]{4})
+(
+  # January-September
+  (?:0[1-9])
+  # OR October - December
+  |(?:1[0-2])
+)
+(
+  # First nine days of the month.
+  (?:0[1-9])
+  # Next twenty days of the month.
+  |(?:[1-2][0-9])
+  # Last two days of the month.
+  |(?:3[0-1])
+)
+# A hyphen and then any four digits.
+-([0-9]{4})
+# Last two days of the month. Excludes February.
+  |(?:(?<!02)3[0-1])"
+
+# YYYYMMDD-NNNN
+str1 <- "20200402-1234"
+
+re
+```
+
+```
+## [1] "(?x)\n# match any year\n([0-9]{4})\n(\n  # January-September\n  (?:0[1-9])\n  # OR October - December\n  |(?:1[0-2])\n)\n(\n  # First nine days of the month.\n  (?:0[1-9])\n  # Next twenty days of the month.\n  |(?:[1-2][0-9])\n  # Last two days of the month.\n  |(?:3[0-1])\n)\n# A hyphen and then any four digits.\n-([0-9]{4})\n# Last two days of the month. Excludes February.\n  |(?:(?<!02)3[0-1])"
+```
+
+```r
+str1
+```
+
+```
+## [1] "20200402-1234"
+```
+
+```r
+str_extract(str1, re)
+```
+
+```
+## [1] "20200402-1234"
+```
+
+Base R can even do that if you specify `perl = TRUE`.
+
+
+```r
+grep("(?x)a
+     b", c("ab", "a b", "a\nb", "ab"), perl = TRUE)
+```
+
+```
+## [1] 1 4
+```
+
+Work it all out at [RegEx 101](https://regex101.com).

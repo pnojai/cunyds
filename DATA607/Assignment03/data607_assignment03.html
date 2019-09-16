@@ -398,6 +398,7 @@ summary {
 </ul></li>
 <li><a href="#conclusions">Conclusions</a></li>
 <li><a href="#development-plan">Development plan</a></li>
+<li><a href="#appendix">Appendix</a></li>
 </ul>
 </div>
 <div id="problem-3" class="section level3">
@@ -875,6 +876,50 @@ name_incl_suffix[!is_swap]</code></pre>
 <p>Explaining my lessons learned here is a start. Now haunt <a href="https://stackoverflow.com">StackOverflow</a>. My best answer there, which got me started earning reputation points, included utilization of <code>grep</code>. It was about an assignment in a popular online R course and has gotten 4000 views.</p>
 <p><a href="https://stackoverflow.com/questions/54932063/using-r-getting-a-cant-bind-data-because-some-arguments-have-the-same-name-u">Using R, getting a “Can’t bind data because some arguments have the same name” using dplyr:select</a></p>
 <p>Watch the <code>regex</code> tag on StackOverflow. Make it a goal to gain reputation points by answering Regular Expression questions.</p>
+</div>
+<div id="appendix" class="section level4">
+<h4>Appendix</h4>
+<p>Following up after submission. I started answering questions on <a href="https://stackoverflow.com">StackOverflow</a>. I gained a few reputation points already. But what I <strong>really</strong> benefitted from was seeing Michael Crenshaw’s coding style on this answer.</p>
+<p><a href="https://stackoverflow.com/questions/57958628/regex-expression-for-yyyymmdd-nnnn">RexEx Expression (sic) for YYYYMMDD-NNNN</a></p>
+<p>And then Wiktor Stribiżew’s answer on this question about how to do it in R.</p>
+<p><a href="https://stackoverflow.com/questions/45290615/breaking-up-a-long-regular-expression-in-r">Breaking up a long regular question in R</a></p>
+<p>The methods in <code>stringr</code> use the <a href="http://userguide.icu-project.org/strings/regexp">ICU RegEx</a> implementation, so you can apply this coding style.</p>
+<pre class="r"><code>re &lt;- &quot;(?x)
+# match any year
+([0-9]{4})
+(
+  # January-September
+  (?:0[1-9])
+  # OR October - December
+  |(?:1[0-2])
+)
+(
+  # First nine days of the month.
+  (?:0[1-9])
+  # Next twenty days of the month.
+  |(?:[1-2][0-9])
+  # Last two days of the month.
+  |(?:3[0-1])
+)
+# A hyphen and then any four digits.
+-([0-9]{4})
+# Last two days of the month. Excludes February.
+  |(?:(?&lt;!02)3[0-1])&quot;
+
+# YYYYMMDD-NNNN
+str1 &lt;- &quot;20200402-1234&quot;
+
+re</code></pre>
+<pre><code>## [1] &quot;(?x)\n# match any year\n([0-9]{4})\n(\n  # January-September\n  (?:0[1-9])\n  # OR October - December\n  |(?:1[0-2])\n)\n(\n  # First nine days of the month.\n  (?:0[1-9])\n  # Next twenty days of the month.\n  |(?:[1-2][0-9])\n  # Last two days of the month.\n  |(?:3[0-1])\n)\n# A hyphen and then any four digits.\n-([0-9]{4})\n# Last two days of the month. Excludes February.\n  |(?:(?&lt;!02)3[0-1])&quot;</code></pre>
+<pre class="r"><code>str1</code></pre>
+<pre><code>## [1] &quot;20200402-1234&quot;</code></pre>
+<pre class="r"><code>str_extract(str1, re)</code></pre>
+<pre><code>## [1] &quot;20200402-1234&quot;</code></pre>
+<p>Base R can even do that if you specify <code>perl = TRUE</code>.</p>
+<pre class="r"><code>grep(&quot;(?x)a
+     b&quot;, c(&quot;ab&quot;, &quot;a b&quot;, &quot;a\nb&quot;, &quot;ab&quot;), perl = TRUE)</code></pre>
+<pre><code>## [1] 1 4</code></pre>
+<p>Work it all out at <a href="https://regex101.com">RegEx 101</a>.</p>
 </div>
 </div>
 </div>
