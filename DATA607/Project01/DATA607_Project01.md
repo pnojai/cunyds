@@ -47,11 +47,33 @@ assign_dir <- "./DATA607/Project01"
 assign_data <- paste(assign_dir, "data", sep = "/")
 ```
 
-## Get data
+## Introduction
+Project 1 reads chess tournament data, transforms it, and outputs a format that could be loaded into a relational database. The chess tournament data is in a consistent, though unstructured, format, hence the necessity to transform it.
+
+## Requirements
+- *Project 1.pdf*. Located in the project's working directory.
+- [Reading a Chess Tournament Cross Table](https://www.youtube.com/watch?v=T5PXYl2FEUo). YouTube video with orientation and requirement constraints.
+
+Most of the requirements pertain to reporting data of interest from the chess tournament input file. There is one reporting requirement that adds value to the input data, summarization of opponents' pre-tournament ratings.
+
+Note these exclusions from scope per the YouTube video.
+
+1. Summarization of rounds with results other than a win or a loss.
+1. Summarization of pre-tournament ratings with non-numeric characters (e.g. "P").
+
+### Assumptions
+For computation of oppenents' average pre-tournament ratings, excluded values reduce the counts. There is no imputation of missing values for out-of-scope rounds or pre-tournament ratings.
+
+## Input data
 - Source: [tournamentinfo.txt](https://bbhosted.cuny.edu/bbcswebdav/pid-42267955-dt-content-rid-347468182_1/courses/SPS01_DATA_607_01_1199_1/tournamentinfo.txt)
 - Download date: Mon Sep 16 19:21:59 2019
+- Location for processing: ./DATA607/Project01/data.
 
 ## Functions
+- `split_cols()`. Athough the input file delimits data, it also contains non-data visual separating rows. Therefore, file reading functions within base R are unable to split the columns. This function assumes deletion of the separator rows and splits on a column separator. It preserves the raw data and appends to it the split columns.
+- `merge_pair_rows()`. Player data is recorded in two rows. The formats of the two rows are different from each other, while remaining consistent from player to player. This function arranges each player's two rows side-by-side, forming a single record per player.
+- `xform()`. Transforms the raw data. Data types are coerced where necessary. Out-of-scope ratings are left unmapped. The functions supports flexibility in the input of data for rounds. Any number of rounds can be included.
+- `read_rounds()`. The input file records tournament round results in a cross tab format. This function pivots the rounds into a Tidy format for aggregation and reporting. The function supports input of files with any number of rounds.
 
 ```r
 split_cols <- function(df, sep) {
@@ -94,6 +116,8 @@ xform <- function(df) {
 	df$player_num_xfm <- as.integer(df$player_number_src)
 	# Player name. Format case.
 	df$player_name_xfm <- str_to_title(str_trim(df$player_name_src))
+	# State.
+	df$state_xfm <- str_trim(df$state_src)
 	# Points.
 	df$points_xfm <- as.numeric(df$points_src)
 	# Rounds
@@ -104,7 +128,7 @@ xform <- function(df) {
 			str_extract(df[ , paste0("round", i, "_src")], "^\\w")
 		# Opponent number
 		df[ , str_c("round", i, "_opponent_xfm")] <- 
-			str_extract(df[ , paste0("round", i, "_src")], "\\d+")
+			as.integer(str_extract(df[ , paste0("round", i, "_src")], "\\d+"))
 	}
 	# State
 	df$state_xfm <- str_trim(df$state_src)
@@ -129,17 +153,20 @@ read_rounds <- function(df) {
 	round_count <- sum(str_detect(names(df), "round\\d_result_xfm"))
 	
 	for (i in 1:round_count) {
-			round_row <- df %>%
-				select(result = str_c("round", i, "_result_xfm"),
-					   player_num = player_num_xfm,
-					   opponent_num = str_c("round", i, "_opponent_xfm"))
-			# Add round number. Separately because
-			# dplyr doesn't select literals.
-			round_row <- cbind(round = i, round_row)
-			
-			round_df <- rbind(round_df, round_row)
+		result_col_idx <- which(names(df) == str_c("round", i, "_result_xfm"))
+		opponent_col_idx <- which(names(df) == str_c("round", i, "_opponent_xfm"))
+		
+		round_row <- df %>%
+			select(result = result_col_idx,
+				   player_num = player_num_xfm,
+				   opponent_num = opponent_col_idx)
+		# Add round number separately because
+		# dplyr doesn't select literals.
+		round_row <- cbind(round = i, round_row)
+		
+		round_df <- rbind(round_df, round_row)
 	}
-
+	
 	# Return
 	round_df
 }
@@ -188,13 +215,16 @@ chess_xform <- xform(chess_xform)
 ## Load
 
 ```r
+# Define PLAYER data frame.
 player_df <- data.frame(
 	player_num <- integer(),
 	player_name = character(),
+	state = character(),
 	total_points = integer(),
 	pre_rating = integer(),
 	stringsAsFactors = FALSE)
 
+# Define ROUND data frame.
 round_df <- data.frame(
 	round <- integer(),
 	result <- character(),
@@ -202,35 +232,35 @@ round_df <- data.frame(
 	opponent_num <- integer(),
 	stringsAsFactors = FALSE)
 
+# Load PLAYER data frame.
 player_df <- chess_xform %>%
 	select (player_num = player_num_xfm,
 			player_name = player_name_xfm,
+			state = state_xfm,
 			total_points = points_xfm,
 			pre_rating = rating_xfm)
 
+# Load ROUND data frame.
 round_df <- read_rounds(chess_xform)
 ```
 
-## Processing
-### Players
+## Summarize
 
 ```r
-read_player <- function(df, line_num) {
-	# Validate input.
-	if (line_num %% 2 != 1) {
-		stop("Invalid line_num: Player data begins on odd numbered lines")
-	}
+# Question: Is there a single-pass way to add the summary column to player_df, perhaps using mutate()?
+opponent_prerating_df <- 
+	inner_join(x = round_df, y = player_df, by = c("opponent_num" = "player_num")) %>%
+	filter(!is.na(pre_rating)) %>%
+	group_by(player_num) %>%
+	summarize(opponents_pre_rating = mean(pre_rating)) 
 
-	# Constants
-	line_range <- 2 # Count of lines containing player data.
-	
-	# Subset raw data for player.
-	results <- df[line_num:(line_num + line_range - 1), ]
-	results
-}
+player_df <- inner_join(x = player_df, y = opponent_prerating_df)
+```
 
-process_player <- function(df) {
-	
-	
-}
+```
+## Joining, by = "player_num"
+```
+
+```r
+rm(opponent_prerating_df)
 ```

@@ -1660,15 +1660,43 @@ library(dplyr) # mutate()</code></pre>
 
 assign_dir &lt;- &quot;./DATA607/Project01&quot;
 assign_data &lt;- paste(assign_dir, &quot;data&quot;, sep = &quot;/&quot;)</code></pre>
-<div id="get-data" class="section level2">
-<h2>Get data</h2>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>Project 1 reads chess tournament data, transforms it, and outputs a format that could be loaded into a relational database. The chess tournament data is in a consistent, though unstructured, format, hence the necessity to transform it.</p>
+</div>
+<div id="requirements" class="section level2">
+<h2>Requirements</h2>
+<ul>
+<li><em>Project 1.pdf</em>. Located in the project’s working directory.</li>
+<li><a href="https://www.youtube.com/watch?v=T5PXYl2FEUo">Reading a Chess Tournament Cross Table</a>. YouTube video with orientation and requirement constraints.</li>
+</ul>
+<p>Most of the requirements pertain to reporting data of interest from the chess tournament input file. There is one reporting requirement that adds value to the input data, summarization of opponents’ pre-tournament ratings.</p>
+<p>Note these exclusions from scope per the YouTube video.</p>
+<ol style="list-style-type: decimal">
+<li>Summarization of rounds with results other than a win or a loss.</li>
+<li>Summarization of pre-tournament ratings with non-numeric characters (e.g. “P”).</li>
+</ol>
+<div id="assumptions" class="section level3">
+<h3>Assumptions</h3>
+<p>For computation of oppenents’ average pre-tournament ratings, excluded values reduce the counts. There is no imputation of missing values for out-of-scope rounds or pre-tournament ratings.</p>
+</div>
+</div>
+<div id="input-data" class="section level2">
+<h2>Input data</h2>
 <ul>
 <li>Source: <a href="https://bbhosted.cuny.edu/bbcswebdav/pid-42267955-dt-content-rid-347468182_1/courses/SPS01_DATA_607_01_1199_1/tournamentinfo.txt">tournamentinfo.txt</a></li>
 <li>Download date: Mon Sep 16 19:21:59 2019</li>
+<li>Location for processing: ./DATA607/Project01/data.</li>
 </ul>
 </div>
 <div id="functions" class="section level2">
 <h2>Functions</h2>
+<ul>
+<li><code>split_cols()</code>. Athough the input file delimits data, it also contains non-data visual separating rows. Therefore, file reading functions within base R are unable to split the columns. This function assumes deletion of the separator rows and splits on a column separator. It preserves the raw data and appends to it the split columns.</li>
+<li><code>merge_pair_rows()</code>. Player data is recorded in two rows. The formats of the two rows are different from each other, while remaining consistent from player to player. This function arranges each player’s two rows side-by-side, forming a single record per player.</li>
+<li><code>xform()</code>. Transforms the raw data. Data types are coerced where necessary. Out-of-scope ratings are left unmapped. The functions supports flexibility in the input of data for rounds. Any number of rounds can be included.</li>
+<li><code>read_rounds()</code>. The input file records tournament round results in a cross tab format. This function pivots the rounds into a Tidy format for aggregation and reporting. The function supports input of files with any number of rounds.</li>
+</ul>
 <pre class="r"><code>split_cols &lt;- function(df, sep) {
     # Reference:
     # https://www.r-bloggers.com/converting-strsplit-output-to-a-data-frame/
@@ -1709,6 +1737,8 @@ xform &lt;- function(df) {
     df$player_num_xfm &lt;- as.integer(df$player_number_src)
     # Player name. Format case.
     df$player_name_xfm &lt;- str_to_title(str_trim(df$player_name_src))
+    # State.
+    df$state_xfm &lt;- str_trim(df$state_src)
     # Points.
     df$points_xfm &lt;- as.numeric(df$points_src)
     # Rounds
@@ -1719,7 +1749,7 @@ xform &lt;- function(df) {
             str_extract(df[ , paste0(&quot;round&quot;, i, &quot;_src&quot;)], &quot;^\\w&quot;)
         # Opponent number
         df[ , str_c(&quot;round&quot;, i, &quot;_opponent_xfm&quot;)] &lt;- 
-            str_extract(df[ , paste0(&quot;round&quot;, i, &quot;_src&quot;)], &quot;\\d+&quot;)
+            as.integer(str_extract(df[ , paste0(&quot;round&quot;, i, &quot;_src&quot;)], &quot;\\d+&quot;))
     }
     # State
     df$state_xfm &lt;- str_trim(df$state_src)
@@ -1744,17 +1774,20 @@ read_rounds &lt;- function(df) {
     round_count &lt;- sum(str_detect(names(df), &quot;round\\d_result_xfm&quot;))
     
     for (i in 1:round_count) {
-            round_row &lt;- df %&gt;%
-                select(result = str_c(&quot;round&quot;, i, &quot;_result_xfm&quot;),
-                       player_num = player_num_xfm,
-                       opponent_num = str_c(&quot;round&quot;, i, &quot;_opponent_xfm&quot;))
-            # Add round number. Separately because
-            # dplyr doesn't select literals.
-            round_row &lt;- cbind(round = i, round_row)
-            
-            round_df &lt;- rbind(round_df, round_row)
+        result_col_idx &lt;- which(names(df) == str_c(&quot;round&quot;, i, &quot;_result_xfm&quot;))
+        opponent_col_idx &lt;- which(names(df) == str_c(&quot;round&quot;, i, &quot;_opponent_xfm&quot;))
+        
+        round_row &lt;- df %&gt;%
+            select(result = result_col_idx,
+                   player_num = player_num_xfm,
+                   opponent_num = opponent_col_idx)
+        # Add round number separately because
+        # dplyr doesn't select literals.
+        round_row &lt;- cbind(round = i, round_row)
+        
+        round_df &lt;- rbind(round_df, round_row)
     }
-
+    
     # Return
     round_df
 }</code></pre>
@@ -1800,13 +1833,16 @@ chess_xform &lt;- xform(chess_xform)</code></pre>
 </div>
 <div id="load" class="section level2">
 <h2>Load</h2>
-<pre class="r"><code>player_df &lt;- data.frame(
+<pre class="r"><code># Define PLAYER data frame.
+player_df &lt;- data.frame(
     player_num &lt;- integer(),
     player_name = character(),
+    state = character(),
     total_points = integer(),
     pre_rating = integer(),
     stringsAsFactors = FALSE)
 
+# Define ROUND data frame.
 round_df &lt;- data.frame(
     round &lt;- integer(),
     result &lt;- character(),
@@ -1814,37 +1850,29 @@ round_df &lt;- data.frame(
     opponent_num &lt;- integer(),
     stringsAsFactors = FALSE)
 
+# Load PLAYER data frame.
 player_df &lt;- chess_xform %&gt;%
     select (player_num = player_num_xfm,
             player_name = player_name_xfm,
+            state = state_xfm,
             total_points = points_xfm,
             pre_rating = rating_xfm)
 
+# Load ROUND data frame.
 round_df &lt;- read_rounds(chess_xform)</code></pre>
 </div>
-<div id="processing" class="section level2">
-<h2>Processing</h2>
-<div id="players" class="section level3">
-<h3>Players</h3>
-<pre class="r"><code>read_player &lt;- function(df, line_num) {
-    # Validate input.
-    if (line_num %% 2 != 1) {
-        stop(&quot;Invalid line_num: Player data begins on odd numbered lines&quot;)
-    }
+<div id="summarize" class="section level2">
+<h2>Summarize</h2>
+<pre class="r"><code># Question: Is there a single-pass way to add the summary column to player_df, perhaps using mutate()?
+opponent_prerating_df &lt;- 
+    inner_join(x = round_df, y = player_df, by = c(&quot;opponent_num&quot; = &quot;player_num&quot;)) %&gt;%
+    filter(!is.na(pre_rating)) %&gt;%
+    group_by(player_num) %&gt;%
+    summarize(opponents_pre_rating = mean(pre_rating)) 
 
-    # Constants
-    line_range &lt;- 2 # Count of lines containing player data.
-    
-    # Subset raw data for player.
-    results &lt;- df[line_num:(line_num + line_range - 1), ]
-    results
-}
-
-process_player &lt;- function(df) {
-    
-    
-}</code></pre>
-</div>
+player_df &lt;- inner_join(x = player_df, y = opponent_prerating_df)</code></pre>
+<pre><code>## Joining, by = &quot;player_num&quot;</code></pre>
+<pre class="r"><code>rm(opponent_prerating_df)</code></pre>
 </div>
 
 
