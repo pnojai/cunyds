@@ -64,10 +64,21 @@ Note these exclusions from scope per the YouTube video.
 ### Assumptions
 For computation of oppenents' average pre-tournament ratings, excluded values reduce the counts. There is no imputation of missing values for out-of-scope rounds or pre-tournament ratings.
 
-## Input data
-- Source: [tournamentinfo.txt](https://bbhosted.cuny.edu/bbcswebdav/pid-42267955-dt-content-rid-347468182_1/courses/SPS01_DATA_607_01_1199_1/tournamentinfo.txt)
+## Input
+- Source data: [tournamentinfo.txt](https://bbhosted.cuny.edu/bbcswebdav/pid-42267955-dt-content-rid-347468182_1/courses/SPS01_DATA_607_01_1199_1/tournamentinfo.txt)
 - Download date: Mon Sep 16 19:21:59 2019
 - Location for processing: ./DATA607/Project01/data.
+
+## Output
+Data processing produces a list of data frames. The name of the list is created at run time. Depositing the output into a list permits processing of multiple input files and retaining their output separately.
+
+The output list contains these data frames:
+
+- `chess_raw`. Raw data from the input file. No cleansing.
+- `chess_split`. Cleansing has started. Header rows and separator rows are removed. Fields of the data rows are split by the delimiter.
+- `chess_xform`. The input file format allots two rows for each player. This data frame reorganizes them  side by side into a single row for each player. Names are applied to columns. The source columns from `chess_split` are retained. Transformations are applied to transformation columns in the same row.
+- `player_df`. Reporting table for players. The average pre-rating for a player's opponents appears in this table.
+- `round_df`. Reporting table for chess round results, organized in a Tidy format.
 
 ## Functions
 - `split_cols()`. Athough the input file delimits data, it also contains non-data visual separating rows. Therefore, file reading functions within base R are unable to split the columns. This function assumes deletion of the separator rows and splits on a column separator. It preserves the raw data and appends to it the split columns.
@@ -111,7 +122,7 @@ merge_pair_rows <- function(df, col_range_1, col_range_2) {
 	df_merge
 }
 
-xform <- function(df) {
+xform_data <- function(df) {
 	# Player number.
 	df$player_num_xfm <- as.integer(df$player_number_src)
 	# Player name. Format case.
@@ -170,97 +181,127 @@ read_rounds <- function(df) {
 	# Return
 	round_df
 }
+
+process_file <- function(dat_file) {
+	# CONSTANTS
+	sep <- "\\|" # Column separator 
+
+	out <- list() # Output multiple data frames
+	
+	# Read as unstructured text.
+	out$chess_raw <- fread(dat_file, sep = NULL, header = FALSE)
+	
+	# Count rounds
+	# Headings are in row 2 of the raw data.
+	round_count <- str_count(toupper(out$chess_raw[2, 1]), "ROUND")
+	
+	# Columns used in each record type.
+	player_rec1_col_range <- 2:(4 + round_count)
+	player_rec2_col_range <- 2:3
+	
+	# Remove column descriptions and separators.
+	out$chess_split <- out$chess_raw %>% 
+		filter(row_number() %% 3 != 1 & row_number() > 4)
+	
+	# Append split columns.
+	out$chess_split <- split_cols(df = out$chess_split, sep = sep)
+	
+	# Merge row pairs into records
+	out$chess_xform <- merge_pair_rows(
+		out$chess_split,
+		player_rec1_col_range,
+		player_rec2_col_range)
+	
+	# Name the transformation columns
+	names(out$chess_xform) <- c(
+		"player_number_src",
+		"player_name_src",
+		"points_src",
+		paste0("round", 1:round_count, "_src"),
+		"state_src",
+		"uscf_id_rating_src"
+	)
+	
+	# Transform
+	out$chess_xform <- xform_data(out$chess_xform)
+
+	return(out)
+}
+
+load_data <- function(dat_list) {
+	# Define PLAYER data frame.
+	player_df <- data.frame(
+		player_num <- integer(),
+		player_name = character(),
+		state = character(),
+		total_points = integer(),
+		pre_rating = integer(),
+		stringsAsFactors = FALSE)
+	
+	# Define ROUND data frame.
+	round_df <- data.frame(
+		round <- integer(),
+		result <- character(),
+		player_num <- integer(),
+		opponent_num <- integer(),
+		stringsAsFactors = FALSE)
+	
+	# Load PLAYER data frame.
+	# print(str(dat_list))
+	# dat_list$player_df <- 
+
+	chess_xfm <- dat_list[[3]]
+	
+	player_df <- chess_xfm %>%
+		select (player_num = player_num_xfm,
+				player_name = player_name_xfm,
+				state = state_xfm,
+				total_points = points_xfm,
+				pre_rating = rating_xfm)
+	dat_list$player_df <- player_df
+
+	# Load ROUND data frame.
+	round_df <- read_rounds(chess_xfm)
+	dat_list$round_df <- round_df
+	
+	return(dat_list)
+}
+
+append_summaries <- function(dat_list) {
+	round_df <- dat_list[[5]]
+	player_df <- dat_list[[4]]
+	
+	# Question: Is there a single-pass way to add the summary column to player_df, perhaps using mutate()?
+	opponent_prerating_df <- 
+		inner_join(x = round_df, y = player_df, by = c("opponent_num" = "player_num")) %>%
+		filter(!is.na(pre_rating)) %>%
+		group_by(player_num) %>%
+		summarize(opponents_pre_rating = mean(pre_rating)) 
+	
+	player_df <- inner_join(x = player_df, y = opponent_prerating_df)
+	
+	dat_list$player_df <- player_df
+
+	return(dat_list)	
+}
 ```
-## Extract, clean/transform
+## Process and load
 
 ```r
-# CONSTANTS
-data_fil <- "tournamentinfo.txt"
-sep <- "\\|" # Column separator 
-data_path <- paste(assign_data, data_fil, sep = "/")
-# Columns used.
-player_rec1_col_range <- 2:11
-player_rec2_col_range <- 2:3
+dat_file_name <- "tournamentinfo.txt"
+# Fully qualified path.
+dat_file <- paste(assign_data, dat_file_name, sep = "/")
 
-# Read as unstructured text.
-chess_raw <- fread(data_path, sep = NULL, header = FALSE)
+# Process
+assignment_data_list <- process_file(dat_file)
 
-# Remove column descriptions and separators.
-chess_filter_rows_split_cols <- chess_raw %>% 
-	filter(row_number() %% 3 != 1 & row_number() > 4)
+# Load 
+assignment_data_list <- load_data(assignment_data_list)
 
-# Append split columns.
-chess_filter_rows_split_cols <- split_cols(df = chess_filter_rows_split_cols, sep = sep)
-
-# Merge row pairs into records
-chess_xform <- merge_pair_rows(
-	chess_filter_rows_split_cols,
-	player_rec1_col_range,
-	player_rec2_col_range)
-
-# Name the transformation columns
-names(chess_xform) <- c(
-	"player_number_src",
-	"player_name_src",
-	"points_src",
-	paste0("round", 1:7, "_src"),
-	"state_src",
-	"uscf_id_rating_src"
-)
-
-# Transform
-chess_xform <- xform(chess_xform)
-```
-
-## Load
-
-```r
-# Define PLAYER data frame.
-player_df <- data.frame(
-	player_num <- integer(),
-	player_name = character(),
-	state = character(),
-	total_points = integer(),
-	pre_rating = integer(),
-	stringsAsFactors = FALSE)
-
-# Define ROUND data frame.
-round_df <- data.frame(
-	round <- integer(),
-	result <- character(),
-	player_num <- integer(),
-	opponent_num <- integer(),
-	stringsAsFactors = FALSE)
-
-# Load PLAYER data frame.
-player_df <- chess_xform %>%
-	select (player_num = player_num_xfm,
-			player_name = player_name_xfm,
-			state = state_xfm,
-			total_points = points_xfm,
-			pre_rating = rating_xfm)
-
-# Load ROUND data frame.
-round_df <- read_rounds(chess_xform)
-```
-
-## Summarize
-
-```r
-# Question: Is there a single-pass way to add the summary column to player_df, perhaps using mutate()?
-opponent_prerating_df <- 
-	inner_join(x = round_df, y = player_df, by = c("opponent_num" = "player_num")) %>%
-	filter(!is.na(pre_rating)) %>%
-	group_by(player_num) %>%
-	summarize(opponents_pre_rating = mean(pre_rating)) 
-
-player_df <- inner_join(x = player_df, y = opponent_prerating_df)
+# Append summaries
+assignment_data_list <- append_summaries(assignment_data_list)
 ```
 
 ```
 ## Joining, by = "player_num"
-```
-
-```r
-rm(opponent_prerating_df)
 ```

@@ -1,0 +1,87 @@
+---
+title: "Segment Demo"
+author: "Jai Jeffryes"
+date: "9/12/2019"
+output: html_document
+---
+
+```{r setup, include=TRUE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "./../..")
+
+library(data.table) # fread()
+library(dplyr) # mutate()
+
+assign_dir <- "./DATA607/Assignment01"
+assign_data <- paste(assign_dir, "data", sep = "/")
+```
+
+```{r read}
+dat_fil <- "agaricus-lepiota.data"
+
+mushroom <- fread(file = paste(assign_dir, "data", dat_fil, sep = "/"),
+      sep = ",",
+      header = FALSE,
+      na.strings = "?")
+```
+
+```{r colnames}
+names(mushroom) = c(
+	"class",
+	"cap_shape",
+	"cap_surface",
+	"cap_color",
+	"bruises",
+	"odor",
+	"gill_attachment",
+	"gill_spacing",
+	"gill_size",
+	"gill_color",
+	"stalk_shape",
+	"stalk_root",
+	"stalk_surface_above_ring",
+	"stalk_surface_below_ring",
+	"stalk_color_above_ring",
+	"stalk_color_below_ring",
+	"veil_type",
+	"veil_color",
+	"ring_number",
+	"ring_type",
+	"spore_print_color",
+	"population",
+	"habitat"
+)
+```
+
+```{r}
+mushroom_sub <- subset(mushroom, class == "e")[1:3488, ]
+mushroom_sub <- rbind(mushroom_sub, subset(mushroom, class == "p")[1:2156, ])
+```
+
+## Not entropy yet
+This isn't right because I don't segment with respect to a target variable. But there might be a fun idea in here to develop.
+```{r}
+entropy <- function(probability_tab) {
+	sum(sapply(probability_tab, function(x) {-x * log2(x)}))
+}
+```
+
+```{r}
+prob_par <- table(mushroom_sub$class) / nrow(mushroom_sub)
+entropy_par <- entropy(prob_par)
+
+prob_par
+entropy_par
+
+barplot(entropy_par)
+```
+
+```{r}
+prob_ch_gill_col <- table(mushroom_sub$gill_color) / nrow(mushroom_sub)
+entropy_ch_gill_col <- entropy(prob_ch_gill_col)
+
+prob_ch_gill_col
+entropy_ch_gill_col
+
+barplot(entropy_ch_gill_col)
+```

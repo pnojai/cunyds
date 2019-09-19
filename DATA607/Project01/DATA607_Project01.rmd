@@ -37,16 +37,32 @@ Note these exclusions from scope per the YouTube video.
 ### Assumptions
 For computation of oppenents' average pre-tournament ratings, excluded values reduce the counts. There is no imputation of missing values for out-of-scope rounds or pre-tournament ratings.
 
-## Input data
-- Source: [tournamentinfo.txt](https://bbhosted.cuny.edu/bbcswebdav/pid-42267955-dt-content-rid-347468182_1/courses/SPS01_DATA_607_01_1199_1/tournamentinfo.txt)
+## Input
+- Source data: [tournamentinfo.txt](https://bbhosted.cuny.edu/bbcswebdav/pid-42267955-dt-content-rid-347468182_1/courses/SPS01_DATA_607_01_1199_1/tournamentinfo.txt)
 - Download date: Mon Sep 16 19:21:59 2019
 - Location for processing: `r assign_data`.
 
+## Output
+Data processing produces a list of data frames. The name of the list is created at run time. Depositing the output into a list permits processing of multiple input files and retaining their output separately.
+
+The output list contains these data frames:
+
+- `chess_raw`. Raw data from the input file. No cleansing.
+- `chess_split`. Cleansing has started. Header rows and separator rows are removed. Fields of the data rows are split by the delimiter.
+- `chess_xform`. The input file format allots two rows for each player. This data frame reorganizes them  side by side into a single row for each player. Names are applied to columns. The source columns from `chess_split` are retained. Transformations are applied to transformation columns in the same row.
+- `player_df`. Reporting table for players. The average pre-rating for a player's opponents appears in this table.
+- `round_df`. Reporting table for chess round results, organized in a Tidy format.
+
 ## Functions
 - `split_cols()`. Athough the input file delimits data, it also contains non-data visual separating rows. Therefore, file reading functions within base R are unable to split the columns. This function assumes deletion of the separator rows and splits on a column separator. It preserves the raw data and appends to it the split columns.
-- `merge_pair_rows()`. Player data is recorded in two rows. The formats of the two rows are different from each other, while remaining consistent from player to player. This function arranges each player's two rows side-by-side, forming a single record per player.
-- `xform()`. Transforms the raw data. Data types are coerced where necessary. Out-of-scope ratings are left unmapped. The functions supports flexibility in the input of data for rounds. Any number of rounds can be included.
+- `merge_player_rows()`. Player data is recorded in two rows. The formats of the two rows are different from each other, while remaining consistent from player to player. This function arranges each player's two rows side-by-side, forming a single record per player.
+- `xform_data()`. Transforms the raw data. Data types are coerced where necessary. Out-of-scope ratings are left unmapped. The functions supports flexibility in the input of data for rounds. Any number of rounds can be included.
 - `read_rounds()`. The input file records tournament round results in a cross tab format. This function pivots the rounds into a Tidy format for aggregation and reporting. The function supports input of files with any number of rounds.
+- `process_file()`.
+  - Reads data file. Probes it for the number of rounds.
+  - Begins data cleansing.
+  - Calls function to split columns.
+  - Calls function to transform columns.
 ```{r functions}
 split_cols <- function(df, sep) {
 	# Reference:
@@ -71,7 +87,7 @@ split_cols <- function(df, sep) {
 	df
 }
 
-merge_pair_rows <- function(df, col_range_1, col_range_2) {
+merge_player_rows <- function(df, col_range_1, col_range_2) {
 	df1 <- df[ , col_range_1] %>% filter(row_number() %% 2 == 1)
 	names(df1) <- paste0("left_", names(df1))
 	df2 <- df[ , col_range_2] %>% filter(row_number() %% 2 == 0)
@@ -168,7 +184,7 @@ process_file <- function(dat_file) {
 	out$chess_split <- split_cols(df = out$chess_split, sep = sep)
 	
 	# Merge row pairs into records
-	out$chess_xform <- merge_pair_rows(
+	out$chess_xform <- merge_player_rows(
 		out$chess_split,
 		player_rec1_col_range,
 		player_rec2_col_range)
@@ -189,7 +205,7 @@ process_file <- function(dat_file) {
 	return(out)
 }
 
-load_data <- function(df) {
+load_data <- function(dat_list) {
 	# Define PLAYER data frame.
 	player_df <- data.frame(
 		player_num <- integer(),
@@ -207,123 +223,93 @@ load_data <- function(df) {
 		opponent_num <- integer(),
 		stringsAsFactors = FALSE)
 	
-	out <- list() # Data frame output.
-	
 	# Load PLAYER data frame.
-	out$player_df <- df %>%
+	# print(str(dat_list))
+	# dat_list$player_df <- 
+
+	chess_xfm <- dat_list[[3]]
+	
+	player_df <- chess_xfm %>%
 		select (player_num = player_num_xfm,
 				player_name = player_name_xfm,
 				state = state_xfm,
 				total_points = points_xfm,
 				pre_rating = rating_xfm)
-	
+	dat_list$player_df <- player_df
+
 	# Load ROUND data frame.
-	out$round_df <- read_rounds(df)
+	round_df <- read_rounds(chess_xfm)
+	dat_list$round_df <- round_df
 	
-	return(out)
+	return(dat_list)
+}
+
+append_summaries <- function(dat_list) {
+	round_df <- dat_list[[5]]
+	player_df <- dat_list[[4]]
+	
+	# Question: Is there a single-pass way to add the summary column to player_df, perhaps using mutate()?
+	opponent_prerating_df <- 
+		inner_join(x = round_df, y = player_df, by = c("opponent_num" = "player_num")) %>%
+		filter(!is.na(pre_rating)) %>%
+		group_by(player_num) %>%
+		summarize(opponents_pre_rating = mean(pre_rating)) 
+	
+	player_df <- inner_join(x = player_df, y = opponent_prerating_df)
+	
+	dat_list$player_df <- player_df
+
+	return(dat_list)	
 }
 ```
-## Extract, clean, and transform
+## Process and load
 ```{r}
 dat_file_name <- "tournamentinfo.txt"
 # Fully qualified path.
 dat_file <- paste(assign_data, dat_file_name, sep = "/")
 
-chess_dat_list <- process_file(dat_file)
+# Process
+tournamentinfo_list <- process_file(dat_file)
 
+# Load 
+tournamentinfo_list <- load_data(tournamentinfo_list)
+
+# Append summaries
+tournamentinfo_list <- append_summaries(tournamentinfo_list)
 ```
-## Extract, clean/transform
-```{r, eval=FALSE}
-# CONSTANTS
-data_fil <- "tournamentinfo.txt"
-sep <- "\\|" # Column separator 
-data_path <- paste(assign_data, data_fil, sep = "/")
-
-# Read as unstructured text.
-chess_raw <- fread(data_path, sep = NULL, header = FALSE)
-
-# Count rounds
-# Headings are in row 2 of the raw data.
-round_count <- str_count(toupper(chess_raw[2, 1]), "ROUND")
-
-# Columns used in each record type.
-player_rec1_col_range <- 2:(4 + round_count)
-player_rec2_col_range <- 2:3
-
-# Remove column descriptions and separators.
-chess_filter_rows_split_cols <- chess_raw %>% 
-	filter(row_number() %% 3 != 1 & row_number() > 4)
-
-# Append split columns.
-chess_filter_rows_split_cols <- split_cols(df = chess_filter_rows_split_cols, sep = sep)
-
-# Merge row pairs into records
-chess_xform <- merge_pair_rows(
-	chess_filter_rows_split_cols,
-	player_rec1_col_range,
-	player_rec2_col_range)
-
-# Name the transformation columns
-names(chess_xform) <- c(
-	"player_number_src",
-	"player_name_src",
-	"points_src",
-	paste0("round", 1:round_count, "_src"),
-	"state_src",
-	"uscf_id_rating_src"
-)
-
-# Transform
-chess_xform <- xform_data(chess_xform)
-```
-
-## Load
+## Inspect results
 ```{r}
-assignment_output <- load_data(chess_dat_list$chess_xform)
+# Data frames in the list
+names(tournamentinfo_list)
 
+# Top of each data frame
+lapply(tournamentinfo_list, print(head))
 ```
 
-## Load
-```{r load, eval=FALSE}
-# Define PLAYER data frame.
-player_df <- data.frame(
-	player_num <- integer(),
-	player_name = character(),
-	state = character(),
-	total_points = integer(),
-	pre_rating = integer(),
-	stringsAsFactors = FALSE)
+## Report
+The requirements specify the form to output a CSV file. Note that the specification omits the player number. I discuss this in [Loading MySQL](#loading-mysql) under the Supplements section.
+```{r}
+# Output the file.
+player_file <- paste(assign_data, "player.csv", sep = "/")
+write.csv(tournamentinfo_list$player_df[ , -1], player_file, row.names = FALSE)
 
-# Define ROUND data frame.
-round_df <- data.frame(
-	round <- integer(),
-	result <- character(),
-	player_num <- integer(),
-	opponent_num <- integer(),
-	stringsAsFactors = FALSE)
-
-# Load PLAYER data frame.
-player_df <- out$chess_xform %>%
-	select (player_num = player_num_xfm,
-			player_name = player_name_xfm,
-			state = state_xfm,
-			total_points = points_xfm,
-			pre_rating = rating_xfm)
-
-# Load ROUND data frame.
-round_df <- read_rounds(out$chess_xform)
+# Inspect the file
+report <- read.csv(player_file)
+head(report)
 ```
 
-## Summarize
-```{r eval=FALSE}
-# Question: Is there a single-pass way to add the summary column to player_df, perhaps using mutate()?
-opponent_prerating_df <- 
-	inner_join(x = round_df, y = player_df, by = c("opponent_num" = "player_num")) %>%
-	filter(!is.na(pre_rating)) %>%
-	group_by(player_num) %>%
-	summarize(opponents_pre_rating = mean(pre_rating)) 
+Location of output file: `r player_file`
 
-player_df <- inner_join(x = player_df, y = opponent_prerating_df)
+## Supplements
+### Loading MySQL
+In a previous assignment about MySQL, the grader challenged me to learn how to populate tables without relying on `INSERT` statements. The current project was an opportunity to do that.
 
-rm(opponent_prerating_df)
-```
+Loading text files into MySQL relies on the `LOAD DATA` scripting command. [Link to Documentation](https://dev.mysql.com/doc/refman/8.0/en/load-data.html)
+
+There is a command line interface for invocation of `LOAD DATA`, [mysqlimport](https://dev.mysql.com/doc/refman/8.0/en/mysqlimport.html).
+
+#### HeidiSQL
+`LOAD DATA` is detailed and specific in its use. Building the command is aided by the third-party open source tool [HeidiSQL](https://www.heidisql.com/download.php). HeidiSQL is a Windows-based program.
+
+- Since I develop in Ubuntu Linux, it required installation of the Wine package. These [Wine installation instructions](https://vitux.com/how-to-install-wine-on-ubuntu/) introduced me to a new Linux command, `lscpu`, for reviewing system properties of my CPU. HeidiSQL runs well under Wine, with a Gold status on the [Wine HQ AppDB](https://appdb.winehq.org/appview.php?iAppId=3326).
+- The website for HeidiSQL says the application runs under Winde, but does not document its installation under Wine. I found some instructions on [AskUbuntu](https://askubuntu.com/questions/459074/how-to-install-heidisql-on-ubuntu). They were incomplete, though. I was unable to run the installer from the desktop. I needed to root on my terminal with `sudo -i` and run the setup program like this: `wine ./HeidiSQL_10.2.0.5599_Setup.exe`. (f course, I snapshot my virtual machine in VirtualBox before fooling around with any of this.)
