@@ -42,14 +42,9 @@ library(dplyr)
 
 ```r
 library(stringr)
-library(RMySQL)
-```
+# library(RMySQL)
 
-```
-## Loading required package: DBI
-```
 
-```r
 assign_dir <- "./DATA607/Project01"
 assign_data <- paste(assign_dir, "data", sep = "/")
 ```
@@ -69,7 +64,8 @@ Note these exclusions from scope per the YouTube video.
 1. Summarization of pre-tournament ratings with non-numeric characters (e.g. "P").
 
 ### Assumptions
-For computation of oppenents' average pre-tournament ratings, excluded values reduce the counts. There is no imputation of missing values for out-of-scope rounds or pre-tournament ratings.
+- For computation of oppenents' average pre-tournament ratings, excluded values reduce the counts. There is no imputation of missing values for out-of-scope rounds or pre-tournament ratings.
+- The number of rounds in a tournment are variable.
 
 ## Input
 - Source data: [tournamentinfo.txt](https://bbhosted.cuny.edu/bbcswebdav/pid-42267955-dt-content-rid-347468182_1/courses/SPS01_DATA_607_01_1199_1/tournamentinfo.txt)
@@ -175,7 +171,7 @@ read_rounds <- function(df) {
 		opponent_num <- integer(),
 		stringsAsFactors = FALSE)
 	
-	round_count <- sum(str_detect(names(df), "round\\d_result_xfm"))
+	round_count <- sum(str_detect(names(df), "round\\d+_result_xfm"))
 	
 	for (i in 1:round_count) {
 		result_col_idx <- which(names(df) == str_c("round", i, "_result_xfm"))
@@ -320,6 +316,7 @@ tournamentinfo_list <- append_summaries(tournamentinfo_list)
 ## Joining, by = "player_num"
 ```
 ## Inspect results
+The output is lengthy, so you may [Jump forward to the report](#report).
 
 ```r
 # Data frames in the list
@@ -338,7 +335,7 @@ lapply(tournamentinfo_list, print(head))
 ```
 ## function (x, ...) 
 ## UseMethod("head")
-## <bytecode: 0x5625e4f3f708>
+## <bytecode: 0x55ed813fc498>
 ## <environment: namespace:utils>
 ```
 
@@ -478,7 +475,7 @@ Location of output file: ./DATA607/Project01/player.csv
 The requirements specify the format for outputting a CSV file.
 
 - Note that the specification omits the player number.
-- NULL values are encoded as "\\N". This is a requirement of MySQL, followed here to satisfy the project's requirement to support loading a database. I discuss MySQL further in the section, [Test oading MySQL](#test-loading-mysql) within the Supplements section.
+- NULL values are encoded as "\\N". This is a requirement of MySQL, followed here to satisfy the project's requirement to support loading a database. I discuss MySQL further in the section, [Test loading MySQL](#test-loading-mysql) within the Supplements section.
 - The opponents' pre-rating differs from the expected results as documented in the project requirements due to modification of scope by the YouTube video, which excludes rounds ending in other than a win or a loss.
 
 
@@ -515,30 +512,8 @@ select	*
 from	player;"
 
 player <- dbGetQuery(con, sql)
-```
 
-```
-## Warning in .local(conn, statement, ...): Decimal MySQL column 2 imported as
-## numeric
-```
-
-```
-## Warning in .local(conn, statement, ...): Decimal MySQL column 4 imported as
-## numeric
-```
-
-```r
 print(head(player))
-```
-
-```
-##           player_name state total_points pre_rating opponents_pre_rating
-## 1            Gary Hua    ON          6.0       1794              1647.60
-## 2     Dakshesh Daruri    MI          6.0       1553              1561.33
-## 3        Aditya Bajaj    MI          6.0       1384              1696.50
-## 4 Patrick H Schilling    MI          5.5       1716              1573.57
-## 5          Hanshi Zuo    MI          5.5       1655              1587.67
-## 6         Hansen Song    OH          5.0       1686              1493.20
 ```
 
 #### Lessons learned
@@ -547,18 +522,19 @@ print(head(player))
   - Files for loading must be deposited in a specific system directory intended for that purpose. Query for the location by running the command, `SHOW VARIABLES LIKE "secure_file_priv";`.
   - The user must have the database privilege, `FILE`, in order to run `LOAD DATA`.
   - Even if the file is in the correct location, the Linux OS allows the `LOAD DATA` command access to it only if the file is owned by the group, `mysql`, and the user, `mysql`. Otherwise, the `LOAD DATA` command raises the error *"OS errno 13 - Permission denied."* This is an operating system error, not a MySQL one. Thefore, after copying an input file to the secure directory, it is necessary to change the file's group and user ownership. Terminal in as root with `sudo -i`. Then execute, for example, `chown mysql:mysql player.csv`.
-- NULL values. Expect data representation of NULL values to be platform specific. MySQL specifies `\N` for representing NULL values in input data files intended for `LOAD DATA`. It loads empty strings as `''` rather than NULL, contrary to Microsoft SQL Server.
+- Loading NULL values to databases is platform specific. MySQL specifies `\N` for representing NULL values in input data files intended for `LOAD DATA`. It loads empty strings as `''` rather than NULL, contrary to Microsoft SQL Server.
 
 ### Test additional rounds
 The format for chess tournament data is a cross tab report. An assumption for this project is tournaments are not limited to seven rounds. Therefore, I designed the load to be flexible for round count.
 
 #### Test approach
-I prepared another test file by duplicating all the rounds using Emacs. Since the data file employs a fixed width format, a macro was able to append to each line. The macro advanced 47 characters into a line to the first position of the first round. It copied to the end of the line, and pasted (yanked in Emacs terms). I modified the round numbers in the heading, although the load process disregards them in any case.
+I prepared another test file by duplicating all the rounds using Emacs. Since the data file employs a fixed width format, a macro was able to append to each line. The macro advanced 47 characters into a line to the first position of the first round. It copied to the end of the line, and pasted (yanked, in Emacs terms). I modified the round numbers in the heading, although the load process disregards them in any case.
 
-I processed the test file using code identical to processing the original data file, but specifying a different input file name, and a different list for output. The design employing output to a list of data frames serves here to support processing of multiple files and retention of their results.
+I processed the test file using code identical to processing the original data file, but specifying a different input file name and a different list for output. The design employing output to a list of data frames serves here to support processing of multiple files and retention of their results.
 
 Expected results:
-- The process completes successfully, no run time errors.
+
+- The process completes successfully with no run time errors.
 - The opponents' pre-rating averages are the same as the first load, since I duplicated the rounds.
 
 
@@ -581,8 +557,7 @@ tournamenttest_list <- append_summaries(tournamenttest_list)
 ## Joining, by = "player_num"
 ```
 #### Test results
-The list, `tournamenttest_list`, is returned. Here is the top of each list. Note there are 14 rounds.
-
+The list, `tournamenttest_list`, is returned. Here is the top of each list. Note there are 14 rounds. The output is lengthy, so you may [jump forward to the comparison](#compare-results).
 
 ```r
 # Top of each data frame
@@ -592,7 +567,7 @@ lapply(tournamenttest_list, print(head))
 ```
 ## function (x, ...) 
 ## UseMethod("head")
-## <bytecode: 0x5625e4f3f708>
+## <bytecode: 0x55ed813fc498>
 ## <environment: namespace:utils>
 ```
 
@@ -753,11 +728,11 @@ lapply(tournamenttest_list, print(head))
 ## 6          6         Hansen Song    OH          5.0       1686
 ##   opponents_pre_rating
 ## 1             1647.600
-## 2             1506.143
+## 2             1561.333
 ## 3             1696.500
-## 4             1542.778
-## 5             1538.286
-## 6             1477.500
+## 4             1573.571
+## 5             1587.667
+## 6             1493.200
 ## 
 ## $round_df
 ##   round result player_num opponent_num
@@ -769,6 +744,7 @@ lapply(tournamenttest_list, print(head))
 ## 6     1      W          6           34
 ```
 
+##### Compare results
 Compare the opponents' pre-rating in the data_frame, `player_df`.
 
 ```r
@@ -792,12 +768,16 @@ print(head(tournamenttest_list$player_df[ , c("player_name", "opponents_pre_rati
 ```
 ##           player_name opponents_pre_rating
 ## 1            Gary Hua             1647.600
-## 2     Dakshesh Daruri             1506.143
+## 2     Dakshesh Daruri             1561.333
 ## 3        Aditya Bajaj             1696.500
-## 4 Patrick H Schilling             1542.778
-## 5          Hanshi Zuo             1538.286
-## 6         Hansen Song             1477.500
+## 4 Patrick H Schilling             1573.571
+## 5          Hanshi Zuo             1587.667
+## 6         Hansen Song             1493.200
 ```
+#### Debugging
+My first test cycle failed. Some players' averages of opponents' pre-ratings did not match between the original file and the test file. The experience demonstrated the value of retaining each stage of data manipulation in lists, which enabled me to trace the data lineage backwards and locate the source of the bug. The transformed data was correct, but extracting the rounds to round_df omitted some rows. The bug was in the function, `read_rounds()`, which uses a Regular Expression to count the columns for rounds. The expression failed to match for multiple digits, so the most rounds it could include was 9.
+
+My work papers for debugging appear in `debug.R`. The results will appear different, now that I've fixed the bug, but the script documents my investigative approach.
 
 #### Conclusion
-Test for additional round processing is successful.
+The test for processing addition rounds succeeds. I base the conclusion on a visual inspection of the top records. A complete test cycle would validate all records.
