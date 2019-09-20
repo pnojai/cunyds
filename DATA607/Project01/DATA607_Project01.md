@@ -42,9 +42,14 @@ library(dplyr)
 
 ```r
 library(stringr)
-# library(RMySQL)
+library(RMySQL)
+```
 
+```
+## Loading required package: DBI
+```
 
+```r
 assign_dir <- "./DATA607/Project01"
 assign_data <- paste(assign_dir, "data", sep = "/")
 ```
@@ -80,15 +85,15 @@ The output list contains these data frames:
 - `chess_raw`. Raw data from the input file. No cleansing.
 - `chess_split`. Cleansing has started. Header rows and separator rows are removed. Fields of the data rows are split by the delimiter.
 - `chess_xform`. The input file format allots two rows for each player. This data frame reorganizes them  side by side into a single row for each player. Names are applied to columns. The source columns from `chess_split` are retained. Transformations are applied to transformation columns in the same row.
-- `player_df`. Reporting table for players. The average pre-rating for a player's opponents appears in this table.
+- `player_df`. Reporting table for players. The average pre-rating for a player's opponents is computed and appended to this table.
 - `round_df`. Reporting table for chess round results, organized in a Tidy format.
 
-The CSV report is built from the data frame, `player_df` and it is sampled below. The location of the file is: ./DATA607/Project01/player.csv.
+The required CSV report is built from the data frame, `player_df` and sampled below. The location of the file is: ./DATA607/Project01/player.csv.
 
 ## Functions
-- `split_cols()`. Athough the input file delimits data, it also contains non-data visual separating rows. Therefore, file reading functions within base R are unable to split the columns. This function assumes deletion of the separator rows and splits on a column separator. It preserves the raw data and appends to it the split columns.
+- `split_cols()`. Athough the input file delimits data, it also contains non-data visual separating rows. Therefore, file reading functions within base R are unable to split the columns. This function assumes deletion of the separator rows and splits on a column separator. It preserves the raw data in the first column and appends the split columns.
 - `merge_player_rows()`. Player data is recorded in two rows. The formats of the two rows are different from each other, while remaining consistent from player to player. This function arranges each player's two rows side-by-side, forming a single record per player.
-- `xform_data()`. Transforms the raw data. Data types are coerced where necessary. Out-of-scope ratings are left unmapped. The functions supports flexibility in the input of data for rounds. Any number of rounds can be included.
+- `xform_data()`. Transforms the raw data. Data types are coerced where necessary. Out-of-scope ratings are left unmapped. The function supports flexibility in tournament rounds. Any number of rounds can be included in the input file.
 - `read_rounds()`. The input file records tournament round results in a cross tab format. This function pivots the rounds into a Tidy format for aggregation and reporting. The function supports input of files with any number of rounds.
 - `process_file()`.
   - Reads data file. Probes it for the number of rounds.
@@ -256,11 +261,8 @@ load_data <- function(dat_list) {
 		opponent_num <- integer(),
 		stringsAsFactors = FALSE)
 	
-	# Load PLAYER data frame.
-	# print(str(dat_list))
-	# dat_list$player_df <- 
-
-	chess_xfm <- dat_list[[3]]
+	chess_xfm <- dat_list[[3]] # Lists passed as parameters don't always allow reference by element name.
+							   # dat_list$chess_xfm didn't work here.
 	
 	player_df <- chess_xfm %>%
 		select (player_num = player_num_xfm,
@@ -335,7 +337,7 @@ lapply(tournamentinfo_list, print(head))
 ```
 ## function (x, ...) 
 ## UseMethod("head")
-## <bytecode: 0x55ed813fc498>
+## <bytecode: 0x555cec830708>
 ## <environment: namespace:utils>
 ```
 
@@ -512,8 +514,30 @@ select	*
 from	player;"
 
 player <- dbGetQuery(con, sql)
+```
 
+```
+## Warning in .local(conn, statement, ...): Decimal MySQL column 2 imported as
+## numeric
+```
+
+```
+## Warning in .local(conn, statement, ...): Decimal MySQL column 4 imported as
+## numeric
+```
+
+```r
 print(head(player))
+```
+
+```
+##           player_name state total_points pre_rating opponents_pre_rating
+## 1            Gary Hua    ON          6.0       1794              1647.60
+## 2     Dakshesh Daruri    MI          6.0       1553              1561.33
+## 3        Aditya Bajaj    MI          6.0       1384              1696.50
+## 4 Patrick H Schilling    MI          5.5       1716              1573.57
+## 5          Hanshi Zuo    MI          5.5       1655              1587.67
+## 6         Hansen Song    OH          5.0       1686              1493.20
 ```
 
 #### Lessons learned
@@ -567,7 +591,7 @@ lapply(tournamenttest_list, print(head))
 ```
 ## function (x, ...) 
 ## UseMethod("head")
-## <bytecode: 0x55ed813fc498>
+## <bytecode: 0x555cec830708>
 ## <environment: namespace:utils>
 ```
 
@@ -775,9 +799,9 @@ print(head(tournamenttest_list$player_df[ , c("player_name", "opponents_pre_rati
 ## 6         Hansen Song             1493.200
 ```
 #### Debugging
-My first test cycle failed. Some players' averages of opponents' pre-ratings did not match between the original file and the test file. The experience demonstrated the value of retaining each stage of data manipulation in lists, which enabled me to trace the data lineage backwards and locate the source of the bug. The transformed data was correct, but extracting the rounds to round_df omitted some rows. The bug was in the function, `read_rounds()`, which uses a Regular Expression to count the columns for rounds. The expression failed to match for multiple digits, so the most rounds it could include was 9.
+My first test cycle failed. Some players' averages of opponents' pre-ratings did not match between the original file and the test file. The experience demonstrated the value of retaining each stage of data manipulation in lists, which enabled me to trace data lineage and locate the source of the bug. The transformed data was correct, but extracting the rounds to round_df omitted some rows. The bug was in the function, `read_rounds()`, which uses a Regular Expression to count the columns for rounds. The expression failed to match for multiple digits, so the most rounds it could include was 9.
 
-My work papers for debugging appear in `debug.R`. The results will appear different, now that I've fixed the bug, but the script documents my investigative approach.
+My debugging work appears in `debug.R`. Executing the script yields different results now, since I fixed the bug, but the script documents my investigative approach.
 
 #### Conclusion
 The test for processing addition rounds succeeds. I base the conclusion on a visual inspection of the top records. A complete test cycle would validate all records.
