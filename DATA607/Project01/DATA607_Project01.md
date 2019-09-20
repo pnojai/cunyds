@@ -1,7 +1,7 @@
 ---
 title: "DATA607 Project 1 - Chess Tournament"
 author: "Jai Jeffryes"
-date: "9/22/2019"
+date: "9/20/2019"
 output:
   html_document:
     df_print: paged
@@ -337,7 +337,7 @@ lapply(tournamentinfo_list, print(head))
 ```
 ## function (x, ...) 
 ## UseMethod("head")
-## <bytecode: 0x555cec830708>
+## <bytecode: 0x55df1f3ac708>
 ## <environment: namespace:utils>
 ```
 
@@ -591,7 +591,7 @@ lapply(tournamenttest_list, print(head))
 ```
 ## function (x, ...) 
 ## UseMethod("head")
-## <bytecode: 0x555cec830708>
+## <bytecode: 0x55df1f3ac708>
 ## <environment: namespace:utils>
 ```
 

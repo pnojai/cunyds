@@ -1,7 +1,7 @@
 ---
 title: "DATA607 Project 1 - Chess Tournament"
 author: "Jai Jeffryes"
-date: "9/22/2019"
+date: "9/20/2019"
 output:
   html_document:
     df_print: paged
