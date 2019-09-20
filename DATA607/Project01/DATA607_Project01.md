@@ -338,7 +338,7 @@ lapply(tournamentinfo_list, print(head))
 ```
 ## function (x, ...) 
 ## UseMethod("head")
-## <bytecode: 0x55d89043d708>
+## <bytecode: 0x5625e4f3f708>
 ## <environment: namespace:utils>
 ```
 
@@ -548,3 +548,256 @@ print(head(player))
   - The user must have the database privilege, `FILE`, in order to run `LOAD DATA`.
   - Even if the file is in the correct location, the Linux OS allows the `LOAD DATA` command access to it only if the file is owned by the group, `mysql`, and the user, `mysql`. Otherwise, the `LOAD DATA` command raises the error *"OS errno 13 - Permission denied."* This is an operating system error, not a MySQL one. Thefore, after copying an input file to the secure directory, it is necessary to change the file's group and user ownership. Terminal in as root with `sudo -i`. Then execute, for example, `chown mysql:mysql player.csv`.
 - NULL values. Expect data representation of NULL values to be platform specific. MySQL specifies `\N` for representing NULL values in input data files intended for `LOAD DATA`. It loads empty strings as `''` rather than NULL, contrary to Microsoft SQL Server.
+
+### Test additional rounds
+The format for chess tournament data is a cross tab report. An assumption for this project is tournaments are not limited to seven rounds. Therefore, I designed the load to be flexible for round count.
+
+#### Test approach
+I prepared another test file by duplicating all the rounds using Emacs. Since the data file employs a fixed width format, a macro was able to append to each line. The macro advanced 47 characters into a line to the first position of the first round. It copied to the end of the line, and pasted (yanked in Emacs terms). I modified the round numbers in the heading, although the load process disregards them in any case.
+
+I processed the test file using code identical to processing the original data file, but specifying a different input file name, and a different list for output. The design employing output to a list of data frames serves here to support processing of multiple files and retention of their results.
+
+Expected results:
+- The process completes successfully, no run time errors.
+- The opponents' pre-rating averages are the same as the first load, since I duplicated the rounds.
+
+
+```r
+dat_file_name <- "tournamenttest.txt"
+# Fully qualified path.
+dat_file <- paste(assign_data, dat_file_name, sep = "/")
+
+# Process
+tournamenttest_list <- process_file(dat_file)
+
+# Load 
+tournamenttest_list <- load_data(tournamenttest_list)
+
+# Append summaries
+tournamenttest_list <- append_summaries(tournamenttest_list)
+```
+
+```
+## Joining, by = "player_num"
+```
+#### Test results
+The list, `tournamenttest_list`, is returned. Here is the top of each list. Note there are 14 rounds.
+
+
+```r
+# Top of each data frame
+lapply(tournamenttest_list, print(head))
+```
+
+```
+## function (x, ...) 
+## UseMethod("head")
+## <bytecode: 0x5625e4f3f708>
+## <environment: namespace:utils>
+```
+
+```
+## $chess_raw
+##                                                                                                                                     V1
+## 1: -----------------------------------------------------------------------------------------------------------------------------------
+## 2:  Pair | Player Name                     |Total|Round|Round|Round|Round|Round|Round|Round|Round|Round|Round|Round|Round|Round|Round|
+## 3:  Num  | USCF ID / Rtg (Pre->Post)       | Pts |  1  |  2  |  3  |  4  |  5  |  6  |  7  |  8  |  9  | 10  | 11  | 12  | 13  | 14  |
+## 4: -----------------------------------------------------------------------------------------------------------------------------------
+## 5:     1 | GARY HUA                        |6.0  |W  39|W  21|W  18|W  14|W   7|D  12|D   4|W  39|W  21|W  18|W  14|W   7|D  12|D   4|
+## 6:    ON | 15445895 / R: 1794   ->1817     |N:2  |W    |B    |W    |B    |W    |B    |W    |W    |B    |W    |B    |W    |B    |W    |
+## 
+## $chess_split
+##                                                                                                                                 V1
+## 1  1 | GARY HUA                        |6.0  |W  39|W  21|W  18|W  14|W   7|D  12|D   4|W  39|W  21|W  18|W  14|W   7|D  12|D   4|
+## 2 ON | 15445895 / R: 1794   ->1817     |N:2  |W    |B    |W    |B    |W    |B    |W    |W    |B    |W    |B    |W    |B    |W    |
+## 3  2 | DAKSHESH DARURI                 |6.0  |W  63|W  58|L   4|W  17|W  16|W  20|W   7|W  63|W  58|L   4|W  17|W  16|W  20|W   7|
+## 4 MI | 14598900 / R: 1553   ->1663     |N:2  |B    |W    |B    |W    |B    |W    |B    |B    |W    |B    |W    |B    |W    |B    |
+## 5  3 | ADITYA BAJAJ                    |6.0  |L   8|W  61|W  25|W  21|W  11|W  13|W  12|L   8|W  61|W  25|W  21|W  11|W  13|W  12|
+## 6 MI | 14959604 / R: 1384   ->1640     |N:2  |W    |B    |W    |B    |W    |B    |W    |W    |B    |W    |B    |W    |B    |W    |
+##   split1                            split2 split3 split4 split5 split6
+## 1     1   GARY HUA                          6.0    W  39  W  21  W  18
+## 2    ON   15445895 / R: 1794   ->1817       N:2    W      B      W    
+## 3     2   DAKSHESH DARURI                   6.0    W  63  W  58  L   4
+## 4    MI   14598900 / R: 1553   ->1663       N:2    B      W      B    
+## 5     3   ADITYA BAJAJ                      6.0    L   8  W  61  W  25
+## 6    MI   14959604 / R: 1384   ->1640       N:2    W      B      W    
+##   split7 split8 split9 split10 split11 split12 split13 split14 split15
+## 1  W  14  W   7  D  12   D   4   W  39   W  21   W  18   W  14   W   7
+## 2  B      W      B       W       W       B       W       B       W    
+## 3  W  17  W  16  W  20   W   7   W  63   W  58   L   4   W  17   W  16
+## 4  W      B      W       B       B       W       B       W       B    
+## 5  W  21  W  11  W  13   W  12   L   8   W  61   W  25   W  21   W  11
+## 6  B      W      B       W       W       B       W       B       W    
+##   split16 split17
+## 1   D  12   D   4
+## 2   B       W    
+## 3   W  20   W   7
+## 4   W       B    
+## 5   W  13   W  12
+## 6   B       W    
+## 
+## $chess_xform
+##   player_number_src                   player_name_src points_src
+## 1                1   GARY HUA                              6.0  
+## 2                2   DAKSHESH DARURI                       6.0  
+## 3                3   ADITYA BAJAJ                          6.0  
+## 4                4   PATRICK H SCHILLING                   5.5  
+## 5                5   HANSHI ZUO                            5.5  
+## 6                6   HANSEN SONG                           5.0  
+##   round1_src round2_src round3_src round4_src round5_src round6_src
+## 1      W  39      W  21      W  18      W  14      W   7      D  12
+## 2      W  63      W  58      L   4      W  17      W  16      W  20
+## 3      L   8      W  61      W  25      W  21      W  11      W  13
+## 4      W  23      D  28      W   2      W  26      D   5      W  19
+## 5      W  45      W  37      D  12      D  13      D   4      W  14
+## 6      W  34      D  29      L  11      W  35      D  10      W  27
+##   round7_src round8_src round9_src round10_src round11_src round12_src
+## 1      D   4      W  39      W  21       W  18       W  14       W   7
+## 2      W   7      W  63      W  58       L   4       W  17       W  16
+## 3      W  12      L   8      W  61       W  25       W  21       W  11
+## 4      D   1      W  23      D  28       W   2       W  26       D   5
+## 5      W  17      W  45      W  37       D  12       D  13       D   4
+## 6      W  21      W  34      D  29       L  11       W  35       D  10
+##   round13_src round14_src state_src                uscf_id_rating_src
+## 1       D  12       D   4       ON   15445895 / R: 1794   ->1817     
+## 2       W  20       W   7       MI   14598900 / R: 1553   ->1663     
+## 3       W  13       W  12       MI   14959604 / R: 1384   ->1640     
+## 4       W  19       D   1       MI   12616049 / R: 1716   ->1744     
+## 5       W  14       W  17       MI   14601533 / R: 1655   ->1690     
+## 6       W  27       W  21       OH   15055204 / R: 1686   ->1687     
+##   player_num_xfm     player_name_xfm state_xfm points_xfm
+## 1              1            Gary Hua        ON        6.0
+## 2              2     Dakshesh Daruri        MI        6.0
+## 3              3        Aditya Bajaj        MI        6.0
+## 4              4 Patrick H Schilling        MI        5.5
+## 5              5          Hanshi Zuo        MI        5.5
+## 6              6         Hansen Song        OH        5.0
+##   round1_result_xfm round1_opponent_xfm round2_result_xfm
+## 1                 W                  39                 W
+## 2                 W                  63                 W
+## 3                 L                   8                 W
+## 4                 W                  23                 D
+## 5                 W                  45                 W
+## 6                 W                  34                 D
+##   round2_opponent_xfm round3_result_xfm round3_opponent_xfm
+## 1                  21                 W                  18
+## 2                  58                 L                   4
+## 3                  61                 W                  25
+## 4                  28                 W                   2
+## 5                  37                 D                  12
+## 6                  29                 L                  11
+##   round4_result_xfm round4_opponent_xfm round5_result_xfm
+## 1                 W                  14                 W
+## 2                 W                  17                 W
+## 3                 W                  21                 W
+## 4                 W                  26                 D
+## 5                 D                  13                 D
+## 6                 W                  35                 D
+##   round5_opponent_xfm round6_result_xfm round6_opponent_xfm
+## 1                   7                 D                  12
+## 2                  16                 W                  20
+## 3                  11                 W                  13
+## 4                   5                 W                  19
+## 5                   4                 W                  14
+## 6                  10                 W                  27
+##   round7_result_xfm round7_opponent_xfm round8_result_xfm
+## 1                 D                   4                 W
+## 2                 W                   7                 W
+## 3                 W                  12                 L
+## 4                 D                   1                 W
+## 5                 W                  17                 W
+## 6                 W                  21                 W
+##   round8_opponent_xfm round9_result_xfm round9_opponent_xfm
+## 1                  39                 W                  21
+## 2                  63                 W                  58
+## 3                   8                 W                  61
+## 4                  23                 D                  28
+## 5                  45                 W                  37
+## 6                  34                 D                  29
+##   round10_result_xfm round10_opponent_xfm round11_result_xfm
+## 1                  W                   18                  W
+## 2                  L                    4                  W
+## 3                  W                   25                  W
+## 4                  W                    2                  W
+## 5                  D                   12                  D
+## 6                  L                   11                  W
+##   round11_opponent_xfm round12_result_xfm round12_opponent_xfm
+## 1                   14                  W                    7
+## 2                   17                  W                   16
+## 3                   21                  W                   11
+## 4                   26                  D                    5
+## 5                   13                  D                    4
+## 6                   35                  D                   10
+##   round13_result_xfm round13_opponent_xfm round14_result_xfm
+## 1                  D                   12                  D
+## 2                  W                   20                  W
+## 3                  W                   13                  W
+## 4                  W                   19                  D
+## 5                  W                   14                  W
+## 6                  W                   27                  W
+##   round14_opponent_xfm uscf_id_xfm rating_xfm
+## 1                    4    15445895       1794
+## 2                    7    14598900       1553
+## 3                   12    14959604       1384
+## 4                    1    12616049       1716
+## 5                   17    14601533       1655
+## 6                   21    15055204       1686
+## 
+## $player_df
+##   player_num         player_name state total_points pre_rating
+## 1          1            Gary Hua    ON          6.0       1794
+## 2          2     Dakshesh Daruri    MI          6.0       1553
+## 3          3        Aditya Bajaj    MI          6.0       1384
+## 4          4 Patrick H Schilling    MI          5.5       1716
+## 5          5          Hanshi Zuo    MI          5.5       1655
+## 6          6         Hansen Song    OH          5.0       1686
+##   opponents_pre_rating
+## 1             1647.600
+## 2             1506.143
+## 3             1696.500
+## 4             1542.778
+## 5             1538.286
+## 6             1477.500
+## 
+## $round_df
+##   round result player_num opponent_num
+## 1     1      W          1           39
+## 2     1      W          2           63
+## 3     1      L          3            8
+## 4     1      W          4           23
+## 5     1      W          5           45
+## 6     1      W          6           34
+```
+
+Compare the opponents' pre-rating in the data_frame, `player_df`.
+
+```r
+print(head(tournamentinfo_list$player_df[ , c("player_name", "opponents_pre_rating")]))
+```
+
+```
+##           player_name opponents_pre_rating
+## 1            Gary Hua             1647.600
+## 2     Dakshesh Daruri             1561.333
+## 3        Aditya Bajaj             1696.500
+## 4 Patrick H Schilling             1573.571
+## 5          Hanshi Zuo             1587.667
+## 6         Hansen Song             1493.200
+```
+
+```r
+print(head(tournamenttest_list$player_df[ , c("player_name", "opponents_pre_rating")]))
+```
+
+```
+##           player_name opponents_pre_rating
+## 1            Gary Hua             1647.600
+## 2     Dakshesh Daruri             1506.143
+## 3        Aditya Bajaj             1696.500
+## 4 Patrick H Schilling             1542.778
+## 5          Hanshi Zuo             1538.286
+## 6         Hansen Song             1477.500
+```
+
+#### Conclusion
+Test for additional round processing is successful.

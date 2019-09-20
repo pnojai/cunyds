@@ -341,3 +341,48 @@ print(head(player))
   - The user must have the database privilege, `FILE`, in order to run `LOAD DATA`.
   - Even if the file is in the correct location, the Linux OS allows the `LOAD DATA` command access to it only if the file is owned by the group, `mysql`, and the user, `mysql`. Otherwise, the `LOAD DATA` command raises the error *"OS errno 13 - Permission denied."* This is an operating system error, not a MySQL one. Thefore, after copying an input file to the secure directory, it is necessary to change the file's group and user ownership. Terminal in as root with `sudo -i`. Then execute, for example, `chown mysql:mysql player.csv`.
 - NULL values. Expect data representation of NULL values to be platform specific. MySQL specifies `\N` for representing NULL values in input data files intended for `LOAD DATA`. It loads empty strings as `''` rather than NULL, contrary to Microsoft SQL Server.
+
+### Test additional rounds
+The format for chess tournament data is a cross tab report. An assumption for this project is tournaments are not limited to seven rounds. Therefore, I designed the load to be flexible for round count.
+
+#### Test approach
+I prepared another test file by duplicating all the rounds using Emacs. Since the data file employs a fixed width format, a macro was able to append to each line. The macro advanced 47 characters into a line to the first position of the first round. It copied to the end of the line, and pasted (yanked in Emacs terms). I modified the round numbers in the heading, although the load process disregards them in any case.
+
+I processed the test file using code identical to processing the original data file, but specifying a different input file name and a different list for output. The design employing output to a list of data frames serves here to support processing of multiple files and retention of their results.
+
+Expected results:
+
+- The process completes successfully, no run time errors.
+- The opponents' pre-rating averages are the same as the first load, since I duplicated the rounds.
+
+```{r}
+dat_file_name <- "tournamenttest.txt"
+# Fully qualified path.
+dat_file <- paste(assign_data, dat_file_name, sep = "/")
+
+# Process
+tournamenttest_list <- process_file(dat_file)
+
+# Load 
+tournamenttest_list <- load_data(tournamenttest_list)
+
+# Append summaries
+tournamenttest_list <- append_summaries(tournamenttest_list)
+```
+#### Test results
+The list, `tournamenttest_list`, is returned. Here is the top of each list. Note there are 14 rounds.
+
+```{r}
+# Top of each data frame
+lapply(tournamenttest_list, print(head))
+```
+
+Compare the opponents' pre-rating in the data_frame, `player_df`.
+```{r}
+print(head(tournamentinfo_list$player_df[ , c("player_name", "opponents_pre_rating")]))
+print(head(tournamenttest_list$player_df[ , c("player_name", "opponents_pre_rating")]))
+
+```
+
+#### Conclusion
+Test for additional round processing fails. Some of the opponents' pre-rating averages differ.
