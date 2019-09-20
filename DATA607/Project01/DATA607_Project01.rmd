@@ -13,8 +13,10 @@ knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_knit$set(root.dir = "./../..")
 
 library(data.table) # fread()
-library(dplyr) # mutate()
+library(dplyr)
 library(stringr)
+library(RMySQL)
+
 
 assign_dir <- "./DATA607/Project01"
 assign_data <- paste(assign_dir, "data", sep = "/")
@@ -42,8 +44,8 @@ For computation of oppenents' average pre-tournament ratings, excluded values re
 - Download date: Mon Sep 16 19:21:59 2019
 - Location for processing: `r assign_data`.
 
-## Output
-Data processing produces a list of data frames. The name of the list is created at run time. Depositing the output into a list permits processing of multiple input files and retaining their output separately.
+## Output and report
+Data processing produces a list of data frames. The name of the list is created at run time. Depositing the output into a list permits processing of multiple input files and retaining their output separately. These lists may be viewed by sourcing this R Markdown file in RStudio.
 
 The output list contains these data frames:
 
@@ -52,6 +54,8 @@ The output list contains these data frames:
 - `chess_xform`. The input file format allots two rows for each player. This data frame reorganizes them  side by side into a single row for each player. Names are applied to columns. The source columns from `chess_split` are retained. Transformations are applied to transformation columns in the same row.
 - `player_df`. Reporting table for players. The average pre-rating for a player's opponents appears in this table.
 - `round_df`. Reporting table for chess round results, organized in a Tidy format.
+
+The CSV report is built from the data frame, `player_df` and it is sampled below. The location of the file is: `r str_c(assign_dir, "/player.csv")`.
 
 ## Functions
 - `split_cols()`. Athough the input file delimits data, it also contains non-data visual separating rows. Therefore, file reading functions within base R are unable to split the columns. This function assumes deletion of the separator rows and splits on a column separator. It preserves the raw data and appends to it the split columns.
@@ -287,29 +291,53 @@ lapply(tournamentinfo_list, print(head))
 ```
 
 ## Report
-The requirements specify the form to output a CSV file. Note that the specification omits the player number. I discuss this in [Loading MySQL](#loading-mysql) under the Supplements section.
 ```{r}
 # Output the file.
-player_file <- paste(assign_data, "player.csv", sep = "/")
-write.csv(tournamentinfo_list$player_df[ , -1], player_file, row.names = FALSE)
+player_file <- paste(assign_dir, "player.csv", sep = "/")
+write.csv(tournamentinfo_list$player_df[ , -1], player_file, row.names = FALSE, na = "\\N")
+```
+Location of output file: `r player_file`
 
+The requirements specify the format for outputting a CSV file.
+
+- Note that the specification omits the player number.
+- NULL values are encoded as "\\N". This is a requirement of MySQL, followed here to satisfy the project's requirement to support loading a database. I discuss MySQL further in the section, [Test oading MySQL](#test-loading-mysql) within the Supplements section.
+- The opponents' pre-rating differs from the expected results as documented in the project requirements due to modification of scope by the YouTube video, which excludes rounds ending in other than a win or a loss.
+
+```{r}
 # Inspect the file
 report <- read.csv(player_file)
 head(report)
 ```
 
-Location of output file: `r player_file`
-
 ## Supplements
-### Loading MySQL
-In a previous assignment about MySQL, the grader challenged me to learn how to populate tables without relying on `INSERT` statements. The current project was an opportunity to do that.
+### Test loading MySQL
+Script for loading player data to MySQL: `chess.sql`.
 
-Loading text files into MySQL relies on the `LOAD DATA` scripting command. [Link to Documentation](https://dev.mysql.com/doc/refman/8.0/en/load-data.html)
+In a previous assignment about MySQL, the grader challenged me to learn how to populate tables without relying on `INSERT` statements. The current project was an opportunity to do that, and though loading a database was not an explicit requirement for this project, the objective was to produce a CSV file that could be loaded. Therefore, it was worth testing.
 
-There is a command line interface for invocation of `LOAD DATA`, [mysqlimport](https://dev.mysql.com/doc/refman/8.0/en/mysqlimport.html).
+#### Report results
+```{r}
+con <- dbConnect(
+	drv = MySQL(),
+	host = "127.0.0.1",
+	user = "jairpt",
+	password = "a",
+	dbname = "chess")
 
-#### HeidiSQL
-`LOAD DATA` is detailed and specific in its use. Building the command is aided by the third-party open source tool [HeidiSQL](https://www.heidisql.com/download.php). HeidiSQL is a Windows-based program.
+sql <- "
+select	*
+from	player;"
 
-- Since I develop in Ubuntu Linux, it required installation of the Wine package. These [Wine installation instructions](https://vitux.com/how-to-install-wine-on-ubuntu/) introduced me to a new Linux command, `lscpu`, for reviewing system properties of my CPU. HeidiSQL runs well under Wine, with a Gold status on the [Wine HQ AppDB](https://appdb.winehq.org/appview.php?iAppId=3326).
-- The website for HeidiSQL says the application runs under Winde, but does not document its installation under Wine. I found some instructions on [AskUbuntu](https://askubuntu.com/questions/459074/how-to-install-heidisql-on-ubuntu). They were incomplete, though. I was unable to run the installer from the desktop. I needed to root on my terminal with `sudo -i` and run the setup program like this: `wine ./HeidiSQL_10.2.0.5599_Setup.exe`. (f course, I snapshot my virtual machine in VirtualBox before fooling around with any of this.)
+player <- dbGetQuery(con, sql)
+
+print(head(player))
+```
+
+#### Lessons learned
+- Loading text files into MySQL relies on the `LOAD DATA` scripting command. [Link to Documentation](https://dev.mysql.com/doc/refman/8.0/en/load-data.html)
+- The security design of MySQL bounds data loads. Online discussion appears to focus on ways to "work around" this constraint. However, this limitation is a design feature, not a bug, and here I focus on complying with the security design.
+  - Files for loading must be deposited in a specific system directory intended for that purpose. Query for the location by running the command, `SHOW VARIABLES LIKE "secure_file_priv";`.
+  - The user must have the database privilege, `FILE`, in order to run `LOAD DATA`.
+  - Even if the file is in the correct location, the Linux OS allows the `LOAD DATA` command access to it only if the file is owned by the group, `mysql`, and the user, `mysql`. Otherwise, the `LOAD DATA` command raises the error *"OS errno 13 - Permission denied."* This is an operating system error, not a MySQL one. Thefore, after copying an input file to the secure directory, it is necessary to change the file's group and user ownership. Terminal in as root with `sudo -i`. Then execute, for example, `chown mysql:mysql player.csv`.
+- NULL values. Expect data representation of NULL values to be platform specific. MySQL specifies `\N` for representing NULL values in input data files intended for `LOAD DATA`. It loads empty strings as `''` rather than NULL, contrary to Microsoft SQL Server.

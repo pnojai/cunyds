@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 knitr::opts_knit$set(root.dir = "./../..")
 
 library(data.table) # fread()
-library(dplyr) # mutate()
+library(dplyr)
 ```
 
 ```
@@ -42,7 +42,14 @@ library(dplyr) # mutate()
 
 ```r
 library(stringr)
+library(RMySQL)
+```
 
+```
+## Loading required package: DBI
+```
+
+```r
 assign_dir <- "./DATA607/Project01"
 assign_data <- paste(assign_dir, "data", sep = "/")
 ```
@@ -69,8 +76,8 @@ For computation of oppenents' average pre-tournament ratings, excluded values re
 - Download date: Mon Sep 16 19:21:59 2019
 - Location for processing: ./DATA607/Project01/data.
 
-## Output
-Data processing produces a list of data frames. The name of the list is created at run time. Depositing the output into a list permits processing of multiple input files and retaining their output separately.
+## Output and report
+Data processing produces a list of data frames. The name of the list is created at run time. Depositing the output into a list permits processing of multiple input files and retaining their output separately. These lists may be viewed by sourcing this R Markdown file in RStudio.
 
 The output list contains these data frames:
 
@@ -80,11 +87,18 @@ The output list contains these data frames:
 - `player_df`. Reporting table for players. The average pre-rating for a player's opponents appears in this table.
 - `round_df`. Reporting table for chess round results, organized in a Tidy format.
 
+The CSV report is built from the data frame, `player_df` and it is sampled below. The location of the file is: ./DATA607/Project01/player.csv.
+
 ## Functions
 - `split_cols()`. Athough the input file delimits data, it also contains non-data visual separating rows. Therefore, file reading functions within base R are unable to split the columns. This function assumes deletion of the separator rows and splits on a column separator. It preserves the raw data and appends to it the split columns.
-- `merge_pair_rows()`. Player data is recorded in two rows. The formats of the two rows are different from each other, while remaining consistent from player to player. This function arranges each player's two rows side-by-side, forming a single record per player.
-- `xform()`. Transforms the raw data. Data types are coerced where necessary. Out-of-scope ratings are left unmapped. The functions supports flexibility in the input of data for rounds. Any number of rounds can be included.
+- `merge_player_rows()`. Player data is recorded in two rows. The formats of the two rows are different from each other, while remaining consistent from player to player. This function arranges each player's two rows side-by-side, forming a single record per player.
+- `xform_data()`. Transforms the raw data. Data types are coerced where necessary. Out-of-scope ratings are left unmapped. The functions supports flexibility in the input of data for rounds. Any number of rounds can be included.
 - `read_rounds()`. The input file records tournament round results in a cross tab format. This function pivots the rounds into a Tidy format for aggregation and reporting. The function supports input of files with any number of rounds.
+- `process_file()`.
+  - Reads data file. Probes it for the number of rounds.
+  - Begins data cleansing.
+  - Calls function to split columns.
+  - Calls function to transform columns.
 
 ```r
 split_cols <- function(df, sep) {
@@ -110,7 +124,7 @@ split_cols <- function(df, sep) {
 	df
 }
 
-merge_pair_rows <- function(df, col_range_1, col_range_2) {
+merge_player_rows <- function(df, col_range_1, col_range_2) {
 	df1 <- df[ , col_range_1] %>% filter(row_number() %% 2 == 1)
 	names(df1) <- paste0("left_", names(df1))
 	df2 <- df[ , col_range_2] %>% filter(row_number() %% 2 == 0)
@@ -207,7 +221,7 @@ process_file <- function(dat_file) {
 	out$chess_split <- split_cols(df = out$chess_split, sep = sep)
 	
 	# Merge row pairs into records
-	out$chess_xform <- merge_pair_rows(
+	out$chess_xform <- merge_player_rows(
 		out$chess_split,
 		player_rec1_col_range,
 		player_rec2_col_range)
@@ -293,15 +307,244 @@ dat_file_name <- "tournamentinfo.txt"
 dat_file <- paste(assign_data, dat_file_name, sep = "/")
 
 # Process
-assignment_data_list <- process_file(dat_file)
+tournamentinfo_list <- process_file(dat_file)
 
 # Load 
-assignment_data_list <- load_data(assignment_data_list)
+tournamentinfo_list <- load_data(tournamentinfo_list)
 
 # Append summaries
-assignment_data_list <- append_summaries(assignment_data_list)
+tournamentinfo_list <- append_summaries(tournamentinfo_list)
 ```
 
 ```
 ## Joining, by = "player_num"
 ```
+## Inspect results
+
+```r
+# Data frames in the list
+names(tournamentinfo_list)
+```
+
+```
+## [1] "chess_raw"   "chess_split" "chess_xform" "player_df"   "round_df"
+```
+
+```r
+# Top of each data frame
+lapply(tournamentinfo_list, print(head))
+```
+
+```
+## function (x, ...) 
+## UseMethod("head")
+## <bytecode: 0x55d89043d708>
+## <environment: namespace:utils>
+```
+
+```
+## $chess_raw
+##                                                                                           V1
+## 1: -----------------------------------------------------------------------------------------
+## 2:  Pair | Player Name                     |Total|Round|Round|Round|Round|Round|Round|Round|
+## 3:  Num  | USCF ID / Rtg (Pre->Post)       | Pts |  1  |  2  |  3  |  4  |  5  |  6  |  7  |
+## 4: -----------------------------------------------------------------------------------------
+## 5:     1 | GARY HUA                        |6.0  |W  39|W  21|W  18|W  14|W   7|D  12|D   4|
+## 6:    ON | 15445895 / R: 1794   ->1817     |N:2  |W    |B    |W    |B    |W    |B    |W    |
+## 
+## $chess_split
+##                                                                                       V1
+## 1  1 | GARY HUA                        |6.0  |W  39|W  21|W  18|W  14|W   7|D  12|D   4|
+## 2 ON | 15445895 / R: 1794   ->1817     |N:2  |W    |B    |W    |B    |W    |B    |W    |
+## 3  2 | DAKSHESH DARURI                 |6.0  |W  63|W  58|L   4|W  17|W  16|W  20|W   7|
+## 4 MI | 14598900 / R: 1553   ->1663     |N:2  |B    |W    |B    |W    |B    |W    |B    |
+## 5  3 | ADITYA BAJAJ                    |6.0  |L   8|W  61|W  25|W  21|W  11|W  13|W  12|
+## 6 MI | 14959604 / R: 1384   ->1640     |N:2  |W    |B    |W    |B    |W    |B    |W    |
+##   split1                            split2 split3 split4 split5 split6
+## 1     1   GARY HUA                          6.0    W  39  W  21  W  18
+## 2    ON   15445895 / R: 1794   ->1817       N:2    W      B      W    
+## 3     2   DAKSHESH DARURI                   6.0    W  63  W  58  L   4
+## 4    MI   14598900 / R: 1553   ->1663       N:2    B      W      B    
+## 5     3   ADITYA BAJAJ                      6.0    L   8  W  61  W  25
+## 6    MI   14959604 / R: 1384   ->1640       N:2    W      B      W    
+##   split7 split8 split9 split10
+## 1  W  14  W   7  D  12   D   4
+## 2  B      W      B       W    
+## 3  W  17  W  16  W  20   W   7
+## 4  W      B      W       B    
+## 5  W  21  W  11  W  13   W  12
+## 6  B      W      B       W    
+## 
+## $chess_xform
+##   player_number_src                   player_name_src points_src
+## 1                1   GARY HUA                              6.0  
+## 2                2   DAKSHESH DARURI                       6.0  
+## 3                3   ADITYA BAJAJ                          6.0  
+## 4                4   PATRICK H SCHILLING                   5.5  
+## 5                5   HANSHI ZUO                            5.5  
+## 6                6   HANSEN SONG                           5.0  
+##   round1_src round2_src round3_src round4_src round5_src round6_src
+## 1      W  39      W  21      W  18      W  14      W   7      D  12
+## 2      W  63      W  58      L   4      W  17      W  16      W  20
+## 3      L   8      W  61      W  25      W  21      W  11      W  13
+## 4      W  23      D  28      W   2      W  26      D   5      W  19
+## 5      W  45      W  37      D  12      D  13      D   4      W  14
+## 6      W  34      D  29      L  11      W  35      D  10      W  27
+##   round7_src state_src                uscf_id_rating_src player_num_xfm
+## 1      D   4       ON   15445895 / R: 1794   ->1817                   1
+## 2      W   7       MI   14598900 / R: 1553   ->1663                   2
+## 3      W  12       MI   14959604 / R: 1384   ->1640                   3
+## 4      D   1       MI   12616049 / R: 1716   ->1744                   4
+## 5      W  17       MI   14601533 / R: 1655   ->1690                   5
+## 6      W  21       OH   15055204 / R: 1686   ->1687                   6
+##       player_name_xfm state_xfm points_xfm round1_result_xfm
+## 1            Gary Hua        ON        6.0                 W
+## 2     Dakshesh Daruri        MI        6.0                 W
+## 3        Aditya Bajaj        MI        6.0                 L
+## 4 Patrick H Schilling        MI        5.5                 W
+## 5          Hanshi Zuo        MI        5.5                 W
+## 6         Hansen Song        OH        5.0                 W
+##   round1_opponent_xfm round2_result_xfm round2_opponent_xfm
+## 1                  39                 W                  21
+## 2                  63                 W                  58
+## 3                   8                 W                  61
+## 4                  23                 D                  28
+## 5                  45                 W                  37
+## 6                  34                 D                  29
+##   round3_result_xfm round3_opponent_xfm round4_result_xfm
+## 1                 W                  18                 W
+## 2                 L                   4                 W
+## 3                 W                  25                 W
+## 4                 W                   2                 W
+## 5                 D                  12                 D
+## 6                 L                  11                 W
+##   round4_opponent_xfm round5_result_xfm round5_opponent_xfm
+## 1                  14                 W                   7
+## 2                  17                 W                  16
+## 3                  21                 W                  11
+## 4                  26                 D                   5
+## 5                  13                 D                   4
+## 6                  35                 D                  10
+##   round6_result_xfm round6_opponent_xfm round7_result_xfm
+## 1                 D                  12                 D
+## 2                 W                  20                 W
+## 3                 W                  13                 W
+## 4                 W                  19                 D
+## 5                 W                  14                 W
+## 6                 W                  27                 W
+##   round7_opponent_xfm uscf_id_xfm rating_xfm
+## 1                   4    15445895       1794
+## 2                   7    14598900       1553
+## 3                  12    14959604       1384
+## 4                   1    12616049       1716
+## 5                  17    14601533       1655
+## 6                  21    15055204       1686
+## 
+## $player_df
+##   player_num         player_name state total_points pre_rating
+## 1          1            Gary Hua    ON          6.0       1794
+## 2          2     Dakshesh Daruri    MI          6.0       1553
+## 3          3        Aditya Bajaj    MI          6.0       1384
+## 4          4 Patrick H Schilling    MI          5.5       1716
+## 5          5          Hanshi Zuo    MI          5.5       1655
+## 6          6         Hansen Song    OH          5.0       1686
+##   opponents_pre_rating
+## 1             1647.600
+## 2             1561.333
+## 3             1696.500
+## 4             1573.571
+## 5             1587.667
+## 6             1493.200
+## 
+## $round_df
+##   round result player_num opponent_num
+## 1     1      W          1           39
+## 2     1      W          2           63
+## 3     1      L          3            8
+## 4     1      W          4           23
+## 5     1      W          5           45
+## 6     1      W          6           34
+```
+
+## Report
+
+```r
+# Output the file.
+player_file <- paste(assign_dir, "player.csv", sep = "/")
+write.csv(tournamentinfo_list$player_df[ , -1], player_file, row.names = FALSE, na = "\\N")
+```
+Location of output file: ./DATA607/Project01/player.csv
+
+The requirements specify the format for outputting a CSV file.
+
+- Note that the specification omits the player number.
+- NULL values are encoded as "\\N". This is a requirement of MySQL, followed here to satisfy the project's requirement to support loading a database. I discuss MySQL further in the section, [Test oading MySQL](#test-loading-mysql) within the Supplements section.
+- The opponents' pre-rating differs from the expected results as documented in the project requirements due to modification of scope by the YouTube video, which excludes rounds ending in other than a win or a loss.
+
+
+```r
+# Inspect the file
+report <- read.csv(player_file)
+head(report)
+```
+
+<div data-pagedtable="false">
+  <script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["player_name"],"name":[1],"type":["fctr"],"align":["left"]},{"label":["state"],"name":[2],"type":["fctr"],"align":["left"]},{"label":["total_points"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["pre_rating"],"name":[4],"type":["fctr"],"align":["left"]},{"label":["opponents_pre_rating"],"name":[5],"type":["dbl"],"align":["right"]}],"data":[{"1":"Gary Hua","2":"ON","3":"6.0","4":"1794","5":"1647.600","_rn_":"1"},{"1":"Dakshesh Daruri","2":"MI","3":"6.0","4":"1553","5":"1561.333","_rn_":"2"},{"1":"Aditya Bajaj","2":"MI","3":"6.0","4":"1384","5":"1696.500","_rn_":"3"},{"1":"Patrick H Schilling","2":"MI","3":"5.5","4":"1716","5":"1573.571","_rn_":"4"},{"1":"Hanshi Zuo","2":"MI","3":"5.5","4":"1655","5":"1587.667","_rn_":"5"},{"1":"Hansen Song","2":"OH","3":"5.0","4":"1686","5":"1493.200","_rn_":"6"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+
+## Supplements
+### Test loading MySQL
+Script for loading player data to MySQL: `chess.sql`.
+
+In a previous assignment about MySQL, the grader challenged me to learn how to populate tables without relying on `INSERT` statements. The current project was an opportunity to do that, and though loading a database was not an explicit requirement for this project, the objective was to produce a CSV file that could be loaded. Therefore, it was worth testing.
+
+#### Report results
+
+```r
+con <- dbConnect(
+	drv = MySQL(),
+	host = "127.0.0.1",
+	user = "jairpt",
+	password = "a",
+	dbname = "chess")
+
+sql <- "
+select	*
+from	player;"
+
+player <- dbGetQuery(con, sql)
+```
+
+```
+## Warning in .local(conn, statement, ...): Decimal MySQL column 2 imported as
+## numeric
+```
+
+```
+## Warning in .local(conn, statement, ...): Decimal MySQL column 4 imported as
+## numeric
+```
+
+```r
+print(head(player))
+```
+
+```
+##           player_name state total_points pre_rating opponents_pre_rating
+## 1            Gary Hua    ON          6.0       1794              1647.60
+## 2     Dakshesh Daruri    MI          6.0       1553              1561.33
+## 3        Aditya Bajaj    MI          6.0       1384              1696.50
+## 4 Patrick H Schilling    MI          5.5       1716              1573.57
+## 5          Hanshi Zuo    MI          5.5       1655              1587.67
+## 6         Hansen Song    OH          5.0       1686              1493.20
+```
+
+#### Lessons learned
+- Loading text files into MySQL relies on the `LOAD DATA` scripting command. [Link to Documentation](https://dev.mysql.com/doc/refman/8.0/en/load-data.html)
+- The security design of MySQL bounds data loads. Online discussion appears to focus on ways to "work around" this constraint. However, this limitation is a design feature, not a bug, and here I focus on complying with the security design.
+  - Files for loading must be deposited in a specific system directory intended for that purpose. Query for the location by running the command, `SHOW VARIABLES LIKE "secure_file_priv";`.
+  - The user must have the database privilege, `FILE`, in order to run `LOAD DATA`.
+  - Even if the file is in the correct location, the Linux OS allows the `LOAD DATA` command access to it only if the file is owned by the group, `mysql`, and the user, `mysql`. Otherwise, the `LOAD DATA` command raises the error *"OS errno 13 - Permission denied."* This is an operating system error, not a MySQL one. Thefore, after copying an input file to the secure directory, it is necessary to change the file's group and user ownership. Terminal in as root with `sudo -i`. Then execute, for example, `chown mysql:mysql player.csv`.
+- NULL values. Expect data representation of NULL values to be platform specific. MySQL specifies `\N` for representing NULL values in input data files intended for `LOAD DATA`. It loads empty strings as `''` rather than NULL, contrary to Microsoft SQL Server.
