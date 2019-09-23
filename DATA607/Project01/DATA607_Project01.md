@@ -70,7 +70,7 @@ Note these exclusions from scope per the YouTube video.
 
 ### Assumptions
 - For computation of oppenents' average pre-tournament ratings, excluded values reduce the counts. There is no imputation of missing values for out-of-scope rounds or pre-tournament ratings.
-- The number of rounds in a tournment are variable.
+- The number of rounds in a tournament are variable.
 
 ## Input
 - Source data: [tournamentinfo.txt](https://bbhosted.cuny.edu/bbcswebdav/pid-42267955-dt-content-rid-347468182_1/courses/SPS01_DATA_607_01_1199_1/tournamentinfo.txt)
@@ -342,7 +342,7 @@ lapply(tournamentinfo_list, print(head))
 ```
 ## function (x, ...) 
 ## UseMethod("head")
-## <bytecode: 0x55aa1122d708>
+## <bytecode: 0x5601b585f708>
 ## <environment: namespace:utils>
 ```
 
@@ -596,7 +596,7 @@ lapply(tournamenttest_list, print(head))
 ```
 ## function (x, ...) 
 ## UseMethod("head")
-## <bytecode: 0x55aa1122d708>
+## <bytecode: 0x5601b585f708>
 ## <environment: namespace:utils>
 ```
 
