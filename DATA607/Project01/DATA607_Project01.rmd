@@ -71,7 +71,7 @@ The required CSV report is built from the data frame, `player_df` and sampled be
 - `load_data()`. Sources the transformation data frames and populates the reporting data frames.
   - `player_df`.
   - `round_df`.
-- `append_summaries`. Computes opponents` average pre-rating and appends results to `player_df`.
+- `append_summaries`. Computes opponents' average pre-ratings and appends results to `player_df`.
 
 ```{r functions}
 split_cols <- function(df, sep) {

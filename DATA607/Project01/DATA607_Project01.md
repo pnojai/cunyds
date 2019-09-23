@@ -103,7 +103,7 @@ The required CSV report is built from the data frame, `player_df` and sampled be
 - `load_data()`. Sources the transformation data frames and populates the reporting data frames.
   - `player_df`.
   - `round_df`.
-- `append_summaries`. Computes opponents` average pre-rating and appends results to `player_df`.
+- `append_summaries`. Computes opponents' average pre-ratings and appends results to `player_df`.
 
 
 ```r
@@ -342,7 +342,7 @@ lapply(tournamentinfo_list, print(head))
 ```
 ## function (x, ...) 
 ## UseMethod("head")
-## <bytecode: 0x56363f4ed708>
+## <bytecode: 0x55aa1122d708>
 ## <environment: namespace:utils>
 ```
 
@@ -596,7 +596,7 @@ lapply(tournamenttest_list, print(head))
 ```
 ## function (x, ...) 
 ## UseMethod("head")
-## <bytecode: 0x56363f4ed708>
+## <bytecode: 0x55aa1122d708>
 ## <environment: namespace:utils>
 ```
 

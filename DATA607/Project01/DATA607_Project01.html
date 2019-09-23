@@ -1725,7 +1725,7 @@ assign_data &lt;- paste(assign_dir, &quot;data&quot;, sep = &quot;/&quot;)</code
 <li><code>player_df</code>.</li>
 <li><code>round_df</code>.</li>
 </ul></li>
-<li><code>append_summaries</code>. Computes opponents<code>average pre-rating and appends results to</code>player_df`.</li>
+<li><code>append_summaries</code>. Computes opponents’ average pre-ratings and appends results to <code>player_df</code>.</li>
 </ul>
 <pre class="r"><code>split_cols &lt;- function(df, sep) {
     # Reference:
@@ -1948,7 +1948,7 @@ names(tournamentinfo_list)</code></pre>
 lapply(tournamentinfo_list, print(head))</code></pre>
 <pre><code>## function (x, ...) 
 ## UseMethod(&quot;head&quot;)
-## &lt;bytecode: 0x56363f4ed708&gt;
+## &lt;bytecode: 0x55aa1122d708&gt;
 ## &lt;environment: namespace:utils&gt;</code></pre>
 <pre><code>## $chess_raw
 ##                                                                                           V1
@@ -2173,7 +2173,7 @@ tournamenttest_list &lt;- append_summaries(tournamenttest_list)</code></pre>
 lapply(tournamenttest_list, print(head))</code></pre>
 <pre><code>## function (x, ...) 
 ## UseMethod(&quot;head&quot;)
-## &lt;bytecode: 0x56363f4ed708&gt;
+## &lt;bytecode: 0x55aa1122d708&gt;
 ## &lt;environment: namespace:utils&gt;</code></pre>
 <pre><code>## $chess_raw
 ##                                                                                                                                     V1
