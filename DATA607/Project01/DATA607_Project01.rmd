@@ -68,6 +68,11 @@ The required CSV report is built from the data frame, `player_df` and sampled be
   - Begins data cleansing.
   - Calls function to split columns.
   - Calls function to transform columns.
+- `load_data()`. Sources the transformation data frames and populates the reporting data frames.
+  - `player_df`.
+  - `round_df`.
+- `append_summaries`. Computes opponents` average pre-rating and appends results to `player_df`.
+
 ```{r functions}
 split_cols <- function(df, sep) {
 	# Reference:
@@ -280,7 +285,7 @@ tournamentinfo_list <- load_data(tournamentinfo_list)
 tournamentinfo_list <- append_summaries(tournamentinfo_list)
 ```
 ## Inspect results
-The output is lengthy, so you may [Jump forward to the report](#report).
+The output is lengthy, so you may [jump forward to the report](#report).
 ```{r}
 # Data frames in the list
 names(tournamentinfo_list)

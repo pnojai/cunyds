@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Data Science in Context</title>
+  <meta charset="utf-8">
+  <meta name="description" content="Data Science in Context">
+  <meta name="author" content="Jai Jeffryes">
+  <meta name="generator" content="slidify" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/default.css" media="all" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/phone.css" 
+    media="only screen and (max-device-width: 480px)" >
+  <link rel="stylesheet" href="libraries/frameworks/io2012/css/slidify.css" >
+  <link rel="stylesheet" href="libraries/highlighters/highlight.js/css/tomorrow.css" />
+  <base target="_blank"> <!-- This amazingness opens all links in a new tab. -->  <link rel=stylesheet href="./assets/css/ribbons.css"></link>
+
+  
+  <!-- Grab CDN jQuery, fall back to local if offline -->
+  <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-1.7.min.js"></script>
+  <script>window.jQuery || document.write('<script src="libraries/widgets/quiz/js/jquery.js"><\/script>')</script> 
+  <script data-main="libraries/frameworks/io2012/js/slides" 
+    src="libraries/frameworks/io2012/js/require-1.0.8.min.js">
+  </script>
+  
+  
+
+</head>
+<body style="opacity: 0">
+  <slides class="layout-widescreen">
+    
+    <!-- LOGO SLIDE -->
+        <slide class="title-slide segue nobackground">
+  <hgroup class="auto-fadein">
+    <h1>Data Science in Context</h1>
+    <h2>Sulzer Neuroscience Laboratory at Columbia University</h2>
+    <p>Jai Jeffryes<br/>Data analyst and programmer</p>
+  </hgroup>
+  <article></article>  
+</slide>
+    
+
+    <!-- SLIDES -->
+    <slide class="" id="slide-1" style="background:;">
+  <article data-timings="">
+    <style>
+.title-slide {
+  background-color: #FFFFFF; /* #EDE0CF; ; #CA9F9D*/
+}
+</style>
+
+<p><img src="./assets/img/SulzerLab.jpg" width="80%"/></p>
+
+<ul>
+<li>Dr. David Sulzer, Principal Investigator</li>
+<li>Jai</li>
+<li>Dr. Mahalakshmi Somayaji, Post-Doctoral Researcher</li>
+</ul>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-2" style="background:;">
+  <hgroup>
+    <h2>Dopamine kinetics</h2>
+  </hgroup>
+  <article data-timings="">
+    <p><img src="./assets/img/Neuron.jpg" alt=""> <img src="./assets/img/Synapse_Illustration2_tweaked.jpg" alt=""></p>
+
+<p>[<sup>1]:</sup> Typical neuron: Public Domain, <a href="https://commons.wikimedia.org/w/index.php?curid=254226">https://commons.wikimedia.org/w/index.php?curid=254226</a>
+[<sup>2]:</sup> Vesicles: Creative Commons, <a href="https://commons.wikimedia.org/w/index.php?curid=4001388">https://commons.wikimedia.org/w/index.php?curid=4001388</a></p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-3" style="background:;">
+  <hgroup>
+    <h2>Random Walk</h2>
+  </hgroup>
+  <article data-timings="">
+    <ul>
+<li>Release</li>
+<li>Diffusion</li>
+<li>Reuptake</li>
+</ul>
+
+<p><img src="./assets/img/RandomWalkScreen.jpg" alt=""></p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-4" style="background:;">
+  <hgroup>
+    <h2>Michaelis-Menten Equation</h2>
+  </hgroup>
+  <article data-timings="">
+    <ul>
+<li>Reuptake</li>
+</ul>
+
+<p><img src="./assets/img/MM_equation.png" alt=""></p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-5" style="background:;">
+  <hgroup>
+    <h2>Simulation of DA concentration</h2>
+  </hgroup>
+  <article data-timings="">
+    <p><img src="./assets/img/Sim1.jpeg" alt=""> <img src="./assets/img/Sim2.jpeg" alt=""> </p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-6" style="background:;">
+  <hgroup>
+    <h2>Experimental data</h2>
+  </hgroup>
+  <article data-timings="">
+    <ul>
+<li>Stimulate each two minutes.</li>
+<li>Amphetamine begins in fourth stimulus.</li>
+<li>Biological variability.</li>
+<li>DA concentration is <strong>net</strong> of release and reuptake.</li>
+</ul>
+
+<p><img src="./assets/img/animal1.jpeg" alt=""></p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-7" style="background:;">
+  <hgroup>
+    <h2>Fitting the model</h2>
+  </hgroup>
+  <article data-timings="">
+    <p>Infer kinetics of DA</p>
+
+<ul>
+<li>Release</li>
+<li>km (reuptake)</li>
+<li>R-squared</li>
+</ul>
+
+<p><img src="./assets/img/animal_fit_before.jpeg" alt=""> <img src="./assets/img/animal_fit_after.jpeg" alt=""></p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="" id="slide-8" style="background:;">
+  <hgroup>
+    <h2>Wrap up</h2>
+  </hgroup>
+  <article data-timings="">
+    <ul>
+<li>Mechanism of AMPH-evoked DA release.</li>
+<li>Controlled experiment using genotypes.</li>
+<li>Publication.</li>
+<li>Rwalk package on GitHub: <a href="https://github.com/pnojai/rwalk">https://github.com/pnojai/rwalk</a></li>
+</ul>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+    <slide class="backdrop"></slide>
+  </slides>
+  <div class="pagination pagination-small" id='io2012-ptoc' style="display:none;">
+    <ul>
+      <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=1 title='NA'>
+         1
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=2 title='Dopamine kinetics'>
+         2
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=3 title='Random Walk'>
+         3
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=4 title='Michaelis-Menten Equation'>
+         4
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=5 title='Simulation of DA concentration'>
+         5
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=6 title='Experimental data'>
+         6
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=7 title='Fitting the model'>
+         7
+      </a>
+    </li>
+    <li>
+      <a href="#" target="_self" rel='tooltip' 
+        data-slide=8 title='Wrap up'>
+         8
+      </a>
+    </li>
+  </ul>
+  </div>  <!--[if IE]>
+    <script 
+      src="http://ajax.googleapis.com/ajax/libs/chrome-frame/1/CFInstall.min.js">  
+    </script>
+    <script>CFInstall.check({mode: 'overlay'});</script>
+  <![endif]-->
+</body>
+  <!-- Load Javascripts for Widgets -->
+  
+  <!-- LOAD HIGHLIGHTER JS FILES -->
+  <script src="libraries/highlighters/highlight.js/highlight.pack.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  <!-- DONE LOADING HIGHLIGHTER JS FILES -->
+   
+  </html>

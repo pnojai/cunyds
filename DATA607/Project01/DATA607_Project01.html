@@ -1720,6 +1720,12 @@ assign_data &lt;- paste(assign_dir, &quot;data&quot;, sep = &quot;/&quot;)</code
 <li>Calls function to split columns.</li>
 <li>Calls function to transform columns.</li>
 </ul></li>
+<li><code>load_data()</code>. Sources the transformation data frames and populates the reporting data frames.
+<ul>
+<li><code>player_df</code>.</li>
+<li><code>round_df</code>.</li>
+</ul></li>
+<li><code>append_summaries</code>. Computes opponents<code>average pre-rating and appends results to</code>player_df`.</li>
 </ul>
 <pre class="r"><code>split_cols &lt;- function(df, sep) {
     # Reference:
@@ -1934,7 +1940,7 @@ tournamentinfo_list &lt;- append_summaries(tournamentinfo_list)</code></pre>
 </div>
 <div id="inspect-results" class="section level2">
 <h2>Inspect results</h2>
-<p>The output is lengthy, so you may <a href="#report">Jump forward to the report</a>.</p>
+<p>The output is lengthy, so you may <a href="#report">jump forward to the report</a>.</p>
 <pre class="r"><code># Data frames in the list
 names(tournamentinfo_list)</code></pre>
 <pre><code>## [1] &quot;chess_raw&quot;   &quot;chess_split&quot; &quot;chess_xform&quot; &quot;player_df&quot;   &quot;round_df&quot;</code></pre>
@@ -1942,7 +1948,7 @@ names(tournamentinfo_list)</code></pre>
 lapply(tournamentinfo_list, print(head))</code></pre>
 <pre><code>## function (x, ...) 
 ## UseMethod(&quot;head&quot;)
-## &lt;bytecode: 0x55df1f3ac708&gt;
+## &lt;bytecode: 0x56363f4ed708&gt;
 ## &lt;environment: namespace:utils&gt;</code></pre>
 <pre><code>## $chess_raw
 ##                                                                                           V1
@@ -2167,7 +2173,7 @@ tournamenttest_list &lt;- append_summaries(tournamenttest_list)</code></pre>
 lapply(tournamenttest_list, print(head))</code></pre>
 <pre><code>## function (x, ...) 
 ## UseMethod(&quot;head&quot;)
-## &lt;bytecode: 0x55df1f3ac708&gt;
+## &lt;bytecode: 0x56363f4ed708&gt;
 ## &lt;environment: namespace:utils&gt;</code></pre>
 <pre><code>## $chess_raw
 ##                                                                                                                                     V1
