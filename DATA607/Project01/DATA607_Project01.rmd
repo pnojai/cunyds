@@ -160,6 +160,7 @@ read_rounds <- function(df) {
 				   opponent_num = opponent_col_idx)
 		# Add round number separately because
 		# dplyr doesn't select literals.
+		# Update: you can define a literal with mutate() and then select() it below.
 		round_row <- cbind(round = i, round_row)
 		
 		round_df <- rbind(round_df, round_row)

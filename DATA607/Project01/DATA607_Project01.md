@@ -342,7 +342,7 @@ lapply(tournamentinfo_list, print(head))
 ```
 ## function (x, ...) 
 ## UseMethod("head")
-## <bytecode: 0x5601b585f708>
+## <bytecode: 0x56040a8ad708>
 ## <environment: namespace:utils>
 ```
 
@@ -596,7 +596,7 @@ lapply(tournamenttest_list, print(head))
 ```
 ## function (x, ...) 
 ## UseMethod("head")
-## <bytecode: 0x5601b585f708>
+## <bytecode: 0x56040a8ad708>
 ## <environment: namespace:utils>
 ```
 

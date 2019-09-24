@@ -1,4 +1,90 @@
+* Waving from Sulzer Lab
+** Dr. Sulzer.
+** Research DA system. PD, schizophrenia, drugs of abuse.
+** Support Dr. Subramanji. Amphetemine and DA.
 * Vesicle attribution
 By Nrets - first upload on en.wikipedia.org, uploaded to Wikimedia Commons as Image:SynapseIllustration2.png, SVG version by User:Surachit. For further information on the image's contents, see Julien, R. M. (2005). The neuron, synaptic transmission, and neurotransmitters. In R. M. Julien, A primer of drug action: A comprehensive guide to the actions, uses, and side effects of psychoactive drugs (pp. 60-88). New York, NY, USA: Worth Publishers., CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=4001388
 * Neuron attribution
 Public Domain, https://commons.wikimedia.org/w/index.php?curid=254226
+* Script
+1/9
+I'm Jai Jeffryes and I'm an analyst and programmer at the Sulzer
+Neuroscience Laboratory at Columbia University.
+
+2/9 I'm waving to you from the lab (while getting photobombed). On the
+left of the screen is Dr. David Sulzer, the principal investigator of
+the lab and my boss. The lab researches the dopamine system, which
+figures prominently in Parkinson's Disease, schizophrenia, and drugs
+of abuse. On the right of the screen is Dr. Mahalakshmi
+Somayaji. Since I joined the lab in March, my main responsibility has
+been supporting Maha's research into the effects of amphetamine on
+the neurotransmitter, dopamine.
+
+3/9
+Signal propagates in a neuron from dendrites, seen on the left, to the
+axon terminals, detailed on the right. The bubbles in the axon
+terminal represent synaptic vesicles, tiny sacks containing molecules
+of dopamine. They transmit dopamine by fusing with the plasma membrane
+and discharging their cargo into the synaptic cleft. A few such
+molecules are depicted here. Some of those will bind with
+neurotransmitter receptors in the dendritic spines of the adjacent
+neuron. The rest will be pumped back up into the axon terminal. Keep
+in mind these dual processes of release and reuptake.
+
+4/9 We can model the kinetics of dopamine in a one-dimensional random
+walk of its diffusion. The release locations are modeled here from
+left to right. Here I release 2.75 micromolar of dopamine. Time slices
+proceed downwards on the matrix. In the next time slice, half of the
+molecules will diffuse to the left neighbor and half to the
+right. Then reuptake reduces the concentration. Now, the next site
+will diffuse to the left and right in the time slice after that. I cut
+out a lot of the matrix. It propogates like this to a column
+representing a measuring electrode, where you see the concentration of
+dopamine over time.
+
+5/9
+The reduction in dopamine from reuptake is given by the
+Michaelis-Menten equation. Note the quantity, km, which expresses the
+affinity between dopamine and its target transporter. If km is
+lowered, the reuptake increases.
+
+6/9 Thus, I can plot a simulation of dopamine concentration. We see
+release followed by reuptake. If I reduce km from 2 to .8, the decay
+of the concentration of dopamine is more rapid in the model.
+
+7/9 This is a plot of the data I receive from Maha. She stimulates a
+mouse brain every two minutes and it evokes dopamine release. Animal
+research can be a sensitive subject. I can tell you that it is highly
+regulated, the animals are anesthetized and they feel nothing.
+
+Note the change in height of the peaks. Here, in the fourth
+stimulation, is where Maha administers amphetamine. Amphetamine both
+raises dopamine release and reduces its reuptake, but how much of
+each?  You can't tell from this plot, for the concentration is the net
+of the two.
+
+Maha believes she has learned something novel about the mechanism of
+amphetamine's influence on dopamine release. To demonstrate it, she
+needs to isolate and quantify dopamine's release and reuptake.
+
+8/9
+We do this by superimposing the model on the data from a single
+stimulus. The model is the green line, Maha's data is red. My first
+estimate isn't very good. I've underestimated the release, so the peak
+height is too low, and I've underestimated the reuptake so the curve
+is spread too widely. I adjust the two until I find a good fit. The
+correlation is quantified by the statistic r-squared.
+
+9/9
+I've inferred measures of release and reuptake based on the model, and
+hopefully these estimates are sufficiently reliable for Maha to draw
+conclusions about the mechanism of dopamine kinetics. Her hypothesis
+involves a particular protein playing a role in vesicular fusion. Her
+control for the experiment is so-called knock out mice, animals
+genetically engineered to lack the protein of interest.
+
+Whatever Maha learns, she'll publish, and I will join the byline as
+one of the co-authors. My contribution is an R package hosted on
+GitHub and my analysis.
+
+That concludes my presentation, Dr. Catlin.
