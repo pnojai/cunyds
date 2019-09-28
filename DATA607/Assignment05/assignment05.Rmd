@@ -5,77 +5,166 @@ date: "9/26/2019"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=TRUE}
 knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
 library(tidyr)
 library(dplyr)
 library(stringr)
+library(ggplot2)
 ```
 
 ## Read
 ```{r}
-flight_rpt <- read.csv("flight_rpt.csv", stringsAsFactors = FALSE, na.strings = "")
+arrival_dat <- read.csv("arrival_rpt.csv", stringsAsFactors = FALSE, na.strings = "")
 ```
 
 ## Clean
 ```{r}
-flight_clean <- flight_rpt
-flight_clean <- flight_clean %>% filter_all(any_vars(!is.na(.))) # Remove empty rows
-flight_clean <- flight_clean %>% fill(1, .direction = c("down")) # Fill airline
-flight_clean <- flight_clean %>% rename(airline = X,             # Rename columns
+arrival_clean <- arrival_dat
+arrival_clean <- arrival_clean %>% filter_all(any_vars(!is.na(.))) # Remove empty rows
+arrival_clean <- arrival_clean %>% fill(1, .direction = c("down")) # Fill airline
+arrival_clean <- arrival_clean %>% rename(airline = X,             # Rename columns
 										status = X.1)
-flight_clean$status <- as.factor(flight_clean$status)
-names(flight_clean) <- str_replace_all(names(flight_clean),      # Replace . in vars
+arrival_clean$status <- as.factor(arrival_clean$status)
+names(arrival_clean) <- str_replace_all(names(arrival_clean),      # Replace . in vars
 									   pattern = "\\.",
 									   replacement = " ")
-flight_clean <- flight_clean %>% gather(city,                    # Pivot cities
-										arrivals,
-										3:length(flight_clean))
-flight_clean$arrivals <-str_replace_all(flight_clean$arrivals,   # Replace ,
+arrival_clean <- arrival_clean %>% gather(city,                    # Pivot cities
+										count,
+										3:length(arrival_clean))
+arrival_clean$count <-str_replace_all(arrival_clean$count,         # Replace ,
 										pattern = ",",
 										replacement = "")
-flight_clean$arrivals <- as.integer(flight_clean$arrivals)       # Coerce to integers
-flight_df <- tbl_df(flight_clean)                                # Format tibble
+arrival_clean$count <- as.integer(arrival_clean$count)             # Coerce to integers
+arrival_df <- tbl_df(arrival_clean)                                # Format tibble
 ```
 
-## Analyze
+## Summarize
 ```{r}
-# On time rate by airline.
-arrivals_by_airline <- flight_df %>%
+# Summarize arrivals
+#   Airline
+arrivals_by_airline <- arrival_df %>%
 	group_by(airline) %>%
-	summarize(total_arrivals = sum(arrivals))
-on_time_arrivals_by_airline <- flight_df %>%
+	summarize(total_arrivals = sum(count))
+#   City
+arrivals_by_city <- arrival_df %>%
+	group_by(city) %>%
+	summarize(total_arrivals = sum(count))
+#   Airline and city
+arrivals_by_airline_city <- arrival_df %>%
+	group_by(airline, city) %>%
+	summarize(total_arrivals = sum(count))
+
+# Summarize delayed arrivals
+#   Airline
+delayed_arrivals_by_airline <- arrival_df %>%
+	filter(status == "delayed") %>%
+	group_by(airline) %>%
+	summarize(delayed_arrivals = sum(count))
+#   City
+delayed_arrivals_by_city <- arrival_df %>%
+	filter(status == "delayed") %>%
+	group_by(city) %>%
+	summarize(delayed_arrivals = sum(count))
+#   Airline and city
+delayed_arrivals_by_airline_city <- arrival_df %>%
+	filter(status == "delayed") %>%
+	group_by(airline, city) %>%
+	summarize(delayed_arrivals = sum(count))
+
+# Delayed rates
+#   Airline
+delayed_rate_by_airline <- inner_join(
+	delayed_arrivals_by_airline, arrivals_by_airline) %>%
+	mutate(delayed_rate = delayed_arrivals / total_arrivals)
+#   City
+delayed_rate_by_city <- inner_join(
+	delayed_arrivals_by_city, arrivals_by_city) %>%
+	mutate(delayed_rate = delayed_arrivals / total_arrivals)
+#   Airline and city
+delayed_rate_by_airline_city <- inner_join(
+	delayed_arrivals_by_airline_city, arrivals_by_airline_city) %>%
+	mutate(delayed_rate = delayed_arrivals / total_arrivals)
+
+# Summarize on time arrivals
+#   Airline
+on_time_arrivals_by_airline <- arrival_df %>%
 	filter(status == "on time") %>%
 	group_by(airline) %>%
-	summarize(on_time_arrivals = sum(arrivals))
+	summarize(on_time_arrivals = sum(count))
+#   City
+on_time_arrivals_by_city <- arrival_df %>%
+	filter(status == "on time") %>%
+	group_by(city) %>%
+	summarize(on_time_arrivals = sum(count))
+#   Airline and city
+on_time_arrivals_by_airline_city <- arrival_df %>%
+	filter(status == "on time") %>%
+	group_by(airline, city) %>%
+	summarize(on_time_arrivals = sum(count))
+
+# On time rates
+#   Airline
 on_time_rate_by_airline <- inner_join(
 	on_time_arrivals_by_airline, arrivals_by_airline) %>%
 	mutate(on_time_rate = on_time_arrivals / total_arrivals)
-
-# On time rate by airline and city
-arrivals_by_airline_city <- flight_df %>%
-	group_by(airline, city) %>%
-	summarize(total_arrivals = sum(arrivals))
-on_time_arrivals_by_airline_city <- flight_df %>%
-	filter(status == "on time") %>%
-	group_by(airline, city) %>%
-	summarize(on_time_arrivals = sum(arrivals))
-
+#   City
+on_time_rate_by_city <- inner_join(
+	on_time_arrivals_by_city, arrivals_by_city) %>%
+	mutate(on_time_rate = on_time_arrivals / total_arrivals)
+#   Airline and city
 on_time_rate_by_airline_city <- inner_join(
 	on_time_arrivals_by_airline_city, arrivals_by_airline_city) %>%
 	mutate(on_time_rate = on_time_arrivals / total_arrivals)
 
-# On time rate by city
-arrivals_by_city <- flight_df %>%
-	group_by(city) %>%
-	summarize(total_arrivals = sum(arrivals))
-on_time_arrivals_by_city <- flight_df %>%
-	filter(status == "on time") %>%
-	group_by(city) %>%
-	summarize(on_time_arrivals = sum(arrivals))
-on_time_rate_by_city <- inner_join(
-	on_time_arrivals_by_city, arrivals_by_city) %>%
-	mutate(on_time_rate = on_time_arrivals / total_arrivals)
+```
+
+## Report
+```{r}
+kable(arrival_df, caption = "Airline Arrivals")
+
+kable(on_time_rate_by_airline[ , c(1, 4)],
+	  digits = 2,
+	  caption = "On Time Rate by Airline")
+
+kable(on_time_rate_by_city[ , c(1, 4)],
+	  digits = 2,
+	  caption = "On Time Rate by City")
+
+kable(on_time_rate_by_airline_city[ , c(1, 2, 5)],
+	  digits = 2,
+	  caption = "On Time Rate by Airline and City")
 ```
 
 ## Plot
+```{r}
+ggplot(data = on_time_rate_by_airline) +
+	geom_col(aes(x = airline, y = on_time_rate)) +
+	labs(title = "On Time Rate by Airline",
+		 x = "Airline",
+		 y = "Rate") +
+	theme_bw()
+
+ggplot(data = on_time_rate_by_city) +
+	geom_col(aes(x = city, y = on_time_rate)) +
+	labs(title = "On Time Rate by City",
+		 x = "City",
+		 y = "Rate") +
+	theme_bw()
+
+ggplot(data = on_time_rate_by_airline_city) +
+	geom_col(aes(x = city, y = on_time_rate, fill = airline), position = "dodge") +
+	labs(title = "On Time Rates by City and Airline",
+		 x = "City",
+		 y = "Rate") +
+	theme_bw()
+
+ggplot(data = on_time_rate_by_airline_city) +
+	geom_col(aes(x = airline, y = on_time_rate, fill = city), position = "dodge") +
+	labs(title = "On Time Rates by Airline and City",
+		 x = "Airline",
+		 y = "Rate") +
+	theme_bw()
+
+```
