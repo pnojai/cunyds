@@ -5,7 +5,7 @@ date: "9/26/2019"
 output: html_document
 ---
 
-```{r setup, include=TRUE}
+```{r setup, include=TRUE, message=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(knitr)
 library(tidyr)
@@ -14,19 +14,51 @@ library(stringr)
 library(ggplot2)
 ```
 
+- [Introduction](#introduction)
+- [Read](#read)
+- [Clean](#clean)
+  - [Objective](#objective)
+  - [Approach](#approach)
+  - [Result](#result)
+- [Summarize](#summarize)
+- [Report](#report)
+- [Analyze](#analyze)
+- [Conclusions](#conclusions)
+
+## Introduction
+I received a report about arrivals for two airlines in a handful of cities. The format was designed for legibility of reading, resembling a control break report in a cross tab summary. I reorganized the data for analysis, and analyzed flight delays.
+
 ## Read
 ```{r}
 arrival_dat <- read.csv("arrival_rpt.csv", stringsAsFactors = FALSE, na.strings = "")
 ```
 
 ## Clean
+### Objective
+I received airline arrival data in a wide report format. It included white space and punctuation for legible reading. My data cleaning objective was to rearrange the data into a structure in which each row recorded one observation, and each column one variable.
+
+```{r}
+kable(arrival_dat, caption = "Airline Arrivals Report")
+```
+
+### Approach
+- Cleaning began upon initial reading of the report. Empty strings in the file were read as `NA` values. No factors were created.
+- An empty row separated data from the two airlines. I coded removal of the empty row so it would be automatic and repeatable, given a larger report with more empty rows.
+- The airline name appeared only once within each group of records for that airline. I filled the name down in the white space below so that it would become a categorical variable.
+- I gave a variable name to columns lacking one.
+- Cities appeared in the first row of the report, an example of a data format in which values of a variable appear in a heading rather than in a column, exemplifying cross tab reporting.
+- In preparation for pivoting the city values into a column of their own, I cleaned periods from their names. The periods were the consequence of allowing the report to be read as containing a header. This was useful because tools can pivot headings into columns. Transforming the periods back to spaces could have been done after pivoting the data, but doing it early optimizes the number of replacements to be made.
+- The function, `tidyr::gather()`, pivoted the city names and the arrival counts, generating two new columns, `city` and `count`, for dimension and measure.
+- I removed commas from arrival counts and coerced the values to a numeric datatype.
+- I converted categorical variables to factors, which `ggplot2` needs for mapping them to aesthetics.
+- I formatted the result as a `tibble` for convenient reporting.
+
 ```{r}
 arrival_clean <- arrival_dat
 arrival_clean <- arrival_clean %>% filter_all(any_vars(!is.na(.))) # Remove empty rows
 arrival_clean <- arrival_clean %>% fill(1, .direction = c("down")) # Fill airline
 arrival_clean <- arrival_clean %>% rename(airline = X,             # Rename columns
 										status = X.1)
-arrival_clean$status <- as.factor(arrival_clean$status)
 names(arrival_clean) <- str_replace_all(names(arrival_clean),      # Replace . in vars
 									   pattern = "\\.",
 									   replacement = " ")
@@ -37,10 +69,30 @@ arrival_clean$count <-str_replace_all(arrival_clean$count,         # Replace ,
 										pattern = ",",
 										replacement = "")
 arrival_clean$count <- as.integer(arrival_clean$count)             # Coerce to integers
+arrival_clean$airline <- as.factor(arrival_clean$airline)          # Factors
+arrival_clean$status <- as.factor(arrival_clean$status)
+arrival_clean$city <- as.factor(arrival_clean$city)
 arrival_df <- tbl_df(arrival_clean)                                # Format tibble
 ```
 
+### Result
+- One observation per row.
+- One variable per column.
+
+```{r}
+kable(arrival_df, caption = "Airline Arrivals Data Frame (Cleaned)")
+```
+
 ## Summarize
+I computed summaries at these groupings:
+
+- Arrivals by airline
+- Arrivals by city
+- Arrivals by city and airline
+- Statistics of delayed arrivals by airline
+- Statistics of delayed arrivals by city
+- Statistics of delayed arrivals by airline and city
+
 ```{r}
 # Summarize arrivals
 #   Airline
@@ -73,98 +125,171 @@ delayed_arrivals_by_airline_city <- arrival_df %>%
 	group_by(airline, city) %>%
 	summarize(delayed_arrivals = sum(count))
 
-# Delayed rates
+# Delayed statistics
 #   Airline
-delayed_rate_by_airline <- inner_join(
+delayed_stat_by_airline <- inner_join(
 	delayed_arrivals_by_airline, arrivals_by_airline) %>%
-	mutate(delayed_rate = delayed_arrivals / total_arrivals)
+	mutate(delayed_p = delayed_arrivals / total_arrivals,
+		   delayed_sd = sqrt(delayed_p * (1 - delayed_p)),
+		   delayed_mean = 1 / delayed_p)
 #   City
-delayed_rate_by_city <- inner_join(
+delayed_stat_by_city <- inner_join(
 	delayed_arrivals_by_city, arrivals_by_city) %>%
-	mutate(delayed_rate = delayed_arrivals / total_arrivals)
+	mutate(delayed_p = delayed_arrivals / total_arrivals,
+		   delayed_sd = sqrt(delayed_p * (1 - delayed_p)),
+		   delayed_mean = 1 / delayed_p)
 #   Airline and city
-delayed_rate_by_airline_city <- inner_join(
+delayed_stat_by_airline_city <- inner_join(
 	delayed_arrivals_by_airline_city, arrivals_by_airline_city) %>%
-	mutate(delayed_rate = delayed_arrivals / total_arrivals)
-
-# Summarize on time arrivals
-#   Airline
-on_time_arrivals_by_airline <- arrival_df %>%
-	filter(status == "on time") %>%
-	group_by(airline) %>%
-	summarize(on_time_arrivals = sum(count))
-#   City
-on_time_arrivals_by_city <- arrival_df %>%
-	filter(status == "on time") %>%
-	group_by(city) %>%
-	summarize(on_time_arrivals = sum(count))
-#   Airline and city
-on_time_arrivals_by_airline_city <- arrival_df %>%
-	filter(status == "on time") %>%
-	group_by(airline, city) %>%
-	summarize(on_time_arrivals = sum(count))
-
-# On time rates
-#   Airline
-on_time_rate_by_airline <- inner_join(
-	on_time_arrivals_by_airline, arrivals_by_airline) %>%
-	mutate(on_time_rate = on_time_arrivals / total_arrivals)
-#   City
-on_time_rate_by_city <- inner_join(
-	on_time_arrivals_by_city, arrivals_by_city) %>%
-	mutate(on_time_rate = on_time_arrivals / total_arrivals)
-#   Airline and city
-on_time_rate_by_airline_city <- inner_join(
-	on_time_arrivals_by_airline_city, arrivals_by_airline_city) %>%
-	mutate(on_time_rate = on_time_arrivals / total_arrivals)
-
+	mutate(delayed_p = delayed_arrivals / total_arrivals,
+		   delayed_sd = sqrt(delayed_p * (1 - delayed_p)),
+		   delayed_mean = 1 / delayed_p)
 ```
 
 ## Report
 ```{r}
-kable(arrival_df, caption = "Airline Arrivals")
-
-kable(on_time_rate_by_airline[ , c(1, 4)],
+kable(delayed_stat_by_airline,
 	  digits = 2,
-	  caption = "On Time Rate by Airline")
+	  caption = "Statistics by Airline")
 
-kable(on_time_rate_by_city[ , c(1, 4)],
+kable(delayed_stat_by_city,
 	  digits = 2,
-	  caption = "On Time Rate by City")
+	  caption = "Statistics by City")
 
-kable(on_time_rate_by_airline_city[ , c(1, 2, 5)],
+kable(delayed_stat_by_airline_city,
 	  digits = 2,
-	  caption = "On Time Rate by Airline and City")
+	  caption = "Statistics by Airline and City")
 ```
 
-## Plot
+## Analyze
+As flights have two statuses, on time or delayed, flight status is a Bernoulli random variable. Since the outcome of interest is delayed arrival, I define a "successful" outcome as a delay and examine that outcome.
+
 ```{r}
-ggplot(data = on_time_rate_by_airline) +
-	geom_col(aes(x = airline, y = on_time_rate)) +
-	labs(title = "On Time Rate by Airline",
-		 x = "Airline",
-		 y = "Rate") +
-	theme_bw()
-
-ggplot(data = on_time_rate_by_city) +
-	geom_col(aes(x = city, y = on_time_rate)) +
-	labs(title = "On Time Rate by City",
-		 x = "City",
-		 y = "Rate") +
-	theme_bw()
-
-ggplot(data = on_time_rate_by_airline_city) +
-	geom_col(aes(x = city, y = on_time_rate, fill = airline), position = "dodge") +
-	labs(title = "On Time Rates by City and Airline",
-		 x = "City",
-		 y = "Rate") +
-	theme_bw()
-
-ggplot(data = on_time_rate_by_airline_city) +
-	geom_col(aes(x = airline, y = on_time_rate, fill = city), position = "dodge") +
-	labs(title = "On Time Rates by Airline and City",
-		 x = "Airline",
-		 y = "Rate") +
-	theme_bw()
-
+# Geometric distribution
+delay_tot <- sum(subset(arrival_df, status == "delayed")["count"])
+arrival_tot <- sum(arrival_df$count)
+delay_p <- delay_tot / arrival_tot
+n <- 1:20
+arrivals_until_delay <- ((1 - delay_p)^(n -1)) * delay_p
+arrivals_until_delay <- tbl_df(arrivals_until_delay)
 ```
+
+Both observed airlines experience delayed flights. The overall probability for delay is `r format(delay_p * 100, digits = 0)`%. The geometric distribution shows the probability of experiencing the first delayed flight after a series of on time arrivals.
+
+```{r}
+ggplot(arrivals_until_delay) +
+	geom_col(aes(x = seq_along(value), y = value)) +
+	labs(title = "Geometric distribution for probability of delay",
+		 x = str_c("Number of flights until a delay for p = ", format(delay_p, digits = 2)),
+		 y = "Probability") +
+	scale_x_continuous(breaks = n) + 
+	theme_bw()
+```
+
+```{r}
+ggplot(data = delayed_stat_by_airline) +
+	geom_col(aes(x = airline, y = delayed_p)) +
+	labs(title = "Probability of Delay by Airline",
+		 x = "Airline",
+		 y = "Probability") +
+	theme_bw()
+```
+
+The probability of delay is greater with Alaska Airlines than with America West, with probabilities of:
+
+- Alaska: `r format((with(delayed_stat_by_airline, delayed_p[airline == "ALASKA"]) * 100), digits = 0)`%.
+- America West: `r format((with(delayed_stat_by_airline, delayed_p[airline == "AM WEST"]) * 100), digits = 0)`%.
+
+A traveler to to all of the observed markets can expect, on average, a delay after the following numbers of flights:
+
+- Alaska: `r format(with(delayed_stat_by_airline, delayed_mean[airline == "ALASKA"]), digits = 0)`.
+- America West: `r format(with(delayed_stat_by_airline, delayed_mean[airline == "AM WEST"]), digits = 0)`.
+
+Since the data are provided as frequencies, we don't know their distributions. However, if we assume that flight arrivals conform to a normal distribution we can generate distributions from these frequencies and compare them. Of course, these manufactured distributions are identical in shape, yet the comparison suggests favorability, in the aggregate, of traveling America West. We will see this picture change with a comparison across destinations.
+
+```{r}
+# Computed summary statistics.
+delayed_mean_alaska <- as.numeric(subset(delayed_stat_by_airline, airline == "ALASKA")["delayed_mean"])
+delayed_sd_alaska <- as.numeric(subset(delayed_stat_by_airline, airline == "ALASKA")["delayed_sd"])
+delayed_mean_amwest <- as.numeric(subset(delayed_stat_by_airline, airline == "AM WEST")["delayed_mean"])
+delayed_sd_amwest <- as.numeric(subset(delayed_stat_by_airline, airline == "AM WEST")["delayed_sd"])
+
+# Generate normal distributions.
+rnorm_alaska <- rnorm(1000, delayed_mean_alaska, delayed_sd_alaska)
+rnorm_amwest <- rnorm(1000, delayed_mean_amwest, delayed_sd_amwest)
+
+# Collect into a data frame.
+alaska_df <- tbl_df(cbind(airline = "ALASKA", flights_til_delay = rnorm_alaska))
+amwest_df <- tbl_df(cbind(airline = "AM WEST", flights_til_delay = rnorm_amwest))
+airline_delay_df <- rbind(alaska_df, amwest_df)
+airline_delay_df$airline <- factor(airline_delay_df$airline)
+airline_delay_df$flights_til_delay <- as.numeric(airline_delay_df$flights_til_delay)
+
+# Plot.
+ggplot(data = airline_delay_df) +
+	geom_boxplot(aes(x = airline, y = flights_til_delay)) +
+	labs(title = "Distribution of Flights until Delay",
+		 x = "Airline",
+		 y = "Frequency until Delay") +
+	theme_bw()
+```
+
+```{r}
+ggplot(data = delayed_stat_by_city) +
+	geom_col(aes(x = city, y = delayed_p)) +
+	labs(title = "Probability of Delay by City",
+		 x = "City",
+		 y = "Probability") +
+	theme_bw()
+```
+
+Among the cities observed, Phoenix has the lowest probability of delay, at `r format((with(delayed_stat_by_city, delayed_p[city == "Phoenix"]) * 100), digits = 0)`%, while San Francisco shows the highest probability, `r format((with(delayed_stat_by_city, delayed_p[city == "San Francisco"]) * 100), digits = 0)`%.
+
+```{r}
+ggplot(data = delayed_stat_by_airline_city) +
+	geom_col(aes(x = city, y = delayed_p, fill = airline), position = "dodge") +
+	labs(title = "Probability of Delay by City and Airline",
+		 x = "City",
+		 y = "Probability") +
+	theme_bw()
+```
+
+Although the overall probability of delay is higher for Alaska Airlines than America West (`r format((with(delayed_stat_by_airline, delayed_p[airline == "ALASKA"]) * 100), digits = 0)`% vs. `r format((with(delayed_stat_by_airline, delayed_p[airline == "AM WEST"]) * 100), digits = 0)`%), Alaska excels in every observed market, surprising given the cumulative statistic.
+
+We can group the destinations by airline and consider their performance across cities.
+
+```{r}
+ggplot(data = delayed_stat_by_airline_city) +
+	geom_col(aes(x = airline, y = delayed_p, fill = city), position = "dodge") +
+	labs(title = "Probability of Delay by Airline and City",
+		 x = "Airline",
+		 y = "Probability") +
+	theme_bw()
+```
+
+Delayed arrivals are dependent on the variable of city, with each airline showing different probabilities of delay in each city. Let's return to the report by airline and city and draw conclusions.
+
+```{r}
+kable(delayed_stat_by_airline_city,
+	  digits = 2,
+	  caption = "Statistics by Airline and City")
+```
+
+## Conclusions
+The report clarifies the summary statistics. America West focuses on its largest market, Phoenix, and provides its most reliable service there. Nevertheless, Alaska's service to that market is even better.
+
+A traveler can observe the following from this analysis:
+
+1. When evaluating flights to the observed destinations Alaska Airlines provides more reliable service than America West, assuming equivalent pricing.
+1. There is a higher likelihood of delay when traveling to San Francisco on either airline, and extra allowance should be made for late arrivals.
+
+America West has two lessons:
+
+1. Highlight in its advertising its favorable overall probability of delay. This is the best story it has to tell about its service.
+1. Learn from Alaska. America West experiences delays similar to those of Alaska in every city. However, Alaska's rate is better in each one. America West should focus on its primary market of Phoenix for reducing arrival delays. This will improve its service for its largest customer base, and if America West can deliver better service than Alaska there, it will have another marketing victory at the level of one destination.
+
+Alaska can observe the following:
+
+1. Though Alaska prevails in service in every observed market, the statistic of overall probability of delay is worsened for them by their primary market of Seattle. Alaska serves Seattle better than America West does, but the delays there pull up Alaska's overall probability for delayed arrivals.
+1. Alaska should highlight in its advertising its service record by market.
+1. There is a risk for Alaska that America West may tout its overall record over Alaska's and that customers may not see or understand Alaska's favorable service with respect to individual destinations. Alaska could mitigate this risk by improving its service in its primary market of Seattle.
