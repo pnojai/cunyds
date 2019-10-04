@@ -1,5 +1,5 @@
 ---
-title: "Project 2a - International Migrant Stock"
+title: "Project 2 - International Migrant Stock (1 of 3)"
 author: "Jai Jeffryes"
 date: "10/4/2019"
 output: html_document
@@ -11,21 +11,19 @@ library(knitr)
 library(openxlsx)
 library(tidyr)
 library(dplyr)
-library(stringr)
 library(ggplot2)
 ```
 
 - [Introduction](#introduction)
 - [Read](#read)
 - [Clean](#clean)
-  - [Objective](#objective)
-  - [Approach](#approach)
-  - [Result](#result)
-- [Summarize](#summarize)
-- [Report](#report)
-- [Analyze](#analyze)
-- [Conclusions](#conclusions)
-
+  - [Validate filters](#validate-filters)
+- [Exploratory Data Analysis](#exploratory-data-analysis)
+  - [Compare proportions by sex](#compare-proportions-by-sex)
+  - [Compare proportions by sex over major region](#compare-proportions-by-sex-over-major-region)
+  - [Compare distributions](#compare-distributions)
+  - [View proportions by country](#view-proportions-by-country)
+  
 ## Introduction
 International migrant stock is the number of people born in a country other than the one where they live. The United Nations Department of Economic and Social Affairs, Population Division publishes estimates of international migrants by age, sex, and origin. Data for international migrant stock as of 2019 are available [here](https://www.un.org/en/development/desa/population/migration/data/estimates2/estimates19.asp).
 
@@ -52,266 +50,248 @@ This analysis examines **Table 1 -  International migrant stock at mid-year by s
 
 ```{r}
 rows <- c(16, 38:240, 242:299)
+cols <- c(2, 13:26)
 migrant_raw <- readWorkbook(xlsxFile = "./data/UN_MigrantStockTotal_2019.xlsx",
-							sheet = 2, startRow = 16, rows = rows)
+							sheet = 2,
+							rows = rows,
+							cols = cols,
+							na.strings = "..")
 ```
 
 ## Clean
-- The headings we are interested, values for a `year` variable, appear in row 16. I adjusted the initial read to start there.
-- The worksheet contains summary rows at the top which I ignore in this analysis. I import detail by country. The body of the report contains summarizations at multiple levels of aggregation. I will summarize at two levels. I retain dataset rows in order to use the descriptions for categorical variables, but I will discard later the reports summary totals. The row filtering is coded in the `rows` vector used by `readWorkbook()`.
-```{r, eval=FALSE}
-kable(arrival_dat, caption = "Airline Arrivals Report")
+- Row filtering is coded in the `rows` vector used by `readWorkbook()`.
+  - The headings we are interested in are values for a `year` variable. They appear in row 16.
+  - The worksheet contains summary rows at the top which I ignore in this analysis as I compute summaries. I import detail by country. The body of the report contains summarizations at multiple levels of aggregation. I summarize at two levels of aggregation for geographic location, major area and region. The detail grain of the report is country. In the initial read, I retain summary rows for major area and region in order to use the descriptions for populating categorical variable, after which I discard the summary rows. 
+- Column filtering is coded in the `cols` vector used by `readWorkbook()`. I retain the geographic location and the yearly measures for each sex. I ignore sort order, notes, codes, type of data, and the yearly total measures for both sexes.
+- NA values are coded in the file as "..".
+
+```{r}
+# Split sexes.
+migrant_clean_m <- tbl_df(migrant_raw[ , 1:8])
+migrant_clean_f <- tbl_df(migrant_raw[ , c(1, 9:15)])
+
+# Create dimension variables.
+migrant_clean_m <- cbind(major_area = NA,
+						 region = NA,
+						 country = migrant_clean_m$X1,
+						 sex = "male",
+						 migrant_clean_m[ , 2:8],
+						 stringsAsFactors = FALSE)
+migrant_clean_f <- cbind(major_area = NA,
+						 region = NA,
+						 country = migrant_clean_f$X1,
+						 sex = "female",
+						 migrant_clean_f[ , 2:8],
+						 stringsAsFactors = FALSE)
+
+# Populate dimensions on breaks.
+major_area_idx <- c(1, 57, 85, 102, 123, 175, 203)
+region_idx <- c(2, 23, 33, 39, 58, 66, 86, 92, 103, 111, 124, 151, 160, 176, 179, 185, 193, 204, 215, 229, 246, 256)
+migrant_clean_m$major_area[major_area_idx] <- migrant_clean_m$country[major_area_idx]
+migrant_clean_m$region[region_idx] <- migrant_clean_m$country[region_idx]
+migrant_clean_f$major_area[major_area_idx] <- migrant_clean_f$country[major_area_idx]
+migrant_clean_f$region[region_idx] <- migrant_clean_f$country[region_idx]
+
+# Fill dimensions
+migrant_clean_m <- migrant_clean_m %>% fill(1:2, .direction = c("down"))
+migrant_clean_f <- migrant_clean_f %>% fill(1:2, .direction = c("down"))
+
+# Discard summary rows.
+migrant_clean_m <- migrant_clean_m[-c(major_area_idx, region_idx), ]
+migrant_clean_f <- migrant_clean_f[-c(major_area_idx, region_idx), ]
+
+# Pivot year variable.
+migrant_clean_m <- migrant_clean_m %>% gather(year, count, 5:length(migrant_clean_m))
+migrant_clean_f <- migrant_clean_f %>% gather(year, count, 5:length(migrant_clean_f))
+
+# Merge partitions.
+migrant_clean <- tbl_df(rbind(migrant_clean_m, migrant_clean_f)) %>% arrange(major_area, region, country, year, sex)
+
+# Create factors.
+migrant_clean$major_area <- factor(migrant_clean$major_area)
+migrant_clean$region <- factor(migrant_clean$region)
+migrant_clean$country <- factor(migrant_clean$country)
+migrant_clean$sex <- factor(migrant_clean$sex)
+
+# Data types.
+migrant_clean$year <- as.integer(migrant_clean$year)
+
 ```
 
-### Approach
-- Cleaning began upon initial reading of the report. Empty strings in the file were read as `NA` values. No factors were created.
-- An empty row separated data from the two airlines. I coded removal of the empty row so it would be automatic and repeatable, given a larger report with more empty rows.
-- The airline name appeared only once within each group of records for that airline. I filled the name down in the white space below so that it would become a categorical variable.
-- I gave a variable name to columns lacking one.
-- Cities appeared in the first row of the report, an example of a data format in which values of a variable appear in a heading rather than in a column, exemplifying cross tab reporting.
-- In preparation for pivoting the city values into a column of their own, I cleaned periods from their names. The periods were the consequence of allowing the report to be read as containing a header. This was useful because tools can pivot headings into columns. Transforming the periods back to spaces could have been done after pivoting the data, but doing it early optimizes the number of replacements to be made.
-- The function, `tidyr::gather()`, pivoted the city names and the arrival counts, generating two new columns, `city` and `count`, for dimension and measure.
-- I removed commas from arrival counts and coerced the values to a numeric datatype.
-- I converted categorical variables to factors, which `ggplot2` needs for mapping them to aesthetics.
-- I formatted the result as a `tibble` for convenient reporting.
+### Validate filters
+The report presents totals for both sexes. My organization of the data removes summary rows. I validated that I removed the necessary rows and no more than that. I compare the world totals by year from my cleaned data set against the world totals in the report and found no differences.
 
-```{r, eval=FALSE}
-arrival_clean <- arrival_dat
-arrival_clean <- arrival_clean %>% filter_all(any_vars(!is.na(.))) # Remove empty rows
-arrival_clean <- arrival_clean %>% fill(1, .direction = c("down")) # Fill airline
-arrival_clean <- arrival_clean %>% rename(airline = X,             # Rename columns
-										status = X.1)
-names(arrival_clean) <- str_replace_all(names(arrival_clean),      # Replace . in vars
-									   pattern = "\\.",
-									   replacement = " ")
-arrival_clean <- arrival_clean %>% gather(city,                    # Pivot cities
-										count,
-										3:length(arrival_clean))
-arrival_clean$count <-str_replace_all(arrival_clean$count,         # Replace ,
-										pattern = ",",
-										replacement = "")
-arrival_clean$count <- as.integer(arrival_clean$count)             # Coerce to integers
-arrival_clean$airline <- as.factor(arrival_clean$airline)          # Factors
-arrival_clean$status <- as.factor(arrival_clean$status)
-arrival_clean$city <- as.factor(arrival_clean$city)
-arrival_df <- tbl_df(arrival_clean)                                # Format tibble
+```{r}
+tot_world_clean <- migrant_clean %>%
+	filter(!is.na(count)) %>%
+	group_by(year) %>%
+	summarize(total = sum(count)) %>% 
+	rename(tot_clean = total)
+
+tot_raw <- readWorkbook(xlsxFile = "./data/UN_MigrantStockTotal_2019.xlsx",
+							sheet = 2,
+							rows = 16:17,
+							cols = 6:12,
+							na.strings = "..")
+tot_raw <- tbl_df(t(tot_raw)) %>% 
+	rename(tot_raw = 1)
+
+tot_compare <- cbind(tot_world_clean, tot_raw) %>% 
+	mutate(difference = tot_clean - tot_raw)
+
+kable(tot_compare, caption = "Validation of World Totals")
 ```
 
-### Result
-- One observation per row.
-- One variable per column.
+## Exploratory data analysis
+### Compare proportions by sex
+The proportion of male migrants is higher than that of females in each year.
 
-```{r, eval=FALSE}
-kable(arrival_df, caption = "Airline Arrivals Data Frame (Cleaned)")
-```
+```{r}
+sex_prop_year <- migrant_clean %>%
+	filter(!is.na(count)) %>% 
+	group_by(sex, year) %>% 
+	summarize(count = sum(count)) %>% 
+	spread(sex, count) %>%                                     # Pivot the summaries for computed columns
+	mutate(total = .[[2]] + .[[3]],                            # Create computed columns for proportions
+		   Male = male / total,
+		   Female = female / total) %>% 
+	gather(Sex, Proportion, Male:Female)                 # Unpivot the results again for plotting
+sex_prop_year$Sex <- factor(sex_prop_year$Sex) # Aesthetic mappings needs factors
 
-## Summarize
-I computed summaries at these groupings:
-
-- Arrivals by airline
-- Arrivals by city
-- Arrivals by city and airline
-- Statistics of delayed arrivals by airline
-- Statistics of delayed arrivals by city
-- Statistics of delayed arrivals by airline and city
-
-```{r, eval=FALSE}
-# Summarize arrivals
-#   Airline
-arrivals_by_airline <- arrival_df %>%
-	group_by(airline) %>%
-	summarize(total_arrivals = sum(count))
-#   City
-arrivals_by_city <- arrival_df %>%
-	group_by(city) %>%
-	summarize(total_arrivals = sum(count))
-#   Airline and city
-arrivals_by_airline_city <- arrival_df %>%
-	group_by(airline, city) %>%
-	summarize(total_arrivals = sum(count))
-
-# Summarize delayed arrivals
-#   Airline
-delayed_arrivals_by_airline <- arrival_df %>%
-	filter(status == "delayed") %>%
-	group_by(airline) %>%
-	summarize(delayed_arrivals = sum(count))
-#   City
-delayed_arrivals_by_city <- arrival_df %>%
-	filter(status == "delayed") %>%
-	group_by(city) %>%
-	summarize(delayed_arrivals = sum(count))
-#   Airline and city
-delayed_arrivals_by_airline_city <- arrival_df %>%
-	filter(status == "delayed") %>%
-	group_by(airline, city) %>%
-	summarize(delayed_arrivals = sum(count))
-
-# Delayed statistics
-#   Airline
-delayed_stat_by_airline <- inner_join(
-	delayed_arrivals_by_airline, arrivals_by_airline) %>%
-	mutate(delayed_p = delayed_arrivals / total_arrivals,
-		   delayed_sd = sqrt(delayed_p * (1 - delayed_p)),
-		   delayed_mean = 1 / delayed_p)
-#   City
-delayed_stat_by_city <- inner_join(
-	delayed_arrivals_by_city, arrivals_by_city) %>%
-	mutate(delayed_p = delayed_arrivals / total_arrivals,
-		   delayed_sd = sqrt(delayed_p * (1 - delayed_p)),
-		   delayed_mean = 1 / delayed_p)
-#   Airline and city
-delayed_stat_by_airline_city <- inner_join(
-	delayed_arrivals_by_airline_city, arrivals_by_airline_city) %>%
-	mutate(delayed_p = delayed_arrivals / total_arrivals,
-		   delayed_sd = sqrt(delayed_p * (1 - delayed_p)),
-		   delayed_mean = 1 / delayed_p)
-```
-
-## Report
-```{r, eval=FALSE}
-kable(delayed_stat_by_airline,
-	  digits = 2,
-	  caption = "Statistics by Airline")
-
-kable(delayed_stat_by_city,
-	  digits = 2,
-	  caption = "Statistics by City")
-
-kable(delayed_stat_by_airline_city,
-	  digits = 2,
-	  caption = "Statistics by Airline and City")
-```
-
-## Analyze
-As flights have two statuses, on time or delayed, flight status is a Bernoulli random variable. Since the outcome of interest is delayed arrival, I define a "successful" outcome as a delay and examine that outcome.
-
-```{r, eval=FALSE}
-# Geometric distribution
-delay_tot <- sum(subset(arrival_df, status == "delayed")["count"])
-arrival_tot <- sum(arrival_df$count)
-delay_p <- delay_tot / arrival_tot
-n <- 1:20
-arrivals_until_delay <- ((1 - delay_p)^(n -1)) * delay_p
-arrivals_until_delay <- tbl_df(arrivals_until_delay)
-```
-
-Both observed airlines experience delayed flights. The overall probability for delay is `r, eval=FALSE format(delay_p * 100, digits = 0)`%. The geometric distribution shows the probability of experiencing the first delayed flight after a series of on time arrivals.
-
-```{r, eval=FALSE}
-ggplot(arrivals_until_delay) +
-	geom_col(aes(x = seq_along(value), y = value)) +
-	labs(title = "Geometric distribution for probability of delay",
-		 x = str_c("Number of flights until a delay for p = ", format(delay_p, digits = 2)),
-		 y = "Probability") +
-	scale_x_continuous(breaks = n) + 
+ggplot(data = sex_prop_year) +
+	geom_col(aes(x = year, y = Proportion, fill = Sex), position = "dodge") +
+	labs(title = "Proportions of male and female migrants by year",
+		 x = "Year",
+		 y = "Proportion") +
 	theme_bw()
 ```
 
-```{r, eval=FALSE}
-ggplot(data = delayed_stat_by_airline) +
-	geom_col(aes(x = airline, y = delayed_p)) +
-	labs(title = "Probability of Delay by Airline",
-		 x = "Airline",
-		 y = "Probability") +
+The proportion of male migrants is rising.
+
+```{r}
+ggplot(data = subset(sex_prop_year, Sex == "Male")) +
+	geom_line(mapping = aes(x = year, y = Proportion), stat = "identity") +
+	labs(title = "Proportion of male migrants by year",
+		 x = "Year",
+		 y = "Proportion") +
 	theme_bw()
 ```
 
-The probability of delay is greater with Alaska Airlines than with America West, with probabilities of:
+### Compare proportions by sex over major region
+We can view these proportions by major region over all time.
 
-- Alaska: `r, eval=FALSE format((with(delayed_stat_by_airline, delayed_p[airline == "ALASKA"]) * 100), digits = 0)`%.
-- America West: `r, eval=FALSE format((with(delayed_stat_by_airline, delayed_p[airline == "AM WEST"]) * 100), digits = 0)`%.
+```{r}
+sex_prop_major_area <- migrant_clean %>%
+	filter(!is.na(count)) %>% 
+	group_by(sex, major_area) %>% 
+	summarize(count = sum(count)) %>% 
+	spread(sex, count) %>%                                     # Pivot the summaries for computed columns
+	mutate(Total = female + male,                            # Create computed columns for proportions
+		   Male = male / Total,
+		   Female = female / Total) %>% 
+	gather(Sex, Proportion, Male:Female)                 # Unpivot the results again for plotting
+sex_prop_major_area$Sex <- factor(sex_prop_major_area$Sex) # Aesthetic mappings needs factors
 
-A traveler to to all of the observed markets can expect, on average, a delay after the following numbers of flights:
+ggplot(data = sex_prop_major_area) +
+	geom_col(aes(x = major_area, y = Proportion, fill = Sex), position = "dodge") +
+	labs(title = "Proportions of male and female migrants by major area",
+		 x = "Major Area",
+		 y = "Proportion") +
+	theme_bw() + # Use built in theme
+	# Then customize theme
+	theme(axis.text.x = element_text(angle = -30, hjust = 0)) # Justification 0 = left, 1 = right
+```
 
-- Alaska: `r, eval=FALSE format(with(delayed_stat_by_airline, delayed_mean[airline == "ALASKA"]), digits = 0)`.
-- America West: `r, eval=FALSE format(with(delayed_stat_by_airline, delayed_mean[airline == "AM WEST"]), digits = 0)`.
+The major area where the proportion of male migrants is highest is Northern Africa and Western Asia. We can examine the trend over time. The proportion began a marked increase following the year 2000. It plateaued in 2010 and has remained high since then.
 
-Since the data are provided as frequencies, we don't know their distributions. However, if we assume that flight arrivals conform to a normal distribution we can generate distributions from these frequencies and compare them. Of course, these manufactured distributions are identical in shape, yet the comparison suggests favorability, in the aggregate, of traveling America West. We will see this picture change with a comparison across destinations.
+```{r}
+sex_prop_nafrica_wasia_year <- migrant_clean %>%
+	filter(!is.na(count),
+		   major_area == "NORTHERN AFRICA AND WESTERN ASIA") %>% 
+	group_by(sex, year) %>% 
+	summarize(count = sum(count)) %>% 
+	spread(sex, count) %>%                                     # Pivot the summaries for computed columns
+	mutate(total = female + male,                            # Create computed columns for proportions
+		   Male = male / total,
+		   Female = female / total) %>% 
+	gather(Sex, Proportion, Male:Female)                 # Unpivot the results again for plotting
+sex_prop_year$Sex <- factor(sex_prop_year$Sex) # Aesthetic mappings needs factors
 
-```{r, eval=FALSE}
-# Computed summary statistics.
-delayed_mean_alaska <- as.numeric(subset(delayed_stat_by_airline, airline == "ALASKA")["delayed_mean"])
-delayed_sd_alaska <- as.numeric(subset(delayed_stat_by_airline, airline == "ALASKA")["delayed_sd"])
-delayed_mean_amwest <- as.numeric(subset(delayed_stat_by_airline, airline == "AM WEST")["delayed_mean"])
-delayed_sd_amwest <- as.numeric(subset(delayed_stat_by_airline, airline == "AM WEST")["delayed_sd"])
-
-# Generate normal distributions.
-rnorm_alaska <- rnorm(1000, delayed_mean_alaska, delayed_sd_alaska)
-rnorm_amwest <- rnorm(1000, delayed_mean_amwest, delayed_sd_amwest)
-
-# Collect into a data frame.
-alaska_df <- tbl_df(cbind(airline = "ALASKA", flights_til_delay = rnorm_alaska))
-amwest_df <- tbl_df(cbind(airline = "AM WEST", flights_til_delay = rnorm_amwest))
-airline_delay_df <- rbind(alaska_df, amwest_df)
-airline_delay_df$airline <- factor(airline_delay_df$airline)
-airline_delay_df$flights_til_delay <- as.numeric(airline_delay_df$flights_til_delay)
-
-# Plot.
-ggplot(data = airline_delay_df) +
-	geom_boxplot(aes(x = airline, y = flights_til_delay)) +
-	labs(title = "Distribution of Flights until Delay",
-		 x = "Airline",
-		 y = "Frequency until Delay") +
+ggplot(data = subset(sex_prop_nafrica_wasia_year, Sex == "Male")) +
+	geom_line(mapping = aes(x = year, y = Proportion), stat = "identity") +
+	labs(title = "Proportion of male migrants in Northern Africa and Western Asia by year",
+		 x = "Year",
+		 y = "Proportion") +
 	theme_bw()
 ```
 
-```{r, eval=FALSE}
-ggplot(data = delayed_stat_by_city) +
-	geom_col(aes(x = city, y = delayed_p)) +
-	labs(title = "Probability of Delay by City",
-		 x = "City",
-		 y = "Probability") +
+### Compare distributions
+Compare the distributions of proportions of migrant stock by sex over all countries in year 2019.
+
+```{r}
+sex_prop_country <- migrant_clean %>%
+	filter(!is.na(count),
+		   year == 2019) %>% 
+	group_by(sex, country) %>% 
+	summarize(count = sum(count)) %>% 
+	spread(sex, count) %>%                                     # Pivot the summaries for computed columns
+	mutate(total = female + male,                            # Create computed columns for proportions
+		   Male = male / total,
+		   Female = female / total) %>% 
+	gather(Sex, Proportion, Male:Female)                 # Unpivot the results again for plotting
+sex_prop_country$Sex <- factor(sex_prop_country$Sex) # Aesthetic mappings needs factors
+
+kable(summary(subset(sex_prop_country, Sex == "Male")["Proportion"]),
+	  caption = "Summary for Males",
+	  align = "l")
+
+kable(summary(subset(sex_prop_country, Sex == "Female")["Proportion"]),
+	  caption = "Summary for Females",
+	  align = "l")
+```
+
+Compare the distributions visually. Naturally, the proportions of the sexes complement each other.
+
+```{r}
+ggplot(sex_prop_country) +
+	geom_boxplot(mapping = aes(x = Sex, y = Proportion)) +
+	labs(title = "Distributions of international migrant stock in year 2019",
+		 x = "Sex",
+		 y = "Proportion") +
 	theme_bw()
 ```
 
-Among the cities observed, Phoenix has the lowest probability of delay, at `r, eval=FALSE format((with(delayed_stat_by_city, delayed_p[city == "Phoenix"]) * 100), digits = 0)`%, while San Francisco shows the highest probability, `r, eval=FALSE format((with(delayed_stat_by_city, delayed_p[city == "San Francisco"]) * 100), digits = 0)`%.
+### View proportions by country
+We can view countries with the highest proportion of male international migrant stock for the current year, 2019.
 
-```{r, eval=FALSE}
-ggplot(data = delayed_stat_by_airline_city) +
-	geom_col(aes(x = city, y = delayed_p, fill = airline), position = "dodge") +
-	labs(title = "Probability of Delay by City and Airline",
-		 x = "City",
-		 y = "Probability") +
+```{r}
+df_m <- sex_prop_country %>%
+	filter(Sex == "Male") %>% 
+	arrange(desc(Proportion)) %>% 
+	top_n(25)
+
+ggplot(data = df_m) +
+	geom_col(aes(x = reorder(country, Proportion), y = Proportion)) +
+	coord_flip() +
+	labs(title = "Proportion of male migrants by country in year 2019",
+		 x = "Country",
+		 y = "Proportion") +
 	theme_bw()
 ```
 
-Although the overall probability of delay is higher for Alaska Airlines than America West (`r, eval=FALSE format((with(delayed_stat_by_airline, delayed_p[airline == "ALASKA"]) * 100), digits = 0)`% vs. `r, eval=FALSE format((with(delayed_stat_by_airline, delayed_p[airline == "AM WEST"]) * 100), digits = 0)`%), Alaska excels in every observed market, surprising given the cumulative statistic.
+Conversely, we can view countries with the highest proportion of female international migrant stock for the current year, 2019.
 
-We can group the destinations by airline and consider their performance across cities.
+```{r}
+df_f <- sex_prop_country %>%
+	filter(Sex == "Female") %>% 
+	arrange(desc(Proportion)) %>% 
+	top_n(25)
 
-```{r, eval=FALSE}
-ggplot(data = delayed_stat_by_airline_city) +
-	geom_col(aes(x = airline, y = delayed_p, fill = city), position = "dodge") +
-	labs(title = "Probability of Delay by Airline and City",
-		 x = "Airline",
-		 y = "Probability") +
+ggplot(data = df_f) +
+	geom_col(aes(x = reorder(country, Proportion), y = Proportion)) +
+	coord_flip() +
+	labs(title = "Proportion of female migrants by country in year 2019",
+		 x = "Country",
+		 y = "Proportion") +
 	theme_bw()
 ```
-
-Delayed arrivals are dependent on the variable of city, with each airline showing different probabilities of delay in each city. Let's return to the report by airline and city and draw conclusions.
-
-```{r, eval=FALSE}
-kable(delayed_stat_by_airline_city,
-	  digits = 2,
-	  caption = "Statistics by Airline and City")
-```
-
-## Conclusions
-The report clarifies the summary statistics. America West focuses on its largest market, Phoenix, and provides its most reliable service there. Nevertheless, Alaska's service to that market is even better.
-
-A traveler can observe the following from this analysis:
-
-1. When evaluating flights to the observed destinations Alaska Airlines provides more reliable service than America West, assuming equivalent pricing.
-1. There is a higher likelihood of delay when traveling to San Francisco on either airline, and extra allowance should be made for late arrivals.
-
-America West has two lessons:
-
-1. Highlight in its advertising its favorable overall probability of delay. This is the best story it has to tell about its service.
-1. Learn from Alaska. America West experiences delays similar to those of Alaska in every city. However, Alaska's rate is better in each one. America West should focus on its primary market of Phoenix for reducing arrival delays. This will improve its service for its largest customer base, and if America West can deliver better service than Alaska there, it will have another marketing victory at the level of one destination.
-
-Alaska can observe the following:
-
-1. Though Alaska prevails in service in every observed market, the statistic of overall probability of delay is worsened for them by their primary market of Seattle. Alaska serves Seattle better than America West does, but the delays there pull up Alaska's overall probability for delayed arrivals.
-1. Alaska should highlight in its advertising its service record by market.
-1. There is a risk for Alaska that America West may tout its overall record over Alaska's and that customers may not see or understand Alaska's favorable service with respect to individual destinations. Alaska could mitigate this risk by improving its service in its primary market of Seattle.
