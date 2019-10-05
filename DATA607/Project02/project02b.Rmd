@@ -1,0 +1,137 @@
+---
+title: "Project 2 - Chess (2 of 3)"
+author: "Jai Jeffryes"
+date: "10/4/2019"
+output: html_document
+---
+
+```{r setup, include=TRUE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+library(openxlsx)
+library(tidyr)
+library(dplyr)
+library(stringr)
+library(ggplot2)
+```
+
+- [Introduction](#introduction)
+- [Read](#read)
+- [Clean](#clean)
+- [Exploratory Analysis](#exploratory-analysis)
+
+## Introduction
+I selected a dataset about chess tournament results posted by Michael Yampol in the [discussion forum](https://bbhosted.cuny.edu/webapps/discussionboard/do/message?action=list_messages&course_id=_1793305_1&nav=discussion_board_entry&conf_id=_1955210_1&forum_id=_2023615_1&message_id=_33952298_1), It gave me a chance to improve on my approach from an earlier assignment and employ reshaping tools from the `tidyr` package.
+
+I copied and pasted the data manually from the following link.
+
+- Link: [North American Open 2018 Standings – Open Section](https://chessevents.com/2018/12/north-american-open-2018-standings-open-section/)
+- Date: 10/4/2019
+
+## Read
+
+```{r}
+cols <- 1:15
+chess_raw <- readWorkbook(xlsxFile = "./data/chess_naopen_2018.xlsx",
+						  cols = cols,
+						  na.strings = c(NA, "unr."))
+```
+
+## Clean
+- Column filtering is coded in the `cols` vector used by `readWorkbook()`. I ignore prizes and amounts.
+- The `name` variable includes titles from the Fédération Internationale des Échecs (FIDE). I split those into into a separate column. The titles are documented on [Wikipedia](https://en.wikipedia.org/wiki/FIDE_titles).
+  - Grandmaster (GM)
+  - International Master (IM)
+  - FIDE Master (FM)
+  - Candidate Master (CM)
+  - Woman Grandmaster (WGM)
+  - Woman International Master (WIM)
+  - Woman FIDE Master (WFM)
+  - Woman Candidate Master (WCM)
+- I unpivoted results of tournament rounds from a wide format into a narrow data frame.
+
+```{r}
+# Working copy.
+chess_wrk <- tbl_df(chess_raw)
+
+# Clean the column names.
+names(chess_wrk)[c(1:5, 15)] <- c("player_number", "name", "rating", "team", "club", "total")
+names(chess_wrk) <- str_replace_all(string = names(chess_wrk), pattern = "Rd\\.", replacement = "")
+
+# Create a data frame for player.
+chess_player <- chess_wrk[ , c(1:5, 15)]
+chess_player <- cbind(chess_player[ , 1], fide_title = as.character(NA), chess_player[ , 2:6])
+
+# Split FIDE title
+#  Begin string anchor.
+#  Set of titles in capture group.
+#  Optional.
+#  White space in capture group, optional.
+#  Remainder of string in capture group.
+fide_pat <- "^(GM|IM|FM|CM|WGM|WIM|WFM|WCM)?(\\s)?(.+)"
+player_name_split <- str_match(chess_player$name, fide_pat)
+chess_player$fide_title <- player_name_split[ , 2]
+chess_player$name <- player_name_split[ , 4]
+
+# Create a data frame for tourament round.
+chess_round <- chess_wrk[ , c(1, 6:14)]
+
+# Unpivot. The code for this (for at least the next 10 minutes) is the pivot_longer() function.
+chess_round <- chess_round %>% 
+	pivot_longer(-player_number, names_to = "round_number", values_to = "result_raw")
+
+# Split the result string into game result and opponent number.
+chess_round$result <- str_sub(string = chess_round$result_raw, start = 1, end = 1)
+chess_round$opponent_number <- str_sub(string = chess_round$result_raw, start = 2)
+chess_round$opponent_number <- as.integer(chess_round$opponent_number)
+
+# Drop the column with the raw result string.
+chess_round <- chess_round[ , -3]
+
+# Create factors.
+chess_player$fide_title <- factor(chess_player$fide_title)
+chess_player$team <- factor(chess_player$team)
+chess_player$club <- factor(chess_player$club)
+chess_round$round_number <- factor(chess_round$round_number)
+chess_round$result <- factor(chess_round$result)
+
+# Join the player and round data frames, in case you need them in one place.
+chess_join <- inner_join(chess_player, chess_round)
+```
+
+## Exploratory analysis
+If we examine the size of the clubs, participation at this event is predominantly from the USA.
+
+```{r}
+ggplot(chess_player) +
+	geom_bar(aes(x = club)) +
+	labs(title = "Player count by club") +
+	theme_bw()
+```
+
+We can examine win rate by FIDE title. The performance of untitled players (NA in the plot) invites further exploration to understand the superior performance over players with the title, Women's FIDE Master. The Widipedia [article](https://en.wikipedia.org/wiki/FIDE_titles) about FIDE titles says that some women prefer to compete in the non-gendered title categories. Does the lower win rate for WFM players reveal a motivation to gain a title by players who may otherwise be unable to attain one?
+
+```{r}
+player_round_count <- chess_round %>%
+	group_by(player_number) %>%
+	summarize(round_count = n())
+
+player_win_count <- chess_round %>% 
+	filter(result == "W") %>% 
+	group_by(player_number) %>%
+	summarize(win_count = n())
+
+player_wins <- inner_join(player_win_count, player_round_count) %>%
+	mutate(win_rate = win_count / round_count)
+
+chess_player <- inner_join(chess_player, player_wins)
+
+ggplot(chess_player) +
+	geom_bar(mapping = aes(x = reorder(fide_title, -win_rate), y = win_rate), stat = "summary", fun.y = "mean") +
+	labs(title = "Win rate by FIDE title",
+		 x = "FIDE Title",
+		 y = "Win Rate") +
+	theme_bw()
+```
+
+Note: This bar chart illustrates how to employ statistics other than "identity."

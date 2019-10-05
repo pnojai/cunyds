@@ -25,6 +25,16 @@ library(ggplot2)
   - [View proportions by country](#view-proportions-by-country)
   
 ## Introduction
+Project 2 required data tidying for three data sets. I chose data sets about:
+
+1. International migrant stock reported by the U.N.
+1. A chess tournament reported by the Continental Chess Association.
+1. Per capita expenditures by counties of Maryland in 2010.
+
+Finding appropriate datasets from the discussion board was challenging due to misunderstanding of the goals of so-called tidying, a structural reorganization distinct from other aspects of data cleansing. Many described their contributions using the imprecise term, "messy," and though the data quality may have justified some form of cleansing transformations, the contributions were commonly already tidy, namely having a single variable per column and a single observation per row.
+
+Cross tab reports are common and they lend themselves well to reorganization by tidy principles. This analysis examines data reported by the United Nations.
+
 International migrant stock is the number of people born in a country other than the one where they live. The United Nations Department of Economic and Social Affairs, Population Division publishes estimates of international migrants by age, sex, and origin. Data for international migrant stock as of 2019 are available [here](https://www.un.org/en/development/desa/population/migration/data/estimates2/estimates19.asp).
 
 I downloaded the 2019 dataset manually.
@@ -119,7 +129,7 @@ migrant_clean$year <- as.integer(migrant_clean$year)
 ```
 
 ### Validate filters
-The report presents totals for both sexes. My organization of the data removes summary rows. I validated that I removed the necessary rows and no more than that. I compare the world totals by year from my cleaned data set against the world totals in the report and found no differences.
+The report presents totals for both sexes. My organization of the data removes summary rows. I validated that I removed the necessary rows and no more than that. I compared the world totals by year from my cleaned data set against the world totals in the report and found no differences.
 
 ```{r}
 tot_world_clean <- migrant_clean %>%
@@ -151,11 +161,11 @@ sex_prop_year <- migrant_clean %>%
 	filter(!is.na(count)) %>% 
 	group_by(sex, year) %>% 
 	summarize(count = sum(count)) %>% 
-	spread(sex, count) %>%                                     # Pivot the summaries for computed columns
-	mutate(total = .[[2]] + .[[3]],                            # Create computed columns for proportions
+	spread(sex, count) %>%                     # Pivot the summaries for computed columns
+	mutate(total = .[[2]] + .[[3]],            # Create computed columns for proportions
 		   Male = male / total,
 		   Female = female / total) %>% 
-	gather(Sex, Proportion, Male:Female)                 # Unpivot the results again for plotting
+	gather(Sex, Proportion, Male:Female)       # Unpivot the results again for plotting
 sex_prop_year$Sex <- factor(sex_prop_year$Sex) # Aesthetic mappings needs factors
 
 ggplot(data = sex_prop_year) +
@@ -185,11 +195,11 @@ sex_prop_major_area <- migrant_clean %>%
 	filter(!is.na(count)) %>% 
 	group_by(sex, major_area) %>% 
 	summarize(count = sum(count)) %>% 
-	spread(sex, count) %>%                                     # Pivot the summaries for computed columns
-	mutate(Total = female + male,                            # Create computed columns for proportions
+	spread(sex, count) %>%                                    # Pivot the summaries for computed columns
+	mutate(Total = female + male,                             # Create computed columns for proportions
 		   Male = male / Total,
 		   Female = female / Total) %>% 
-	gather(Sex, Proportion, Male:Female)                 # Unpivot the results again for plotting
+	gather(Sex, Proportion, Male:Female)                      # Unpivot the results again for plotting
 sex_prop_major_area$Sex <- factor(sex_prop_major_area$Sex) # Aesthetic mappings needs factors
 
 ggplot(data = sex_prop_major_area) +
@@ -210,11 +220,11 @@ sex_prop_nafrica_wasia_year <- migrant_clean %>%
 		   major_area == "NORTHERN AFRICA AND WESTERN ASIA") %>% 
 	group_by(sex, year) %>% 
 	summarize(count = sum(count)) %>% 
-	spread(sex, count) %>%                                     # Pivot the summaries for computed columns
-	mutate(total = female + male,                            # Create computed columns for proportions
+	spread(sex, count) %>%                     # Pivot the summaries for computed columns
+	mutate(total = female + male,              # Create computed columns for proportions
 		   Male = male / total,
 		   Female = female / total) %>% 
-	gather(Sex, Proportion, Male:Female)                 # Unpivot the results again for plotting
+	gather(Sex, Proportion, Male:Female)       # Unpivot the results again for plotting
 sex_prop_year$Sex <- factor(sex_prop_year$Sex) # Aesthetic mappings needs factors
 
 ggplot(data = subset(sex_prop_nafrica_wasia_year, Sex == "Male")) +
@@ -234,11 +244,11 @@ sex_prop_country <- migrant_clean %>%
 		   year == 2019) %>% 
 	group_by(sex, country) %>% 
 	summarize(count = sum(count)) %>% 
-	spread(sex, count) %>%                                     # Pivot the summaries for computed columns
-	mutate(total = female + male,                            # Create computed columns for proportions
+	spread(sex, count) %>%                           # Pivot the summaries for computed columns
+	mutate(total = female + male,                    # Create computed columns for proportions
 		   Male = male / total,
 		   Female = female / total) %>% 
-	gather(Sex, Proportion, Male:Female)                 # Unpivot the results again for plotting
+	gather(Sex, Proportion, Male:Female)             # Unpivot the results again for plotting
 sex_prop_country$Sex <- factor(sex_prop_country$Sex) # Aesthetic mappings needs factors
 
 kable(summary(subset(sex_prop_country, Sex == "Male")["Proportion"]),

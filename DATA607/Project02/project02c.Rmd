@@ -1,0 +1,104 @@
+---
+title: "Project 2 - Maryland Expenditures 2010 (3 of 3)"
+author: "Jai Jeffryes"
+date: "10/4/2019"
+output: html_document
+---
+
+```{r setup, include=TRUE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+library(openxlsx)
+library(tidyr)
+library(dplyr)
+library(stringr)
+library(ggplot2)
+```
+
+- [Introduction](#introduction)
+- [Read](#read)
+- [Clean](#clean)
+- [Exploratory Analysis](#exploratory-analysis)
+
+## Introduction
+I examined multiple datasets from the discussion. I found budget data from the State of Maryland that was a good candidate for tidying. I copied and pasted the data manually from the following link.
+
+- Link: [Per Capita County Expenditures By Category – Fiscal Year 2010](https://catalog.data.gov/dataset/per-capita-county-expenditures-by-category-fiscal-year-2010/resource/9ce0b412-6758-4e48-9cc4-264b9e4c3f16)
+- Date: 10/4/2019
+
+Per capita dollars for each county's expenditures. Source: Local Government Finances Fiscal 2010 (Department of Legislative Services), via Overview of Maryland Local Governments Finances and Demographic Information (Department of Legislative Services, 2012).
+
+## Read
+```{r}
+md_budget_raw <- read.csv(file = "./data/Per_Capita_County_Expenditures_By_Category___Fiscal_Year_2010.csv",
+						  stringsAsFactors = FALSE)
+```
+
+## Clean
+View the top of the file. There are three variables.
+
+1. County. Located in a column, which is good.
+1. Budget category. Values are located in the column header. These must be pivoted.
+1. Per capita expenditures. Located in the grid.
+
+```{r}
+head(md_budget_raw)
+```
+
+- I ignore the total column that sums categories.
+- I ignore the Statewide row that sums counties.
+
+```{r}
+# Working copy.
+md_budget_clean <- tbl_df(md_budget_raw[-25, -10])
+
+# Clean the column names.
+names(md_budget_clean) <- str_replace_all(string = names(md_budget_clean),
+										  pattern = "\\.", replacement = "_")
+names(md_budget_clean) <- str_replace_all(string = names(md_budget_clean),
+										  pattern = "__", replacement = "_")
+names(md_budget_clean) <- str_replace_all(string = names(md_budget_clean),
+										  pattern = "__", replacement = "_")
+
+# Unpivot. The code for this (for at least the next 10 minutes) is the pivot_longer() function.
+md_budget_clean <- md_budget_clean %>% 
+	pivot_longer(-County, names_to = "Category", values_to = "Expenditures")
+
+# Create factors.
+md_budget_clean$County <- factor(md_budget_clean$County)
+md_budget_clean$Category <- factor(md_budget_clean$Category)
+```
+
+## Exploratory analysis
+
+```{r}
+ggplot(md_budget_clean) +
+	geom_bar(aes(x = County, y = Expenditures), stat = "summary", fun.y = "sum") +
+	labs(title = "Per capita expenditures by county",
+		 y = "Expenditures (Dollars)") +
+	theme_bw() +
+	theme(axis.text.x = element_text(angle = -40, hjust = 0), # Justification 0 = left, 1 = right
+		  plot.margin = margin(10, 60, 10, 10, "pt"))
+```
+
+```{r}
+ggplot(md_budget_clean) +
+	geom_bar(aes(x = Category, y = Expenditures), stat = "summary", fun.y = "sum") +
+	labs(title = "Per capita expenditures by category",
+		 y = "Expenditures (Dollars)") +
+	theme_bw() +
+	theme(axis.text.x = element_text(angle = -40, hjust = 0), # Justification 0 = left, 1 = right
+		  plot.margin = margin(10, 50, 10, 10, "pt"))
+```
+
+The highest spending per capita is in the category of Education and Libraries. Compare the spending in this category alone across all counties.
+
+```{r}
+ggplot(subset(md_budget_clean, Category == "Education_Libraries")) +
+	geom_bar(aes(x = County, y = Expenditures), stat = "identity") +
+	labs(title = "Per capita Education and Library expenditures by county",
+		 y = "Expenditures (Dollars)") +
+	theme_bw() +
+	theme(axis.text.x = element_text(angle = -40, hjust = 0), # Justification 0 = left, 1 = right
+		  plot.margin = margin(10, 50, 10, 10, "pt"))
+```
