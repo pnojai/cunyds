@@ -1,0 +1,213 @@
+---
+title: DATA 606 Data Project Proposal
+author: Jai Jeffryes
+---
+
+### Data Preparation
+
+#### Behavioral Risk Factor Surveillance System
+- [2018 BRFSS Data (ASCII)](https://www.cdc.gov/brfss/annual_data/2018/files/LLCP2018ASC.zip)
+- Download date: 10/5/2019
+- [Fixed width file layout](https://www.cdc.gov/brfss/annual_data/2018/llcp_varlayout_18_onecolumn.html)
+
+#### Download data
+```{r}
+library(devtools) # To install package distributions from GitHub.
+install_github( "ajdamico/lodown" , dependencies = TRUE ) # Anthony Damico's lodown package.
+library(lodown)
+
+# Set download directory
+dl_dir <- file.path(getwd(), "DATA606", "Project", "data")
+# Get list of BRFSS files.
+brfss_cat <-get_catalog("brfss", output_dir = dl_dir)
+brfss_cat <- subset(brfss_cat, year == 2018)
+brfss_cat <- lodown("brfss" , brfss_cat)
+```
+
+```{r setup, echo=TRUE, results='hide', warning=FALSE, message=FALSE}
+library(readr)
+library(stringr)
+
+# Fixed width file.
+fil_name <- "LLCP2018.ASC"
+
+# Map all columns of the fixed width file. Emacs macros do the trick
+# using the variable layout. We'll only use a subset of the columns,
+# but putting them into vectors will make it easy to pick and choose
+# positions, widths, and column names by index.
+positions_start = c(
+	1, 17, 19, 21, 23, 32, 36, 63, 64, 65,
+	66, 67, 68, 69, 71, 73, 75, 76, 77, 78,
+	79, 80, 81, 84, 85, 90, 91, 93, 95, 97,
+	98, 99, 100, 101, 102, 104, 105, 106, 107, 108,
+	109, 110, 111, 112, 113, 114, 115, 116, 118, 119,
+	120, 157, 158, 159, 168, 169, 170, 171, 172, 173,
+	175, 177, 181, 185, 186, 187, 188, 189, 190, 191,
+	192, 193, 194, 195, 197, 198, 201, 203, 205, 207,
+	208, 214, 216, 217, 219, 221, 222, 224, 225, 226,
+	227, 228, 229, 230, 231, 232, 233, 234, 235, 236,
+	237, 238, 239, 240, 241, 242, 243, 249, 250, 251,
+	252, 253, 256, 259, 261, 263, 265, 266, 267, 268,
+	269, 271, 272, 297, 298, 299, 301, 302, 303, 304,
+	305, 306, 307, 308, 309, 310, 311, 313, 314, 315,
+	317, 318, 319, 320, 321, 322, 323, 325, 326, 327,
+	329, 331, 332, 333, 334, 335, 336, 337, 338, 339,
+	340, 341, 343, 346, 349, 350, 352, 354, 357, 360,
+	363, 364, 365, 367, 369, 370, 372, 373, 374, 375,
+	376, 377, 378, 379, 380, 381, 382, 383, 384, 385,
+	387, 388, 589, 590, 591, 598, 633, 634, 635, 641,
+	643, 1402, 1403, 1409, 1410, 1416, 1446, 1456, 1471, 1482,
+	1539, 1541, 1584, 1681, 1682, 1692, 1750, 1898, 1899, 1900,
+	1901, 1902, 1903, 1904, 1905, 1906, 1907, 1908, 1909, 1910,
+	1967, 1969, 1973, 1974, 1975, 1976, 1977, 1978, 1980, 1981,
+	1983, 1984, 1987, 1990, 1995, 1999, 2000, 2001, 2002, 2003,
+	2004, 2005, 2006, 2007, 2010, 2011, 2016, 2017, 2018, 2019,
+	2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029,
+	2030, 2031, 2032)
+
+widths <- c(
+	2, 2, 2, 2, 4, 4, 10, 1, 1, 1,
+	1, 1, 1, 2, 2, 2, 1, 1, 1, 1,
+	1, 1, 1, 1, 2, 1, 2, 2, 2, 1,
+	1, 1, 1, 1, 2, 1, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 2, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 2,
+	2, 4, 4, 1, 1, 1, 1, 1, 1, 1,
+	1, 1, 1, 2, 1, 3, 2, 2, 2, 1,
+	6, 2, 1, 2, 2, 1, 2, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 6, 1, 1, 1,
+	1, 3, 3, 2, 2, 2, 1, 1, 1, 1,
+	2, 1, 25, 1, 1, 2, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 2, 1, 1, 2,
+	1, 1, 1, 1, 1, 1, 2, 1, 1, 2,
+	2, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+	1, 2, 3, 3, 1, 2, 2, 3, 3, 3,
+	1, 1, 2, 2, 1, 2, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 2,
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 2,
+	2, 1, 1, 1, 6, 10, 10, 10, 2, 1,
+	2, 2, 10, 1, 10, 10, 10, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+	2, 2, 1, 1, 1, 1, 1, 2, 1, 2,
+	1, 3, 3, 5, 4, 1, 1, 1, 1, 1,
+	1, 1, 1, 3, 1, 5, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+	1, 1, 1
+)
+
+positions_end <- positions_start + (widths - 1)
+
+col_names <- c(
+	"_STATE", "FMONTH", "IMONTH", "IDAY", "IYEAR", "DISPCODE",
+	"SEQNO", "CTELENM1", "PVTRESD1", "COLGHOUS", "STATERE1", "CELLFON4",
+	"LADULT", "NUMADULT", "NUMMEN", "NUMWOMEN", "SAFETIME", "CTELNUM1",
+	"CELLFON5", "CADULT", "PVTRESD3", "CCLGHOUS", "CSTATE1", "LANDLINE",
+	"HHADULT", "GENHLTH", "PHYSHLTH", "MENTHLTH", "POORHLTH", "HLTHPLN1",
+	"PERSDOC2", "MEDCOST", "CHECKUP1", "EXERANY2", "SLEPTIM1", "CVDINFR4",
+	"CVDCRHD4", "CVDSTRK3", "ASTHMA3", "ASTHNOW", "CHCSCNCR", "CHCOCNCR",
+	"CHCCOPD1", "HAVARTH3", "ADDEPEV2", "CHCKDNY1", "DIABETE3", "DIABAGE2",
+	"LASTDEN4", "RMVTETH4", "SEX1", "MARITAL", "EDUCA", "RENTHOM1",
+	"NUMHHOL3", "NUMPHON3", "CPDEMO1B", "VETERAN3", "EMPLOY1", "CHILDREN",
+	"INCOME2", "WEIGHT2", "HEIGHT3", "PREGNANT", "DEAF", "BLIND",
+	"DECIDE", "DIFFWALK", "DIFFDRES", "DIFFALON", "SMOKE100", "SMOKDAY2",
+	"STOPSMK2", "LASTSMK2", "USENOW3", "ALCDAY5", "AVEDRNK2", "DRNK3GE5",
+	"MAXDRNKS", "FLUSHOT6", "FLSHTMY2", "IMFVPLAC", "PNEUVAC4", "FALL12MN",
+	"FALLINJ3", "SEATBELT", "DRNKDRI2", "HADMAM", "HOWLONG", "HADPAP2",
+	"LASTPAP2", "HPVTEST", "HPLSTTST", "HADHYST2", "PCPSAAD3", "PCPSADI1",
+	"PCPSARE1", "PSATEST1", "PSATIME", "PCPSARS1", "BLDSTOOL", "LSTBLDS3",
+	"HADSIGM3", "HADSGCO1", "LASTSIG3", "HIVTST6", "HIVTSTD3", "HIVRISK5",
+	"PDIABTST", "PREDIAB1", "INSULIN", "BLDSUGAR", "FEETCHK3", "DOCTDIAB",
+	"CHKHEMO3", "FEETCHK", "EYEEXAM1", "DIABEYE", "DIABEDU", "MEDICARE",
+	"HLTHCVR1", "DELAYME1", "DLYOTHER", "NOCOV121", "LSTCOVRG", "DRVISITS",
+	"MEDSCOS1", "CARERCVD", "MEDBILL1", "CIMEMLOS", "CDHOUSE", "CDASSIST",
+	"CDHELP", "CDSOCIAL", "CDDISCUS", "CAREGIV1", "CRGVREL2", "CRGVLNG1",
+	"CRGVHRS1", "CRGVPRB2", "CRGVPERS", "CRGVHOUS", "CRGVMST3", "CRGVEXPT",
+	"ECIGARET", "ECIGNOW", "MARIJAN1", "USEMRJN2", "RSNMRJN1", "ADSLEEP",
+	"SLEPDAY1", "SLEPSNO2", "SLEPBRTH", "ADPLEAS1", "ADDOWN1", "FEELNERV",
+	"STOPWORY", "COPDCOGH", "COPDFLEM", "COPDBRTH", "COPDBTST", "COPDSMOK",
+	"INDORTAN", "NUMBURN3", "SUNPRTCT", "WKDAYOUT", "WKENDOUT", "LCSFIRST",
+	"LCSLAST", "LCSNUMCG", "LCSCTSCN", "CNCRDIFF", "CNCRAGE", "CNCRTYP1",
+	"CSRVTRT2", "CSRVDOC1", "CSRVSUM", "CSRVRTRN", "CSRVINST", "CSRVINSR",
+	"CSRVDEIN", "CSRVCLIN", "CSRVPAIN", "CSRVCTL1", "PCPSADE1", "PCDMDEC1",
+	"PROFEXAM", "LENGEXAM", "HPVADVC2", "HPVADSHT", "TETANUS1", "SHINGLE2",
+	"SOMALE", "SOFEMALE", "TRNSGNDR", "RCSGENDR", "RCSRLTN2", "CASTHDX2",
+	"CASTHNO2", "QSTVER", "QSTLANG", "_METSTAT", "_URBSTAT", "MSCODE",
+	"_STSTR", "_STRWT", "_RAWRAKE", "_WT2RAKE", "_IMPRACE", "_CHISPNC",
+	"_CRACE1", "_CPRACE", "_CLLCPWT", "_DUALUSE", "_DUALCOR", "_LLCPWT2",
+	"_LLCPWT", "_RFHLTH", "_PHYS14D", "_MENT14D", "_HCVU651", "_TOTINDA",
+	"_MICHD", "_LTASTH1", "_CASTHM1", "_ASTHMS1", "_DRDXAR1", "_EXTETH3",
+	"_ALTETH3", "_DENVST3", "_PRACE1", "_MRACE1", "_HISPANC", "_RACE",
+	"_RACEG21", "_RACEGR3", "_RACE_G1", "_AGEG5YR", "_AGE65YR", "_AGE80",
+	"_AGE_G", "HTIN4", "HTM4", "WTKG3", "_BMI5", "_BMI5CAT",
+	"_RFBMI5", "_CHLDCNT", "_EDUCAG", "_INCOMG", "_SMOKER3", "_RFSMOK3",
+	"DRNKANY5", "DROCDY3", "_RFBING5", "_DRNKWEK", "_RFDRHV6", "_FLSHOT6",
+	"_PNEUMO3", "_RFSEAT2", "_RFSEAT3", "_DRNKDRV", "_RFMAM21", "_MAM5022",
+	"_RFPAP34", "_RFPSA22", "_RFBLDS3", "_COL10YR", "_HFOB3YR", "_FS5YR",
+	"_FOBTFS", "_CRCREC", "_AIDTST3"
+)
+
+# There are a lot of columns in these data frames. This will subset the data 
+# frames to include only the variables we are interested in. We will also rename 
+# the columns to be more descriptive.
+
+# col_subset <- 1
+# positions_start <- positions_start[col_subset]
+# col_names <- col_names[col_subset]
+# widths <- widths[col_subset]
+
+brfss <- read_fwf(fil_name, fwf_positions(positions_start, positions_end, col_names))
+```
+
+
+### Research question 
+
+**You should phrase your research question in a way that matches up with the scope of inference your dataset allows for.**
+
+
+
+### Cases 
+
+**What are the cases, and how many are there?**
+
+
+
+### Data collection 
+
+**Describe the method of data collection.**
+
+
+
+### Type of study 
+
+**What type of study is this (observational/experiment)?**
+
+
+
+### Data Source 
+
+**If you collected the data, state self-collected. If not, provide a citation/link.**
+
+
+
+
+### Dependent Variable
+
+**What is the response variable? Is it quantitative or qualitative?**
+
+
+
+### Independent Variable
+
+**You should have two independent variables, one quantitative and one qualitative.**
+
+
+
+### Relevant summary statistics 
+
+**Provide summary statistics for each the variables. Also include appropriate visualizations related to your research question (e.g. scatter plot, boxplots, etc). This step requires the use of R, hence a code chunk is provided below. Insert more code chunks as needed.**
+
+```{r}
+
+```
+
