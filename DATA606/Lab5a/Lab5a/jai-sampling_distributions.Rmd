@@ -245,7 +245,7 @@ for(i in 1:100){
 sample_means_small
 ```
 
-There are 100 elements in the vector `sample_means_small`. Each element is $\hat{p}$, a sample mean, that is, a point estimate of the mean home area, *p*, the population mean.
+There are 100 elements in the vector `sample_means_small`. Each element is a sample mean, a point estimate of the mean home area, the population mean.
 
 ## Sample size and the sampling distribution
 

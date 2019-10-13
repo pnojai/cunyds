@@ -99,7 +99,7 @@ summary(samp1)
 
 ```
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##     672    1117    1362    1474    1656    2855
+##     630    1063    1468    1450    1750    2589
 ```
 
 ```r
@@ -122,7 +122,7 @@ mean(samp1)
 ```
 
 ```
-## [1] 1473.82
+## [1] 1450.4
 ```
 
 Depending on which 50 homes you selected, your estimate could be a bit above 
@@ -144,7 +144,7 @@ summary(samp2)
 
 ```
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##     796    1162    1454    1494    1688    2956
+##     698    1149    1541    1579    1728    3820
 ```
 
 ```r
@@ -155,7 +155,7 @@ hist(samp1)
 
 **ANSWER**
 
-The difference between the means of the two samples is: 20.12.
+The difference between the means of the two samples is: 128.26.
 
 Not surprisingly, every time we take another random sample, we get a different 
 sample mean.  It's useful to get a sense of just how much variability we 
@@ -296,22 +296,22 @@ sample_means_small
 ```
 
 ```
-##   [1] 1526.68 1399.72 1441.32 1397.96 1495.78 1554.18 1520.26 1467.80
-##   [9] 1519.02 1536.96 1496.02 1610.98 1671.52 1424.44 1534.26 1421.50
-##  [17] 1469.60 1538.94 1475.70 1450.42 1630.66 1541.80 1625.82 1425.38
-##  [25] 1509.30 1625.32 1489.24 1490.78 1533.62 1475.06 1516.40 1416.14
-##  [33] 1508.32 1594.02 1466.50 1469.76 1541.44 1472.92 1584.94 1628.10
-##  [41] 1561.38 1463.40 1441.32 1498.90 1529.50 1538.34 1335.82 1604.14
-##  [49] 1432.44 1520.06 1538.52 1523.98 1607.88 1441.38 1457.24 1517.88
-##  [57] 1454.70 1531.48 1493.16 1463.64 1426.48 1463.78 1503.48 1393.22
-##  [65] 1449.24 1424.82 1538.36 1532.12 1450.40 1481.16 1620.78 1606.76
-##  [73] 1604.26 1567.50 1479.50 1460.56 1485.08 1426.34 1426.44 1687.62
-##  [81] 1538.74 1485.34 1397.32 1503.56 1468.04 1486.72 1550.96 1571.88
-##  [89] 1489.86 1536.50 1541.70 1576.26 1414.62 1523.44 1577.44 1500.22
-##  [97] 1551.06 1549.64 1522.20 1693.96
+##   [1] 1394.22 1459.42 1521.32 1444.66 1500.36 1456.34 1530.68 1448.56
+##   [9] 1463.12 1459.98 1438.08 1493.28 1546.18 1480.52 1484.54 1447.90
+##  [17] 1508.48 1521.82 1445.24 1521.32 1437.54 1455.80 1415.52 1413.90
+##  [25] 1615.10 1382.18 1484.34 1589.46 1393.48 1505.98 1445.44 1384.96
+##  [33] 1657.40 1609.22 1505.40 1396.32 1434.36 1406.62 1463.24 1551.88
+##  [41] 1583.98 1624.42 1528.52 1535.54 1506.16 1627.00 1514.96 1491.02
+##  [49] 1431.70 1518.36 1484.72 1461.76 1405.74 1603.40 1385.46 1613.80
+##  [57] 1508.00 1457.80 1586.70 1514.30 1506.70 1510.54 1483.82 1432.04
+##  [65] 1617.70 1568.12 1403.24 1580.02 1536.02 1613.12 1537.90 1393.08
+##  [73] 1493.72 1443.72 1515.60 1392.36 1510.36 1443.74 1505.10 1616.70
+##  [81] 1602.02 1473.30 1451.58 1593.16 1384.68 1531.22 1458.78 1573.64
+##  [89] 1558.70 1382.14 1537.76 1513.12 1595.10 1551.06 1511.48 1479.60
+##  [97] 1673.18 1567.18 1538.80 1450.50
 ```
 
-There are 100 elements in the vector `sample_means_small`. Each element is $\hat{p}$, a sample mean, that is, a point estimate of the mean home area, *p*, the population mean.
+There are 100 elements in the vector `sample_means_small`. Each element is a sample mean, a point estimate of the mean home area, the population mean.
 
 ## Sample size and the sampling distribution
 
@@ -403,7 +403,7 @@ Ames.  Now you'll try to estimate the mean home price.
     samp_price_50 <- sample(price, 50)
     price_50_mean <- mean(samp_price_50)
     ```
-    Point estimate of the population mean: 208586.34.
+    Point estimate of the population mean: 195594.90.
     
 -   Since you have access to the population, simulate the sampling 
     distribution for $\bar{x}_{price}$ by taking 5000 samples from the 
@@ -429,7 +429,7 @@ summary(sample_means50)
 
 ```
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##  147174  173293  180758  181050  188296  229728
+##  146627  173227  180829  181223  188752  225149
 ```
 
 ```r
@@ -442,7 +442,7 @@ hist(sample_means50)
 ```r
 pop_mean <- mean(price)
 ```
-The shape of the sample is a symmetric, unimodal distribution. For my point estimate of the samples, I took the mean of the sample means: 181050.23. I'm unsure that's legal. Is this where I'm supposed to employ what we've learned about sample distributions? If we sample one time, I can compute a margin of error, but this is a lot of samples so my intuition says to combine them. I dunno. The population mean is: 180796.06.
+The shape of the sample is a symmetric, unimodal distribution. For my point estimate of the samples, I took the mean of the sample means: 181223.15. I'm unsure that's legal. Is this where I'm supposed to employ what we've learned about sample distributions? If we sample one time, I can compute a margin of error, but this is a lot of samples so my intuition says to combine them. I dunno. The population mean is: 180796.06.
 
 - Change your sample size from 50 to 150, then compute the sampling 
     distribution using the same method as above, and store these means in a 
@@ -467,7 +467,7 @@ summary(sample_means150)
 
 ```
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##  154824  176608  180776  180863  185007  207839
+##  158053  176359  180522  180730  184947  202783
 ```
 
 ```r
@@ -477,7 +477,7 @@ hist(sample_means150)
 
 ![](jai-sampling_distributions_files/figure-latex/unnamed-chunk-3-1.pdf)<!-- --> 
 
-The shape of the sample is a symmetric, unimodal distribution. It is taller and narrower than the distribution of fewer samples. For my point estimate of the samples, I took the mean of the sample means: 180862.54.
+The shape of the sample is a symmetric, unimodal distribution. It is taller and narrower than the distribution of fewer samples. For my point estimate of the samples, I took the mean of the sample means: 180729.70.
 
 -   Of the sampling distributions from 2 and 3, which has a smaller spread?  If
     we're concerned with making estimates that are more often close to the 
