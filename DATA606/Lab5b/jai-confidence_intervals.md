@@ -52,7 +52,7 @@ hist(samp)
 "typical" size within your sample? Also state precisely what you interpreted 
 "typical" to mean.
 
-The typical size is 1493 square feet. I interpret typical to mean the statistical mean.
+The typical size is 1513 square feet. I interpret typical to mean the statistical mean.
 
 2.  Would you expect another student's distribution to be identical to yours? 
 Would you expect it to be similar? Why or why not?
@@ -91,7 +91,7 @@ c(lower, upper)
 ```
 
 ```
-## [1] 1337.665 1648.602
+## [1] 1392.046 1633.921
 ```
 
 **QUESTION**
@@ -144,7 +144,7 @@ interval capture this value?
 in_ci <- lower <= mean(population) & mean(population) <= upper
 ```
 
-- Confidence interval: 1337.6646325, 1648.6020342
+- Confidence interval: 1392.0455976, 1633.9210691
 - Population mean: 1499.6904437
 - Confidence interval captures true averge: TRUE
 
@@ -209,7 +209,7 @@ c(lower_vector[1], upper_vector[1])
 ```
 
 ```
-## [1] 1303.878 1511.755
+## [1] 1331.462 1582.771
 ```
 
 * * *
