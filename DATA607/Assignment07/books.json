@@ -1,0 +1,26 @@
+[
+   {
+      "author": [
+         "T. Colin Campbell, Ph.D.",
+         "Thomas M. Campbell II, M.D."
+      ],
+      "title": "The China Study",
+      "genre": "Nutritional Science",
+      "publish_date": "January 2005",
+      "publisher": "BenBella Books"
+   },
+   {
+      "author": "Michael Gregor, M.D.",
+      "title": "How Not to Die",
+      "genre": "Nutritional Science",
+      "publish_date": "December 2015",
+      "publisher": "Flatiron Books"
+   },
+   {
+      "author": "Caldwell B. Esselstyn, Jr., M.D.",
+      "title": "Prevent and Reverse Heart Disease",
+      "genre": "Nutritional Science",
+      "publish_date": "January 2008",
+      "publisher": "Avery"
+   }
+]
