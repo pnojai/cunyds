@@ -1,0 +1,50 @@
+---
+title: "Assignment 7"
+author: "Jai Jeffryes"
+date: "10/13/2019"
+output: html_document
+---
+
+```{r}
+library(RCurl) # Word to the wise. THIS is the tool for getting HTML from HTTPS.
+library(XML)
+library(RJSONIO)
+library(plyr)
+
+# Three source files on the web.
+books_html_url = "https://raw.githubusercontent.com/pnojai/cunyds/master/DATA607/Assignment07/books.html"
+books_xml_url = "https://raw.githubusercontent.com/pnojai/cunyds/master/DATA607/Assignment07/books.xml"
+books_json_url = "https://raw.githubusercontent.com/pnojai/cunyds/master/DATA607/Assignment07/books.json"
+
+# GET HTML from HTTPS
+URL.1 <- books_html_url
+URL.2 <- getURL(URL.1)
+books_html <- htmlTreeParse(URL.2, useInternalNodes = TRUE)
+
+# GET XML from HTTPS
+URL.1 <- books_xml_url
+URL.2 <- getURL(URL.1)
+books_xml <- xmlParse(URL.2)
+
+# GET JSON
+isValidJSON(books_json_url)
+books_json <- fromJSON(content = books_json_url)
+```
+
+I manufactured three files and pushed them to GitHub.
+
+1. books.html
+1. books.xml
+1. books.json
+
+I fetched them with code and parsed them. My assignment is incomplete, though. I did not load them to data frames. I'll have to catch up with that after the due date of the assignment.
+
+I output the three files below to demonstrate that I authored them and was able to fetch and parse them.
+
+```{r}
+# Output the files to show you retrieved them
+books_html
+books_xml
+books_json
+```
+
