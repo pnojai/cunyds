@@ -1,0 +1,114 @@
+---
+title: "Web APIs"
+author: "Jai Jeffryes"
+date: "10/21/2019"
+output:
+  html_document:
+    code_download: yes
+    code_folding: hide
+    highlight: pygments
+    number_sections: yes
+    theme: flatly
+    toc: yes
+    toc_float: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(jsonlite)
+library(stringr)
+library(tibble)
+library(tidyr)
+library(mongolite)
+
+nytimes_api_key <- readLines("nytimes_key.txt")
+```
+
+## URL
+Some JSON calls require a query string, others don't. Use a function to build the URL so you don't drive yourself crazy with positioning of `?` and `&`.
+
+```{r}
+get_nyt_json <- function(api_key, api_url, query = NULL) {
+	if (is.null(query)) {
+		base_url <- str_c(api_url, "?api-key=", nytimes_api_key)
+	} else {
+		base_url <- str_c(api_url, "?", query, "&api-key=", nytimes_api_key)
+	}
+	
+	print(base_url)
+	json <- fromJSON(base_url)
+	json
+}
+```
+
+## Go get 'em
+I tried three retrieval scenarios.
+
+1. Simple list. Books API.
+1. Nested list of data frames. Books API.
+1. Query. Movie reviews API.
+
+The `flatten` parameter in `jsonlite::fromJSON()` and the function`jsonlite::flatten()` function achieved nothing with these JSON documents. However, `unnest()` from the `tidyr` package did flatten the nested data frames I wanted to see in the book overview.
+
+### Don't do me so many favors, `tibble()`
+However, if you want to flatten with `tidyr::unnest()`, use base data frames, not a `tibble`. A base data frame gathers the nested lists into columns. Ironically, `as.tibble()` does not.
+
+```{r}
+# Get best sellers list names.
+api_url <- "https://api.nytimes.com/svc/books/v3/lists/names.json"
+book_list <- get_nyt_json(nytimes_api_key, api_url)
+book_list_df <- as_tibble(book_list)
+head(book_list_df)
+
+# Get best sellers overviews.
+# Top 5 books for all lists
+api_url <- "https://api.nytimes.com/svc/books/v3/lists/overview.json"
+book_overview <- get_nyt_json(nytimes_api_key, api_url)
+book_overview_df <- data.frame(book_overview) %>% unnest(results.lists.books)
+head(book_overview_df)
+# Call out the flattened titles.
+head(book_overview_df[, c("title", "contributor", "publisher")])
+
+# Movie reviews
+api_url <- "https://api.nytimes.com/svc/movies/v2/reviews/search.json"
+query <- "query=hollywood"
+movie_review <- get_nyt_json(nytimes_api_key, api_url, query)
+movie_review_df <- as_tibble(movie_review)
+head(movie_review_df)
+```
+
+## MongoDB
+I wanted to take advantage of this chance to get started with MongoDB.
+
+```{r}
+# Create files of collections
+cat(str_c("Creating files...\n"))
+
+stream_out(x = book_list_df, file("book_list.json"))
+stream_out(x = book_overview_df, file("book_overview.json"))
+stream_out(x = movie_review_df, file("movie_review.json"))
+
+# Import a collection and report action.
+m_coll <- function(collection, db, fil) {
+	m_con <- mongo(collection = collection, db = db)
+	
+	cat("Dropping collection if it is there...\n")
+	m_con$drop()
+	print(m_con$count())
+	
+	cat(str_c("Importing collection: ", collection, "\nDatabase: ", db, "\nFile: ", fil, "\n"))
+	m_con$import(file(fil))
+	cnt <- m_con$count()
+	cat(str_c("Records inserted: ", cnt, "\n"))
+		
+	m_con$disconnect()
+}
+
+m_coll("book_list", "nytimes", "book_list.json")
+#m_coll("book_overview", "nytimes", "book_overview.json") # Clean the keys.
+m_coll("movie_review", "nytimes", "movie_review.json")
+```
+
