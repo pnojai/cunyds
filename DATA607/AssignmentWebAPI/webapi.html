@@ -1691,8 +1691,15 @@ div.tocify {
 <a class="sourceLine" id="cb1-5" data-line-number="5"><span class="kw">library</span>(mongolite)</a>
 <a class="sourceLine" id="cb1-6" data-line-number="6"></a>
 <a class="sourceLine" id="cb1-7" data-line-number="7">nytimes_api_key &lt;-<span class="st"> </span><span class="kw">readLines</span>(<span class="st">&quot;nytimes_key.txt&quot;</span>)</a></code></pre></div>
-<div id="url" class="section level2">
-<h2><span class="header-section-number">0.1</span> URL</h2>
+<div id="new-york-times-web-api" class="section level2">
+<h2><span class="header-section-number">0.1</span> <em>New York Times</em> web API</h2>
+<ul>
+<li>Use APIs from the <em>Times</em> <a href="https://developer.nytimes.com">here</a> to fetch JSON data and create data frames.</li>
+<li>Extra exercise: write them to MongoDB.</li>
+</ul>
+</div>
+<div id="prepare-api-call" class="section level2">
+<h2><span class="header-section-number">0.2</span> Prepare API call</h2>
 <p>Some JSON calls require a query string, others don’t. Use a function to build the URL so you don’t drive yourself crazy with positioning of <code>?</code> and <code>&amp;</code>.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1">get_nyt_json &lt;-<span class="st"> </span><span class="cf">function</span>(api_key, api_url, <span class="dt">query =</span> <span class="ot">NULL</span>) {</a>
 <a class="sourceLine" id="cb2-2" data-line-number="2">    <span class="cf">if</span> (<span class="kw">is.null</span>(query)) {</a>
@@ -1707,7 +1714,7 @@ div.tocify {
 <a class="sourceLine" id="cb2-11" data-line-number="11">}</a></code></pre></div>
 </div>
 <div id="go-get-em" class="section level2">
-<h2><span class="header-section-number">0.2</span> Go get ’em</h2>
+<h2><span class="header-section-number">0.3</span> Go get ’em</h2>
 <p>I tried three retrieval scenarios.</p>
 <ol style="list-style-type: decimal">
 <li>Simple list. Books API.</li>
@@ -1716,7 +1723,7 @@ div.tocify {
 </ol>
 <p>The <code>flatten</code> parameter in <code>jsonlite::fromJSON()</code> and the function<code>jsonlite::flatten()</code> function achieved nothing with these JSON documents. However, <code>unnest()</code> from the <code>tidyr</code> package did flatten the nested data frames I wanted to see in the book overview.</p>
 <div id="dont-do-me-so-many-favors-tibble" class="section level3">
-<h3><span class="header-section-number">0.2.1</span> Don’t do me so many favors, <code>tibble()</code></h3>
+<h3><span class="header-section-number">0.3.1</span> Don’t do me so many favors, <code>tibble()</code></h3>
 <p>However, if you want to flatten with <code>tidyr::unnest()</code>, use base data frames, not a <code>tibble</code>. A base data frame gathers the nested lists into columns. Ironically, <code>as.tibble()</code> does not.</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="co"># Get best sellers list names.</span></a>
 <a class="sourceLine" id="cb3-2" data-line-number="2">api_url &lt;-<span class="st"> &quot;https://api.nytimes.com/svc/books/v3/lists/names.json&quot;</span></a>
@@ -1802,10 +1809,20 @@ div.tocify {
 </div>
 </div>
 <div id="mongodb" class="section level2">
-<h2><span class="header-section-number">0.3</span> MongoDB</h2>
+<h2><span class="header-section-number">0.4</span> MongoDB</h2>
 <p>I wanted to take advantage of this chance to get started with MongoDB.</p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb17-1" data-line-number="1"><span class="co"># Create files of collections</span></a>
-<a class="sourceLine" id="cb17-2" data-line-number="2"><span class="kw">cat</span>(<span class="kw">str_c</span>(<span class="st">&quot;Creating files...</span><span class="ch">\n</span><span class="st">&quot;</span>))</a></code></pre></div>
+<ul>
+<li>Clean the key names. MongoDB doesn’t like periods in the keys.</li>
+<li>Create files from the data frames. I would like to learn if there is a way to go from R objects to MongoDB without laying down files in order to do it.</li>
+<li>Import the files. Then query and output a few rows to demonstrate they are there.</li>
+</ul>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb17-1" data-line-number="1"><span class="co"># Clean key names</span></a>
+<a class="sourceLine" id="cb17-2" data-line-number="2"><span class="kw">names</span>(book_list_df) &lt;-<span class="st"> </span><span class="kw">str_replace_all</span>(<span class="kw">names</span>(<span class="dt">x =</span> book_list_df), <span class="dt">pattern =</span> <span class="st">&quot;</span><span class="ch">\\</span><span class="st">.&quot;</span>, <span class="dt">replacement =</span> <span class="st">&quot;_&quot;</span>)</a>
+<a class="sourceLine" id="cb17-3" data-line-number="3"><span class="kw">names</span>(book_overview_df) &lt;-<span class="st"> </span><span class="kw">str_replace_all</span>(<span class="kw">names</span>(<span class="dt">x =</span> book_overview_df), <span class="dt">pattern =</span> <span class="st">&quot;</span><span class="ch">\\</span><span class="st">.&quot;</span>, <span class="dt">replacement =</span> <span class="st">&quot;_&quot;</span>)</a>
+<a class="sourceLine" id="cb17-4" data-line-number="4"><span class="kw">names</span>(movie_review_df) &lt;-<span class="st"> </span><span class="kw">str_replace_all</span>(<span class="kw">names</span>(<span class="dt">x =</span> movie_review_df), <span class="dt">pattern =</span> <span class="st">&quot;</span><span class="ch">\\</span><span class="st">.&quot;</span>, <span class="dt">replacement =</span> <span class="st">&quot;_&quot;</span>)</a>
+<a class="sourceLine" id="cb17-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb17-6" data-line-number="6"><span class="co"># Create files of collections</span></a>
+<a class="sourceLine" id="cb17-7" data-line-number="7"><span class="kw">cat</span>(<span class="kw">str_c</span>(<span class="st">&quot;Creating files...</span><span class="ch">\n</span><span class="st">&quot;</span>))</a></code></pre></div>
 <pre><code>## Creating files...</code></pre>
 <div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb19-1" data-line-number="1"><span class="kw">stream_out</span>(<span class="dt">x =</span> book_list_df, <span class="kw">file</span>(<span class="st">&quot;book_list.json&quot;</span>))</a></code></pre></div>
 <pre><code>## opening file output connection.</code></pre>
@@ -1833,29 +1850,328 @@ Complete! Processed total of 20 rows.</code></pre>
 <a class="sourceLine" id="cb31-9" data-line-number="9">    <span class="kw">cat</span>(<span class="kw">str_c</span>(<span class="st">&quot;Importing collection: &quot;</span>, collection, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">Database: &quot;</span>, db, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">File: &quot;</span>, fil, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>))</a>
 <a class="sourceLine" id="cb31-10" data-line-number="10">    m_con<span class="op">$</span><span class="kw">import</span>(<span class="kw">file</span>(fil))</a>
 <a class="sourceLine" id="cb31-11" data-line-number="11">    cnt &lt;-<span class="st"> </span>m_con<span class="op">$</span><span class="kw">count</span>()</a>
-<a class="sourceLine" id="cb31-12" data-line-number="12">    <span class="kw">cat</span>(<span class="kw">str_c</span>(<span class="st">&quot;Records inserted: &quot;</span>, cnt, <span class="st">&quot;</span><span class="ch">\n</span><span class="st">&quot;</span>))</a>
-<a class="sourceLine" id="cb31-13" data-line-number="13">        </a>
-<a class="sourceLine" id="cb31-14" data-line-number="14">    m_con<span class="op">$</span><span class="kw">disconnect</span>()</a>
-<a class="sourceLine" id="cb31-15" data-line-number="15">}</a>
-<a class="sourceLine" id="cb31-16" data-line-number="16"></a>
-<a class="sourceLine" id="cb31-17" data-line-number="17"><span class="kw">m_coll</span>(<span class="st">&quot;book_list&quot;</span>, <span class="st">&quot;nytimes&quot;</span>, <span class="st">&quot;book_list.json&quot;</span>)</a></code></pre></div>
+<a class="sourceLine" id="cb31-12" data-line-number="12">    <span class="kw">cat</span>(<span class="kw">str_c</span>(<span class="st">&quot;Records inserted: &quot;</span>, cnt, <span class="st">&quot;</span><span class="ch">\n\n</span><span class="st">&quot;</span>))</a>
+<a class="sourceLine" id="cb31-13" data-line-number="13">    </a>
+<a class="sourceLine" id="cb31-14" data-line-number="14">    <span class="co"># Read</span></a>
+<a class="sourceLine" id="cb31-15" data-line-number="15">    mongo_dat &lt;-<span class="st"> </span>m_con<span class="op">$</span><span class="kw">find</span>()</a>
+<a class="sourceLine" id="cb31-16" data-line-number="16">    </a>
+<a class="sourceLine" id="cb31-17" data-line-number="17">    <span class="co"># Output</span></a>
+<a class="sourceLine" id="cb31-18" data-line-number="18">    <span class="kw">print</span>(<span class="st">&quot;Top records from MongoDB...&quot;</span>)</a>
+<a class="sourceLine" id="cb31-19" data-line-number="19">    <span class="kw">print</span>(<span class="kw">head</span>(mongo_dat))</a>
+<a class="sourceLine" id="cb31-20" data-line-number="20">    </a>
+<a class="sourceLine" id="cb31-21" data-line-number="21">    m_con<span class="op">$</span><span class="kw">disconnect</span>()</a>
+<a class="sourceLine" id="cb31-22" data-line-number="22">}</a>
+<a class="sourceLine" id="cb31-23" data-line-number="23"></a>
+<a class="sourceLine" id="cb31-24" data-line-number="24"><span class="kw">m_coll</span>(<span class="st">&quot;book_list&quot;</span>, <span class="st">&quot;nytimes&quot;</span>, <span class="st">&quot;book_list.json&quot;</span>)</a></code></pre></div>
 <pre><code>## Dropping collection if it is there...
 ## [1] 0
 ## Importing collection: book_list
 ## Database: nytimes
 ## File: book_list.json
-## Records inserted: 59</code></pre>
-<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb33-1" data-line-number="1"><span class="co">#m_coll(&quot;book_overview&quot;, &quot;nytimes&quot;, &quot;book_overview.json&quot;) # Clean the keys.</span></a>
-<a class="sourceLine" id="cb33-2" data-line-number="2"><span class="kw">m_coll</span>(<span class="st">&quot;movie_review&quot;</span>, <span class="st">&quot;nytimes&quot;</span>, <span class="st">&quot;movie_review.json&quot;</span>)</a></code></pre></div>
+## Records inserted: 59
+## 
+## [1] &quot;Top records from MongoDB...&quot;
+##   status
+## 1     OK
+## 2     OK
+## 3     OK
+## 4     OK
+## 5     OK
+## 6     OK
+##                                                              copyright
+## 1 Copyright (c) 2019 The New York Times Company.  All Rights Reserved.
+## 2 Copyright (c) 2019 The New York Times Company.  All Rights Reserved.
+## 3 Copyright (c) 2019 The New York Times Company.  All Rights Reserved.
+## 4 Copyright (c) 2019 The New York Times Company.  All Rights Reserved.
+## 5 Copyright (c) 2019 The New York Times Company.  All Rights Reserved.
+## 6 Copyright (c) 2019 The New York Times Company.  All Rights Reserved.
+##   num_results                    results.list_name
+## 1          59    Combined Print and E-Book Fiction
+## 2          59 Combined Print and E-Book Nonfiction
+## 3          59                    Hardcover Fiction
+## 4          59                 Hardcover Nonfiction
+## 5          59              Trade Fiction Paperback
+## 6          59                Mass Market Paperback
+##                 results.display_name            results.list_name_encoded
+## 1    Combined Print &amp; E-Book Fiction    combined-print-and-e-book-fiction
+## 2 Combined Print &amp; E-Book Nonfiction combined-print-and-e-book-nonfiction
+## 3                  Hardcover Fiction                    hardcover-fiction
+## 4               Hardcover Nonfiction                 hardcover-nonfiction
+## 5            Paperback Trade Fiction              trade-fiction-paperback
+## 6      Paperback Mass-Market Fiction                mass-market-paperback
+##   results.oldest_published_date results.newest_published_date
+## 1                    2011-02-13                    2019-11-03
+## 2                    2011-02-13                    2019-11-03
+## 3                    2008-06-08                    2019-11-03
+## 4                    2008-06-08                    2019-11-03
+## 5                    2008-06-08                    2019-11-03
+## 6                    2008-06-08                    2017-01-29
+##   results.updated
+## 1          WEEKLY
+## 2          WEEKLY
+## 3          WEEKLY
+## 4          WEEKLY
+## 5          WEEKLY
+## 6          WEEKLY</code></pre>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb33-1" data-line-number="1"><span class="kw">m_coll</span>(<span class="st">&quot;book_overview&quot;</span>, <span class="st">&quot;nytimes&quot;</span>, <span class="st">&quot;book_overview.json&quot;</span>) <span class="co"># Clean the keys.</span></a></code></pre></div>
+<pre><code>## Dropping collection if it is there...
+## [1] 0
+## Importing collection: book_overview
+## Database: nytimes
+## File: book_overview.json
+## Records inserted: 90
+## 
+## [1] &quot;Top records from MongoDB...&quot;
+##   status
+## 1     OK
+## 2     OK
+## 3     OK
+## 4     OK
+## 5     OK
+## 6     OK
+##                                                              copyright
+## 1 Copyright (c) 2019 The New York Times Company.  All Rights Reserved.
+## 2 Copyright (c) 2019 The New York Times Company.  All Rights Reserved.
+## 3 Copyright (c) 2019 The New York Times Company.  All Rights Reserved.
+## 4 Copyright (c) 2019 The New York Times Company.  All Rights Reserved.
+## 5 Copyright (c) 2019 The New York Times Company.  All Rights Reserved.
+## 6 Copyright (c) 2019 The New York Times Company.  All Rights Reserved.
+##   num_results results_bestsellers_date results_published_date
+## 1          90               2019-10-19             2019-11-03
+## 2          90               2019-10-19             2019-11-03
+## 3          90               2019-10-19             2019-11-03
+## 4          90               2019-10-19             2019-11-03
+## 5          90               2019-10-19             2019-11-03
+## 6          90               2019-10-19             2019-11-03
+##   results_published_date_description results_previous_published_date
+## 1                             latest                      2019-10-27
+## 2                             latest                      2019-10-27
+## 3                             latest                      2019-10-27
+## 4                             latest                      2019-10-27
+## 5                             latest                      2019-10-27
+## 6                             latest                      2019-10-27
+##   results_next_published_date results_lists_list_id
+## 1                                               704
+## 2                                               704
+## 3                                               704
+## 4                                               704
+## 5                                               704
+## 6                                               708
+##                results_lists_list_name
+## 1    Combined Print and E-Book Fiction
+## 2    Combined Print and E-Book Fiction
+## 3    Combined Print and E-Book Fiction
+## 4    Combined Print and E-Book Fiction
+## 5    Combined Print and E-Book Fiction
+## 6 Combined Print and E-Book Nonfiction
+##        results_lists_list_name_encoded         results_lists_display_name
+## 1    combined-print-and-e-book-fiction    Combined Print &amp; E-Book Fiction
+## 2    combined-print-and-e-book-fiction    Combined Print &amp; E-Book Fiction
+## 3    combined-print-and-e-book-fiction    Combined Print &amp; E-Book Fiction
+## 4    combined-print-and-e-book-fiction    Combined Print &amp; E-Book Fiction
+## 5    combined-print-and-e-book-fiction    Combined Print &amp; E-Book Fiction
+## 6 combined-print-and-e-book-nonfiction Combined Print &amp; E-Book Nonfiction
+##   results_lists_updated
+## 1                WEEKLY
+## 2                WEEKLY
+## 3                WEEKLY
+## 4                WEEKLY
+## 5                WEEKLY
+## 6                WEEKLY
+##                               results_lists_list_image
+## 1 https://s1.nyt.com/du/books/images/9780385544184.jpg
+## 2 https://s1.nyt.com/du/books/images/9780385544184.jpg
+## 3 https://s1.nyt.com/du/books/images/9780385544184.jpg
+## 4 https://s1.nyt.com/du/books/images/9780385544184.jpg
+## 5 https://s1.nyt.com/du/books/images/9780385544184.jpg
+## 6 https://s1.nyt.com/du/books/images/9781250147608.jpg
+##   results_lists_list_image_width results_lists_list_image_height age_group
+## 1                            330                             481          
+## 2                            330                             481          
+## 3                            330                             481          
+## 4                            330                             481          
+## 5                            330                             481          
+## 6                            322                             495          
+##                                                                            amazon_product_url
+## 1              https://www.amazon.com/Guardians-Novel-John-Grisham/dp/0385544189?tag=NYTBS-20
+## 2           https://www.amazon.com/Where-Crawdads-Sing-Delia-Owens/dp/0735219095?tag=NYTBS-20
+## 3   https://www.amazon.com/19th-Christmas-Womens-Murder-Club-ebook/dp/B07P1SSF9S?tag=NYTBS-20
+## 4        https://www.amazon.com/Olive-Again-Novel-Elizabeth-Strout/dp/0812996542?tag=NYTBS-20
+## 5 https://www.amazon.com/Stealth-Stone-Barrington-Novel-Book-ebook/dp/B07NCK6YY8?tag=NYTBS-20
+## 6      https://www.amazon.com/Me-Elton-John-Official-Autobiography/dp/1250147603?tag=NYTBS-20
+##   article_chapter_link                            author
+## 1                                           John Grisham
+## 2                                            Delia Owens
+## 3                      James Patterson and Maxine Paetro
+## 4                                       Elizabeth Strout
+## 5                                           Stuart Woods
+## 6                                             Elton John
+##                                             book_image book_image_width
+## 1 https://s1.nyt.com/du/books/images/9780385544184.jpg              330
+## 2 https://s1.nyt.com/du/books/images/9780735219090.jpg              328
+## 3 https://s1.nyt.com/du/books/images/9780316494021.jpg              321
+## 4 https://s1.nyt.com/du/books/images/9780812996548.jpg              327
+## 5 https://s1.nyt.com/du/books/images/9780593083185.jpg              328
+## 6 https://s1.nyt.com/du/books/images/9781250147608.jpg              322
+##   book_image_height book_review_link                          contributor
+## 1               481                                       by John Grisham
+## 2               495                                        by Delia Owens
+## 3               495                  by James Patterson and Maxine Paetro
+## 4               495                                   by Elizabeth Strout
+## 5               495                                       by Stuart Woods
+## 6               495                                         by Elton John
+##   contributor_note        created_date
+## 1                  2019-10-23 22:02:08
+## 2                  2019-10-23 22:02:08
+## 3                  2019-10-23 22:02:08
+## 4                  2019-10-23 22:02:08
+## 5                  2019-10-23 22:02:08
+## 6                  2019-10-23 22:02:08
+##                                                                                                                                                          description
+## 1                                       Cullen Post, a lawyer and Episcopal minister, antagonizes some ruthless killers when he takes on a wrongful conviction case.
+## 2                                       In a quiet town on the North Carolina coast in 1969, a young woman who survived alone in the marsh becomes a murder suspect.
+## 3                  In the 19th installment of the Women's Murder Club series, detective Lindsay Boxer and company take on a fearsome criminal known only as &quot;Loman.&quot;
+## 4 In a follow-up to the Pulitzer Prize-winning novel “Olive Kitteridge,” new relationships, including a second marriage, are encountered in a seaside town in Maine.
+## 5                              The 51st book in the Stone Barrington series. A respite in England is disrupted when a rival’s deadly plan leads to something bigger.
+## 6                                              The multi-award-winning solo artist's first autobiography chronicles his career, relationships and private struggles.
+##   first_chapter_link price primary_isbn10 primary_isbn13
+## 1                        0           None  9780385544191
+## 2                        0     0735219095  9780735219090
+## 3                        0     0316420271  9780316420273
+## 4                        0           None  9780812996555
+## 5                        0     0593083180  9780593083185
+## 6                        0     1250147603  9781250147608
+##                                          book_uri     publisher rank
+## 1 nyt://book/92eabe83-ac73-5b21-98fb-14dd8ea40c86     Doubleday    1
+## 2 nyt://book/053b4109-4555-5aa1-9b39-cc40549bcdf0        Putnam    2
+## 3 nyt://book/8a6cd41d-3325-5e3d-a20e-7e051a28014e Little, Brown    3
+## 4 nyt://book/01d68681-c151-5d3d-8ae9-5d08533924f3  Random House    4
+## 5 nyt://book/4665d9ee-25ea-584b-b632-5d16aec65483        Putnam    5
+## 6 nyt://book/ebe49014-235b-5234-9e22-379abac7bf4d          Holt    1
+##   rank_last_week sunday_review_link                   title
+## 1              0                              THE GUARDIANS
+## 2              3                    WHERE THE CRAWDADS SING
+## 3              1                         THE 19TH CHRISTMAS
+## 4              0                               OLIVE, AGAIN
+## 5              0                                    STEALTH
+## 6              0                                         ME
+##          updated_date weeks_on_list
+## 1 2019-10-23 22:02:08             1
+## 2 2019-10-23 22:02:08            58
+## 3 2019-10-23 22:02:08             2
+## 4 2019-10-23 22:02:08             1
+## 5 2019-10-23 22:02:08             1
+## 6 2019-10-23 22:02:08             1
+##                                                                                                                                                                                                                                                                                                                                                                                                                                               buy_links
+## 1                                      Amazon, Apple Books, Barnes and Noble, Local Booksellers, https://www.amazon.com/Guardians-Novel-John-Grisham/dp/0385544189?tag=NYTBS-20, http://du-gae-books-dot-nyt-du-prd.appspot.com/buy?title=THE+GUARDIANS&amp;author=John+Grisham, http://www.anrdoezrs.net/click-7990613-11819508?url=http%3A%2F%2Fwww.barnesandnoble.com%2Fw%2F%3Fean%3D9780385544191, http://www.indiebound.org/book/9780385544191?aff=NYT
+## 2                          Amazon, Apple Books, Barnes and Noble, Local Booksellers, https://www.amazon.com/Where-Crawdads-Sing-Delia-Owens/dp/0735219095?tag=NYTBS-20, http://du-gae-books-dot-nyt-du-prd.appspot.com/buy?title=WHERE+THE+CRAWDADS+SING&amp;author=Delia+Owens, http://www.anrdoezrs.net/click-7990613-11819508?url=http%3A%2F%2Fwww.barnesandnoble.com%2Fw%2F%3Fean%3D9780735219090, http://www.indiebound.org/book/9780735219090?aff=NYT
+## 3 Amazon, Apple Books, Barnes and Noble, Local Booksellers, https://www.amazon.com/19th-Christmas-Womens-Murder-Club-ebook/dp/B07P1SSF9S?tag=NYTBS-20, http://du-gae-books-dot-nyt-du-prd.appspot.com/buy?title=THE+19TH+CHRISTMAS&amp;author=James+Patterson+and+Maxine+Paetro, http://www.anrdoezrs.net/click-7990613-11819508?url=http%3A%2F%2Fwww.barnesandnoble.com%2Fw%2F%3Fean%3D9780316420273, http://www.indiebound.org/book/9780316420273?aff=NYT
+## 4                           Amazon, Apple Books, Barnes and Noble, Local Booksellers, https://www.amazon.com/Olive-Again-Novel-Elizabeth-Strout/dp/0812996542?tag=NYTBS-20, http://du-gae-books-dot-nyt-du-prd.appspot.com/buy?title=OLIVE%2C+AGAIN&amp;author=Elizabeth+Strout, http://www.anrdoezrs.net/click-7990613-11819508?url=http%3A%2F%2Fwww.barnesandnoble.com%2Fw%2F%3Fean%3D9780812996555, http://www.indiebound.org/book/9780812996555?aff=NYT
+## 5                               Amazon, Apple Books, Barnes and Noble, Local Booksellers, https://www.amazon.com/Stealth-Stone-Barrington-Novel-Book-ebook/dp/B07NCK6YY8?tag=NYTBS-20, http://du-gae-books-dot-nyt-du-prd.appspot.com/buy?title=STEALTH&amp;author=Stuart+Woods, http://www.anrdoezrs.net/click-7990613-11819508?url=http%3A%2F%2Fwww.barnesandnoble.com%2Fw%2F%3Fean%3D9780593083185, http://www.indiebound.org/book/9780593083185?aff=NYT
+## 6                                           Amazon, Apple Books, Barnes and Noble, Local Booksellers, https://www.amazon.com/Me-Elton-John-Official-Autobiography/dp/1250147603?tag=NYTBS-20, http://du-gae-books-dot-nyt-du-prd.appspot.com/buy?title=ME&amp;author=Elton+John, http://www.anrdoezrs.net/click-7990613-11819508?url=http%3A%2F%2Fwww.barnesandnoble.com%2Fw%2F%3Fean%3D9781250147608, http://www.indiebound.org/book/9781250147608?aff=NYT</code></pre>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb35-1" data-line-number="1"><span class="kw">m_coll</span>(<span class="st">&quot;movie_review&quot;</span>, <span class="st">&quot;nytimes&quot;</span>, <span class="st">&quot;movie_review.json&quot;</span>)</a></code></pre></div>
 <pre><code>## Dropping collection if it is there...
 ## [1] 0
 ## Importing collection: movie_review
 ## Database: nytimes
 ## File: movie_review.json
-## Records inserted: 20</code></pre>
+## Records inserted: 20
+## 
+## [1] &quot;Top records from MongoDB...&quot;
+##   status
+## 1     OK
+## 2     OK
+## 3     OK
+## 4     OK
+## 5     OK
+## 6     OK
+##                                                             copyright
+## 1 Copyright (c) 2019 The New York Times Company. All Rights Reserved.
+## 2 Copyright (c) 2019 The New York Times Company. All Rights Reserved.
+## 3 Copyright (c) 2019 The New York Times Company. All Rights Reserved.
+## 4 Copyright (c) 2019 The New York Times Company. All Rights Reserved.
+## 5 Copyright (c) 2019 The New York Times Company. All Rights Reserved.
+## 6 Copyright (c) 2019 The New York Times Company. All Rights Reserved.
+##   has_more num_results                      results.display_title
+## 1     TRUE          20          Once Upon a Time ... in Hollywood
+## 2     TRUE          20                              306 Hollywood
+## 3     TRUE          20 Scotty and the Secret History of Hollywood
+## 4     TRUE          20                         Hitler's Hollywood
+## 5     TRUE          20 Harold and Lillian: A Hollywood Love Story
+## 6     TRUE          20                      Farewell to Hollywood
+##   results.mpaa_rating results.critics_pick      results.byline
+## 1                   R                    1          A.O. SCOTT
+## 2                                        0      BEN KENIGSBERG
+## 3                                        0 JEANNETTE CATSOULIS
+## 4                                        0      BEN KENIGSBERG
+## 5                                        1     MONICA CASTILLO
+## 6                                        0      BEN KENIGSBERG
+##                                                                         results.headline
+## 1                     ‘Once Upon a Time … in Hollywood’ Review: We Lost It at the Movies
+## 2                         Review: In ‘306 Hollywood,’ an Excavation — at Grandma’s House
+## 3 Review: ‘Scotty and the Secret History of Hollywood’ Reveals a Gabby Hollywood Hustler
+## 4                    Review: ‘Hitler’s Hollywood’ Unearths the Cinema of the Third Reich
+## 5                       Review: ‘Harold and Lillian’ Introduces a Hollywood Power Couple
+## 6                 Review: ‘Farewell to Hollywood,’ the Last Years of a Budding Filmmaker
+##                                                                                                                                              results.summary_short
+## 1 Leonardo DiCaprio and Brad Pitt star as midlevel entertainment industry workers whose relationship forms the core of Quentin Tarantino’s look at the movie past.
+## 2                                                                                                 This documentary argues that everyone’s life is worth archiving.
+## 3                                         Matt Tyrnauer’s gossipy portrait of Scotty Bowers starts out salty but ends up as something sadder and more complicated.
+## 4                                                        The film uses clips to explore the aesthetics, attitudes and messages of German cinema from 1933 to 1945.
+## 5                                    Meet the husband-and-wife team that inspired some of the most memorable moments onscreen, from “The Graduate” to “The Birds.”
+## 6                                          This documentary, co-directed by Regina Nicholson, who died of cancer at 19 in 2012, is moving yet queasily unsettling.
+##   results.publication_date results.opening_date results.date_updated
+## 1               2019-07-24           2019-07-26  2019-08-24 16:44:02
+## 2               2018-09-27           2018-09-28  2018-10-12 16:44:01
+## 3               2018-08-02           2018-07-27  2018-09-02 16:44:01
+## 4               2018-04-10           2018-04-11  2018-05-04 16:44:01
+## 5               2017-04-27           2017-04-28  2017-11-02 04:18:27
+## 6               2015-02-24           2013-09-01  2017-11-02 04:18:17
+##   results.link.type
+## 1           article
+## 2           article
+## 3           article
+## 4           article
+## 5           article
+## 6           article
+##                                                                                                   results.link.url
+## 1                               http://www.nytimes.com/2019/07/24/movies/once-upon-a-time-in-hollywood-review.html
+## 2                                               http://www.nytimes.com/2018/09/27/movies/306-hollywood-review.html
+## 3    http://www.nytimes.com/2018/08/02/movies/scotty-and-the-secret-history-of-hollywood-review-scotty-bowers.html
+## 4                                           http://www.nytimes.com/2018/04/10/movies/hitlers-hollywood-review.html
+## 5                                          http://www.nytimes.com/2017/04/27/movies/harold-and-lillian-review.html
+## 6 http://www.nytimes.com/2015/02/25/movies/review-farewell-to-hollywood-the-last-years-of-a-budding-filmmaker.html
+##                                               results.link.suggested_link_text
+## 1          Read the New York Times Review of Once Upon a Time ... in Hollywood
+## 2                              Read the New York Times Review of 306 Hollywood
+## 3 Read the New York Times Review of Scotty and the Secret History of Hollywood
+## 4                         Read the New York Times Review of Hitler's Hollywood
+## 5 Read the New York Times Review of Harold and Lillian: A Hollywood Love Story
+## 6                      Read the New York Times Review of Farewell to Hollywood
+##   results.multimedia.type
+## 1     mediumThreeByTwo210
+## 2     mediumThreeByTwo210
+## 3     mediumThreeByTwo210
+## 4     mediumThreeByTwo210
+## 5     mediumThreeByTwo210
+## 6     mediumThreeByTwo210
+##                                                                                            results.multimedia.src
+## 1                 https://static01.nyt.com/images/2019/07/24/arts/24onceupon1/24onceupon1-mediumThreeByTwo210.jpg
+## 2                   https://static01.nyt.com/images/2018/09/26/arts/hollywood1/hollywood1-mediumThreeByTwo210.jpg
+## 3                       https://static01.nyt.com/images/2018/08/03/arts/03scotty1/scotty1-mediumThreeByTwo210.jpg
+## 4 https://static01.nyt.com/images/2018/04/11/arts/11hitlers-hollywood1/hitlers-hollywood1-mediumThreeByTwo210.jpg
+## 5                     https://static01.nyt.com/images/2017/04/28/arts/28harold2/28harold2-mediumThreeByTwo210.jpg
+## 6                   https://static01.nyt.com/images/2015/02/25/arts/25FAREWELL/25FAREWELL-mediumThreeByTwo210.jpg
+##   results.multimedia.width results.multimedia.height
+## 1                      210                       140
+## 2                      210                       140
+## 3                      210                       140
+## 4                      210                       140
+## 5                      210                       140
+## 6                      210                       140</code></pre>
 </div>
 
-<div id="rmd-source-code">LS0tCnRpdGxlOiAiV2ViIEFQSXMiCmF1dGhvcjogIkphaSBKZWZmcnllcyIKZGF0ZTogIjEwLzIxLzIwMTkiCm91dHB1dDoKICBodG1sX2RvY3VtZW50OgogICAgY29kZV9kb3dubG9hZDogeWVzCiAgICBjb2RlX2ZvbGRpbmc6IGhpZGUKICAgIGhpZ2hsaWdodDogcHlnbWVudHMKICAgIG51bWJlcl9zZWN0aW9uczogeWVzCiAgICB0aGVtZTogZmxhdGx5CiAgICB0b2M6IHllcwogICAgdG9jX2Zsb2F0OiB5ZXMKLS0tCgpgYGB7ciBzZXR1cCwgaW5jbHVkZT1GQUxTRX0Ka25pdHI6Om9wdHNfY2h1bmskc2V0KGVjaG8gPSBUUlVFKQpgYGAKCmBgYHtyfQpsaWJyYXJ5KGpzb25saXRlKQpsaWJyYXJ5KHN0cmluZ3IpCmxpYnJhcnkodGliYmxlKQpsaWJyYXJ5KHRpZHlyKQpsaWJyYXJ5KG1vbmdvbGl0ZSkKCm55dGltZXNfYXBpX2tleSA8LSByZWFkTGluZXMoIm55dGltZXNfa2V5LnR4dCIpCmBgYAoKIyMgVVJMClNvbWUgSlNPTiBjYWxscyByZXF1aXJlIGEgcXVlcnkgc3RyaW5nLCBvdGhlcnMgZG9uJ3QuIFVzZSBhIGZ1bmN0aW9uIHRvIGJ1aWxkIHRoZSBVUkwgc28geW91IGRvbid0IGRyaXZlIHlvdXJzZWxmIGNyYXp5IHdpdGggcG9zaXRpb25pbmcgb2YgYD9gIGFuZCBgJmAuCgpgYGB7cn0KZ2V0X255dF9qc29uIDwtIGZ1bmN0aW9uKGFwaV9rZXksIGFwaV91cmwsIHF1ZXJ5ID0gTlVMTCkgewoJaWYgKGlzLm51bGwocXVlcnkpKSB7CgkJYmFzZV91cmwgPC0gc3RyX2MoYXBpX3VybCwgIj9hcGkta2V5PSIsIG55dGltZXNfYXBpX2tleSkKCX0gZWxzZSB7CgkJYmFzZV91cmwgPC0gc3RyX2MoYXBpX3VybCwgIj8iLCBxdWVyeSwgIiZhcGkta2V5PSIsIG55dGltZXNfYXBpX2tleSkKCX0KCQoJcHJpbnQoYmFzZV91cmwpCglqc29uIDwtIGZyb21KU09OKGJhc2VfdXJsKQoJanNvbgp9CmBgYAoKIyMgR28gZ2V0ICdlbQpJIHRyaWVkIHRocmVlIHJldHJpZXZhbCBzY2VuYXJpb3MuCgoxLiBTaW1wbGUgbGlzdC4gQm9va3MgQVBJLgoxLiBOZXN0ZWQgbGlzdCBvZiBkYXRhIGZyYW1lcy4gQm9va3MgQVBJLgoxLiBRdWVyeS4gTW92aWUgcmV2aWV3cyBBUEkuCgpUaGUgYGZsYXR0ZW5gIHBhcmFtZXRlciBpbiBganNvbmxpdGU6OmZyb21KU09OKClgIGFuZCB0aGUgZnVuY3Rpb25ganNvbmxpdGU6OmZsYXR0ZW4oKWAgZnVuY3Rpb24gYWNoaWV2ZWQgbm90aGluZyB3aXRoIHRoZXNlIEpTT04gZG9jdW1lbnRzLiBIb3dldmVyLCBgdW5uZXN0KClgIGZyb20gdGhlIGB0aWR5cmAgcGFja2FnZSBkaWQgZmxhdHRlbiB0aGUgbmVzdGVkIGRhdGEgZnJhbWVzIEkgd2FudGVkIHRvIHNlZSBpbiB0aGUgYm9vayBvdmVydmlldy4KCiMjIyBEb24ndCBkbyBtZSBzbyBtYW55IGZhdm9ycywgYHRpYmJsZSgpYApIb3dldmVyLCBpZiB5b3Ugd2FudCB0byBmbGF0dGVuIHdpdGggYHRpZHlyOjp1bm5lc3QoKWAsIHVzZSBiYXNlIGRhdGEgZnJhbWVzLCBub3QgYSBgdGliYmxlYC4gQSBiYXNlIGRhdGEgZnJhbWUgZ2F0aGVycyB0aGUgbmVzdGVkIGxpc3RzIGludG8gY29sdW1ucy4gSXJvbmljYWxseSwgYGFzLnRpYmJsZSgpYCBkb2VzIG5vdC4KCmBgYHtyfQojIEdldCBiZXN0IHNlbGxlcnMgbGlzdCBuYW1lcy4KYXBpX3VybCA8LSAiaHR0cHM6Ly9hcGkubnl0aW1lcy5jb20vc3ZjL2Jvb2tzL3YzL2xpc3RzL25hbWVzLmpzb24iCmJvb2tfbGlzdCA8LSBnZXRfbnl0X2pzb24obnl0aW1lc19hcGlfa2V5LCBhcGlfdXJsKQpib29rX2xpc3RfZGYgPC0gYXNfdGliYmxlKGJvb2tfbGlzdCkKaGVhZChib29rX2xpc3RfZGYpCgojIEdldCBiZXN0IHNlbGxlcnMgb3ZlcnZpZXdzLgojIFRvcCA1IGJvb2tzIGZvciBhbGwgbGlzdHMKYXBpX3VybCA8LSAiaHR0cHM6Ly9hcGkubnl0aW1lcy5jb20vc3ZjL2Jvb2tzL3YzL2xpc3RzL292ZXJ2aWV3Lmpzb24iCmJvb2tfb3ZlcnZpZXcgPC0gZ2V0X255dF9qc29uKG55dGltZXNfYXBpX2tleSwgYXBpX3VybCkKYm9va19vdmVydmlld19kZiA8LSBkYXRhLmZyYW1lKGJvb2tfb3ZlcnZpZXcpICU+JSB1bm5lc3QocmVzdWx0cy5saXN0cy5ib29rcykKaGVhZChib29rX292ZXJ2aWV3X2RmKQojIENhbGwgb3V0IHRoZSBmbGF0dGVuZWQgdGl0bGVzLgpoZWFkKGJvb2tfb3ZlcnZpZXdfZGZbLCBjKCJ0aXRsZSIsICJjb250cmlidXRvciIsICJwdWJsaXNoZXIiKV0pCgojIE1vdmllIHJldmlld3MKYXBpX3VybCA8LSAiaHR0cHM6Ly9hcGkubnl0aW1lcy5jb20vc3ZjL21vdmllcy92Mi9yZXZpZXdzL3NlYXJjaC5qc29uIgpxdWVyeSA8LSAicXVlcnk9aG9sbHl3b29kIgptb3ZpZV9yZXZpZXcgPC0gZ2V0X255dF9qc29uKG55dGltZXNfYXBpX2tleSwgYXBpX3VybCwgcXVlcnkpCm1vdmllX3Jldmlld19kZiA8LSBhc190aWJibGUobW92aWVfcmV2aWV3KQpoZWFkKG1vdmllX3Jldmlld19kZikKYGBgCgojIyBNb25nb0RCCkkgd2FudGVkIHRvIHRha2UgYWR2YW50YWdlIG9mIHRoaXMgY2hhbmNlIHRvIGdldCBzdGFydGVkIHdpdGggTW9uZ29EQi4KCmBgYHtyfQojIENyZWF0ZSBmaWxlcyBvZiBjb2xsZWN0aW9ucwpjYXQoc3RyX2MoIkNyZWF0aW5nIGZpbGVzLi4uXG4iKSkKCnN0cmVhbV9vdXQoeCA9IGJvb2tfbGlzdF9kZiwgZmlsZSgiYm9va19saXN0Lmpzb24iKSkKc3RyZWFtX291dCh4ID0gYm9va19vdmVydmlld19kZiwgZmlsZSgiYm9va19vdmVydmlldy5qc29uIikpCnN0cmVhbV9vdXQoeCA9IG1vdmllX3Jldmlld19kZiwgZmlsZSgibW92aWVfcmV2aWV3Lmpzb24iKSkKCiMgSW1wb3J0IGEgY29sbGVjdGlvbiBhbmQgcmVwb3J0IGFjdGlvbi4KbV9jb2xsIDwtIGZ1bmN0aW9uKGNvbGxlY3Rpb24sIGRiLCBmaWwpIHsKCW1fY29uIDwtIG1vbmdvKGNvbGxlY3Rpb24gPSBjb2xsZWN0aW9uLCBkYiA9IGRiKQoJCgljYXQoIkRyb3BwaW5nIGNvbGxlY3Rpb24gaWYgaXQgaXMgdGhlcmUuLi5cbiIpCgltX2NvbiRkcm9wKCkKCXByaW50KG1fY29uJGNvdW50KCkpCgkKCWNhdChzdHJfYygiSW1wb3J0aW5nIGNvbGxlY3Rpb246ICIsIGNvbGxlY3Rpb24sICJcbkRhdGFiYXNlOiAiLCBkYiwgIlxuRmlsZTogIiwgZmlsLCAiXG4iKSkKCW1fY29uJGltcG9ydChmaWxlKGZpbCkpCgljbnQgPC0gbV9jb24kY291bnQoKQoJY2F0KHN0cl9jKCJSZWNvcmRzIGluc2VydGVkOiAiLCBjbnQsICJcbiIpKQoJCQoJbV9jb24kZGlzY29ubmVjdCgpCn0KCm1fY29sbCgiYm9va19saXN0IiwgIm55dGltZXMiLCAiYm9va19saXN0Lmpzb24iKQojbV9jb2xsKCJib29rX292ZXJ2aWV3IiwgIm55dGltZXMiLCAiYm9va19vdmVydmlldy5qc29uIikgIyBDbGVhbiB0aGUga2V5cy4KbV9jb2xsKCJtb3ZpZV9yZXZpZXciLCAibnl0aW1lcyIsICJtb3ZpZV9yZXZpZXcuanNvbiIpCmBgYAoK</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiV2ViIEFQSXMiCmF1dGhvcjogIkphaSBKZWZmcnllcyIKZGF0ZTogIjEwLzIxLzIwMTkiCm91dHB1dDoKICBodG1sX2RvY3VtZW50OgogICAgY29kZV9kb3dubG9hZDogeWVzCiAgICBjb2RlX2ZvbGRpbmc6IGhpZGUKICAgIGhpZ2hsaWdodDogcHlnbWVudHMKICAgIG51bWJlcl9zZWN0aW9uczogeWVzCiAgICB0aGVtZTogZmxhdGx5CiAgICB0b2M6IHllcwogICAgdG9jX2Zsb2F0OiB5ZXMKLS0tCgpgYGB7ciBzZXR1cCwgaW5jbHVkZT1GQUxTRX0Ka25pdHI6Om9wdHNfY2h1bmskc2V0KGVjaG8gPSBUUlVFKQpgYGAKCmBgYHtyfQpsaWJyYXJ5KGpzb25saXRlKQpsaWJyYXJ5KHN0cmluZ3IpCmxpYnJhcnkodGliYmxlKQpsaWJyYXJ5KHRpZHlyKQpsaWJyYXJ5KG1vbmdvbGl0ZSkKCm55dGltZXNfYXBpX2tleSA8LSByZWFkTGluZXMoIm55dGltZXNfa2V5LnR4dCIpCmBgYAoKIyMgKk5ldyBZb3JrIFRpbWVzKiB3ZWIgQVBJCi0gVXNlIEFQSXMgZnJvbSB0aGUgKlRpbWVzKiBbaGVyZV0oaHR0cHM6Ly9kZXZlbG9wZXIubnl0aW1lcy5jb20pIHRvIGZldGNoIEpTT04gZGF0YSBhbmQgY3JlYXRlIGRhdGEgZnJhbWVzLgotIEV4dHJhIGV4ZXJjaXNlOiB3cml0ZSB0aGVtIHRvIE1vbmdvREIuCgojIyBQcmVwYXJlIEFQSSBjYWxsClNvbWUgSlNPTiBjYWxscyByZXF1aXJlIGEgcXVlcnkgc3RyaW5nLCBvdGhlcnMgZG9uJ3QuIFVzZSBhIGZ1bmN0aW9uIHRvIGJ1aWxkIHRoZSBVUkwgc28geW91IGRvbid0IGRyaXZlIHlvdXJzZWxmIGNyYXp5IHdpdGggcG9zaXRpb25pbmcgb2YgYD9gIGFuZCBgJmAuCgpgYGB7cn0KZ2V0X255dF9qc29uIDwtIGZ1bmN0aW9uKGFwaV9rZXksIGFwaV91cmwsIHF1ZXJ5ID0gTlVMTCkgewoJaWYgKGlzLm51bGwocXVlcnkpKSB7CgkJYmFzZV91cmwgPC0gc3RyX2MoYXBpX3VybCwgIj9hcGkta2V5PSIsIG55dGltZXNfYXBpX2tleSkKCX0gZWxzZSB7CgkJYmFzZV91cmwgPC0gc3RyX2MoYXBpX3VybCwgIj8iLCBxdWVyeSwgIiZhcGkta2V5PSIsIG55dGltZXNfYXBpX2tleSkKCX0KCQoJcHJpbnQoYmFzZV91cmwpCglqc29uIDwtIGZyb21KU09OKGJhc2VfdXJsKQoJanNvbgp9CmBgYAoKIyMgR28gZ2V0ICdlbQpJIHRyaWVkIHRocmVlIHJldHJpZXZhbCBzY2VuYXJpb3MuCgoxLiBTaW1wbGUgbGlzdC4gQm9va3MgQVBJLgoxLiBOZXN0ZWQgbGlzdCBvZiBkYXRhIGZyYW1lcy4gQm9va3MgQVBJLgoxLiBRdWVyeS4gTW92aWUgcmV2aWV3cyBBUEkuCgpUaGUgYGZsYXR0ZW5gIHBhcmFtZXRlciBpbiBganNvbmxpdGU6OmZyb21KU09OKClgIGFuZCB0aGUgZnVuY3Rpb25ganNvbmxpdGU6OmZsYXR0ZW4oKWAgZnVuY3Rpb24gYWNoaWV2ZWQgbm90aGluZyB3aXRoIHRoZXNlIEpTT04gZG9jdW1lbnRzLiBIb3dldmVyLCBgdW5uZXN0KClgIGZyb20gdGhlIGB0aWR5cmAgcGFja2FnZSBkaWQgZmxhdHRlbiB0aGUgbmVzdGVkIGRhdGEgZnJhbWVzIEkgd2FudGVkIHRvIHNlZSBpbiB0aGUgYm9vayBvdmVydmlldy4KCiMjIyBEb24ndCBkbyBtZSBzbyBtYW55IGZhdm9ycywgYHRpYmJsZSgpYApIb3dldmVyLCBpZiB5b3Ugd2FudCB0byBmbGF0dGVuIHdpdGggYHRpZHlyOjp1bm5lc3QoKWAsIHVzZSBiYXNlIGRhdGEgZnJhbWVzLCBub3QgYSBgdGliYmxlYC4gQSBiYXNlIGRhdGEgZnJhbWUgZ2F0aGVycyB0aGUgbmVzdGVkIGxpc3RzIGludG8gY29sdW1ucy4gSXJvbmljYWxseSwgYGFzLnRpYmJsZSgpYCBkb2VzIG5vdC4KCmBgYHtyfQojIEdldCBiZXN0IHNlbGxlcnMgbGlzdCBuYW1lcy4KYXBpX3VybCA8LSAiaHR0cHM6Ly9hcGkubnl0aW1lcy5jb20vc3ZjL2Jvb2tzL3YzL2xpc3RzL25hbWVzLmpzb24iCmJvb2tfbGlzdCA8LSBnZXRfbnl0X2pzb24obnl0aW1lc19hcGlfa2V5LCBhcGlfdXJsKQpib29rX2xpc3RfZGYgPC0gYXNfdGliYmxlKGJvb2tfbGlzdCkKaGVhZChib29rX2xpc3RfZGYpCgojIEdldCBiZXN0IHNlbGxlcnMgb3ZlcnZpZXdzLgojIFRvcCA1IGJvb2tzIGZvciBhbGwgbGlzdHMKYXBpX3VybCA8LSAiaHR0cHM6Ly9hcGkubnl0aW1lcy5jb20vc3ZjL2Jvb2tzL3YzL2xpc3RzL292ZXJ2aWV3Lmpzb24iCmJvb2tfb3ZlcnZpZXcgPC0gZ2V0X255dF9qc29uKG55dGltZXNfYXBpX2tleSwgYXBpX3VybCkKYm9va19vdmVydmlld19kZiA8LSBkYXRhLmZyYW1lKGJvb2tfb3ZlcnZpZXcpICU+JSB1bm5lc3QocmVzdWx0cy5saXN0cy5ib29rcykKaGVhZChib29rX292ZXJ2aWV3X2RmKQojIENhbGwgb3V0IHRoZSBmbGF0dGVuZWQgdGl0bGVzLgpoZWFkKGJvb2tfb3ZlcnZpZXdfZGZbLCBjKCJ0aXRsZSIsICJjb250cmlidXRvciIsICJwdWJsaXNoZXIiKV0pCgojIE1vdmllIHJldmlld3MKYXBpX3VybCA8LSAiaHR0cHM6Ly9hcGkubnl0aW1lcy5jb20vc3ZjL21vdmllcy92Mi9yZXZpZXdzL3NlYXJjaC5qc29uIgpxdWVyeSA8LSAicXVlcnk9aG9sbHl3b29kIgptb3ZpZV9yZXZpZXcgPC0gZ2V0X255dF9qc29uKG55dGltZXNfYXBpX2tleSwgYXBpX3VybCwgcXVlcnkpCm1vdmllX3Jldmlld19kZiA8LSBhc190aWJibGUobW92aWVfcmV2aWV3KQpoZWFkKG1vdmllX3Jldmlld19kZikKYGBgCgojIyBNb25nb0RCCkkgd2FudGVkIHRvIHRha2UgYWR2YW50YWdlIG9mIHRoaXMgY2hhbmNlIHRvIGdldCBzdGFydGVkIHdpdGggTW9uZ29EQi4KCi0gQ2xlYW4gdGhlIGtleSBuYW1lcy4gTW9uZ29EQiBkb2Vzbid0IGxpa2UgcGVyaW9kcyBpbiB0aGUga2V5cy4KLSBDcmVhdGUgZmlsZXMgZnJvbSB0aGUgZGF0YSBmcmFtZXMuIEkgd291bGQgbGlrZSB0byBsZWFybiBpZiB0aGVyZSBpcyBhIHdheSB0byBnbyBmcm9tIFIgb2JqZWN0cyB0byBNb25nb0RCIHdpdGhvdXQgbGF5aW5nIGRvd24gZmlsZXMgaW4gb3JkZXIgdG8gZG8gaXQuCi0gSW1wb3J0IHRoZSBmaWxlcy4gVGhlbiBxdWVyeSBhbmQgb3V0cHV0IGEgZmV3IHJvd3MgdG8gZGVtb25zdHJhdGUgdGhleSBhcmUgdGhlcmUuCgpgYGB7cn0KIyBDbGVhbiBrZXkgbmFtZXMKbmFtZXMoYm9va19saXN0X2RmKSA8LSBzdHJfcmVwbGFjZV9hbGwobmFtZXMoeCA9IGJvb2tfbGlzdF9kZiksIHBhdHRlcm4gPSAiXFwuIiwgcmVwbGFjZW1lbnQgPSAiXyIpCm5hbWVzKGJvb2tfb3ZlcnZpZXdfZGYpIDwtIHN0cl9yZXBsYWNlX2FsbChuYW1lcyh4ID0gYm9va19vdmVydmlld19kZiksIHBhdHRlcm4gPSAiXFwuIiwgcmVwbGFjZW1lbnQgPSAiXyIpCm5hbWVzKG1vdmllX3Jldmlld19kZikgPC0gc3RyX3JlcGxhY2VfYWxsKG5hbWVzKHggPSBtb3ZpZV9yZXZpZXdfZGYpLCBwYXR0ZXJuID0gIlxcLiIsIHJlcGxhY2VtZW50ID0gIl8iKQoKIyBDcmVhdGUgZmlsZXMgb2YgY29sbGVjdGlvbnMKY2F0KHN0cl9jKCJDcmVhdGluZyBmaWxlcy4uLlxuIikpCgpzdHJlYW1fb3V0KHggPSBib29rX2xpc3RfZGYsIGZpbGUoImJvb2tfbGlzdC5qc29uIikpCnN0cmVhbV9vdXQoeCA9IGJvb2tfb3ZlcnZpZXdfZGYsIGZpbGUoImJvb2tfb3ZlcnZpZXcuanNvbiIpKQpzdHJlYW1fb3V0KHggPSBtb3ZpZV9yZXZpZXdfZGYsIGZpbGUoIm1vdmllX3Jldmlldy5qc29uIikpCgojIEltcG9ydCBhIGNvbGxlY3Rpb24gYW5kIHJlcG9ydCBhY3Rpb24uCm1fY29sbCA8LSBmdW5jdGlvbihjb2xsZWN0aW9uLCBkYiwgZmlsKSB7CgltX2NvbiA8LSBtb25nbyhjb2xsZWN0aW9uID0gY29sbGVjdGlvbiwgZGIgPSBkYikKCQoJY2F0KCJEcm9wcGluZyBjb2xsZWN0aW9uIGlmIGl0IGlzIHRoZXJlLi4uXG4iKQoJbV9jb24kZHJvcCgpCglwcmludChtX2NvbiRjb3VudCgpKQoJCgljYXQoc3RyX2MoIkltcG9ydGluZyBjb2xsZWN0aW9uOiAiLCBjb2xsZWN0aW9uLCAiXG5EYXRhYmFzZTogIiwgZGIsICJcbkZpbGU6ICIsIGZpbCwgIlxuIikpCgltX2NvbiRpbXBvcnQoZmlsZShmaWwpKQoJY250IDwtIG1fY29uJGNvdW50KCkKCWNhdChzdHJfYygiUmVjb3JkcyBpbnNlcnRlZDogIiwgY250LCAiXG5cbiIpKQoJCgkjIFJlYWQKCW1vbmdvX2RhdCA8LSBtX2NvbiRmaW5kKCkKCQoJIyBPdXRwdXQKCXByaW50KCJUb3AgcmVjb3JkcyBmcm9tIE1vbmdvREIuLi4iKQoJcHJpbnQoaGVhZChtb25nb19kYXQpKQoJCgltX2NvbiRkaXNjb25uZWN0KCkKfQoKbV9jb2xsKCJib29rX2xpc3QiLCAibnl0aW1lcyIsICJib29rX2xpc3QuanNvbiIpCm1fY29sbCgiYm9va19vdmVydmlldyIsICJueXRpbWVzIiwgImJvb2tfb3ZlcnZpZXcuanNvbiIpICMgQ2xlYW4gdGhlIGtleXMuCm1fY29sbCgibW92aWVfcmV2aWV3IiwgIm55dGltZXMiLCAibW92aWVfcmV2aWV3Lmpzb24iKQpgYGAK</div>
 
 
 </div>

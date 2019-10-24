@@ -27,7 +27,11 @@ library(mongolite)
 nytimes_api_key <- readLines("nytimes_key.txt")
 ```
 
-## URL
+## *New York Times* web API
+- Use APIs from the *Times* [here](https://developer.nytimes.com) to fetch JSON data and create data frames.
+- Extra exercise: write them to MongoDB.
+
+## Prepare API call
 Some JSON calls require a query string, others don't. Use a function to build the URL so you don't drive yourself crazy with positioning of `?` and `&`.
 
 ```{r}
@@ -83,7 +87,16 @@ head(movie_review_df)
 ## MongoDB
 I wanted to take advantage of this chance to get started with MongoDB.
 
+- Clean the key names. MongoDB doesn't like periods in the keys.
+- Create files from the data frames. I would like to learn if there is a way to go from R objects to MongoDB without laying down files in order to do it.
+- Import the files. Then query and output a few rows to demonstrate they are there.
+
 ```{r}
+# Clean key names
+names(book_list_df) <- str_replace_all(names(x = book_list_df), pattern = "\\.", replacement = "_")
+names(book_overview_df) <- str_replace_all(names(x = book_overview_df), pattern = "\\.", replacement = "_")
+names(movie_review_df) <- str_replace_all(names(x = movie_review_df), pattern = "\\.", replacement = "_")
+
 # Create files of collections
 cat(str_c("Creating files...\n"))
 
@@ -102,13 +115,19 @@ m_coll <- function(collection, db, fil) {
 	cat(str_c("Importing collection: ", collection, "\nDatabase: ", db, "\nFile: ", fil, "\n"))
 	m_con$import(file(fil))
 	cnt <- m_con$count()
-	cat(str_c("Records inserted: ", cnt, "\n"))
-		
+	cat(str_c("Records inserted: ", cnt, "\n\n"))
+	
+	# Read
+	mongo_dat <- m_con$find()
+	
+	# Output
+	print("Top records from MongoDB...")
+	print(head(mongo_dat))
+	
 	m_con$disconnect()
 }
 
 m_coll("book_list", "nytimes", "book_list.json")
-#m_coll("book_overview", "nytimes", "book_overview.json") # Clean the keys.
+m_coll("book_overview", "nytimes", "book_overview.json") # Clean the keys.
 m_coll("movie_review", "nytimes", "movie_review.json")
 ```
-
