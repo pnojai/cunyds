@@ -2,8 +2,14 @@
 title: "Assignment 7"
 author: "Jai Jeffryes"
 date: "10/13/2019"
-output: html_document
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
 ---
+
+## Original submission
+In which I manufacture a list of books in three formats: HTML, XML, and JSON. I read and parse them from the web.
 
 ```{r}
 library(RCurl) # Word to the wise. THIS is the tool for getting HTML from HTTPS.
@@ -46,5 +52,42 @@ I output the three files below to demonstrate that I authored them and was able 
 books_html
 books_xml
 books_json
+```
+
+## Do over
+In former scraping, for pre-CUNY courses, I resorted to `rcurl` to overcome the difficulties of acquiring data under the secure protocol, HTTPS. Let's try this again using `rvest` from the `tidyverse`.
+
+Reference: [rvest: easy web scraping with R](https://blog.rstudio.com/2014/11/24/rvest-easy-web-scraping-with-r/)
+
+### HTML
+```{r}
+detach("package:RCurl", unload = TRUE)
+library(rvest)
+```
+
+- Read the html again, and don't worry about tricks to support HTTPS. 
+- Look how easy it is to parse an HTML table into a data frame. Note that there could be multiple tables on a page, so you need to pipe the index even if there's just one.
+
+```{r}
+books_html <- read_html(books_html_url)
+books_html_df <- books_html %>%
+	html_nodes("table") %>% 
+	.[[1]] %>% 
+	html_table()
+books_html_df
+```
+
+### XML
+I'm sure my multiple author XML file can get into a data frame. I'm giving up on it, though. `rvest` gives you a tool for going from an HTML tabe to a data frame. I would love to have a similar tool for XML. There isn't one, and I don't feel the motivation to invent this one myself. JSON does this easily. I just don't think I'm going to need it for XML, and if I do, I'll put in the investment then. (I realize I have a bad attitude about this task. Sorry about that.)
+
+### JSON
+```{r}
+detach("package:RJSONIO", unload = TRUE)
+library(jsonlite)
+library(tidyr)
+library(tibble)
+books_json <- fromJSON(books_json_url)
+books_json_df <- as_tibble(books_json) %>% unnest(author)
+books_json_df
 ```
 
