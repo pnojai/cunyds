@@ -1,6 +1,7 @@
 ---
 title: "Chapter 8 - Introduction to Linear Regression"
-author: ""
+author: "Jai Jeffryes"
+date: "10/31/2019"
 output:
     pdf_document:
         extra_dependencies: ["geometry", "multicol", "multirow", "xcolor"]
@@ -53,11 +54,22 @@ axis(2)
 ```
 
 (a) Describe the relationship between number of calories and amount of carbohydrates (in grams) that Starbucks food menu items contain.
+
+A weak, positive linear relationship, stronger in the domain of calories less than 300.
+
 (b) In this scenario, what are the explanatory and response variables?
+
+Explantory: Calories.
+
+Response: Carbohydrates.
+
 (c) Why might we want to fit a regression line to these data?
+
+If one were restricting consumption of carbohydrates, it might be useful to predict carbohydrates on the Starbucks menu even though Starbucks does not post that nutrion data.
+
 (d) Do these data meet the conditions required for fitting a least squares line?
 
-
+There are problems in this fit, with higher variability in the higher domain of $x$, calories.
 
 
 
@@ -76,16 +88,19 @@ data(bdims)
 # plot height vs. shoulder girth ------------------------------------
 par(mar = c(3.8, 3.8, 0.5, 0.5), las = 1, mgp = c(2.7, 0.7, 0), 
     cex.lab = 1.25, cex.axis = 1.25)
-plot(bdims$hgt ~ bdims$sho.gi, 
-     xlab = "Shoulder girth (cm)", ylab = "Height (cm)", 
+plot(bdims$wgt ~ bdims$hip.gi, 
+     xlab = "Hip girth (cm)", ylab = "Weight (kg)", 
      pch = 19, col = COL[1,2])
 ```
 \end{center}
 
-(a) Describe the relationship between shoulder girth and height.
-(b) How would the relationship change if shoulder girth was measured in inches while the units of height remained in centimeters?
+(a) Describe the relationship between shoulder girth and height. 190
 
+The relationship presented is between hip girth and weight. It is strongly, and postively linear.
 
+(b) How would the relationship change if shoulder girth was measured in inches while the units of height re- mained in centimeters?
+
+None. Axis scale has nothing to do with it unless the linearity of the scale itself changed, like going to a logarithmic scale.
 
 
 --------------------------------------------------------------------------------
@@ -95,12 +110,32 @@ plot(bdims$hgt ~ bdims$sho.gi,
 **Body measurements, Part III.** (8.24, p. 326) Exercise above introduces data on shoulder girth and height of a group of individuals. The mean shoulder girth is 107.20 cm with a standard deviation of 10.37 cm. The mean height is 171.14 cm with a standard deviation of 9.41 cm. The correlation between height and shoulder girth is 0.67.
 
 (a) Write the equation of the regression line for predicting height.
+
+$\widehat{height}$ = 171.14 + 0.67 * $shoulder\_girth$
+
 (b) Interpret the slope and the intercept in this context.
+
+The intercept is the mean of the dependent variable, $height$, predicted if $shoulder\_girth$ measured 0 and that measurement were valid, which it is not however. The slope is the predicted increase in $height$ given 1 unit of increase in $shoulder\_girth$.
+
 (c) Calculate $R^2$ of the regression line for predicting height from shoulder girth, and interpret it in the context of the application.
+
+$R^2$: `r 0.67^2`. This figure is the proportion of the height explained by variability in $shouder\_girth$. (I confess I'm parroting the book in this. I don't really understand what that means.)
+
 (d) A randomly selected student from your class has a shoulder girth of 100 cm. Predict the height of this student using the model.
+
+```{r}
+h <- 171.14 + 0.67 * 100
+```
+
+$height_{pred}$: `r h` cm.
+
 (e) The student from part (d) is 160 cm tall. Calculate the residual, and explain what this residual means.
+
+Residual: `r h - 160`. We overestimated the height by this amount.
+
 (f) A one year old has a shoulder girth of 56 cm. Would it be appropriate to use this linear model to predict the height of this child?
 
+No. The population is made up of adults. Children are undeveloped.
 
 
 
