@@ -96,7 +96,7 @@ plot(bdims$hgt ~ bdims$sho.gi,
 
 (a) Describe the relationship between shoulder girth and height.
 
-The relationship presented is between hip girth and weight. It is strongly, and postively linear.
+It is strongly, and postively linear.
 
 (b) How would the relationship change if shoulder girth was measured in inches while the units of height re- mained in centimeters?
 
