@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019) (preloaded format=pdflatex 2019.8.27)  31 OCT 2019 15:55
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019) (preloaded format=pdflatex 2019.8.27)  2 NOV 2019 12:00
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -711,20 +711,20 @@ ed on input line 206.
 
  <./Homework8_files/figure-latex/unnamed-chunk-2-1.pdf>]
 
-Package xcolor Warning: Incompatible color definition on input line 285.
+Package xcolor Warning: Incompatible color definition on input line 284.
 
-LaTeX Font Info:    Try loading font information for T1+lmtt on input line 286.
+LaTeX Font Info:    Try loading font information for T1+lmtt on input line 285.
 
 (/home/jai/.TinyTeX/texmf-dist/tex/latex/lm/t1lmtt.fd
 File: t1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
 )
 LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <10> not available
-(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 287.
+(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 286.
 
-Package xcolor Warning: Incompatible color definition on input line 289.
+Package xcolor Warning: Incompatible color definition on input line 288.
 
 
-Package xcolor Warning: Incompatible color definition on input line 289.
+Package xcolor Warning: Incompatible color definition on input line 288.
 
 [3
 
@@ -735,7 +735,7 @@ File: Homework8_files/figure-latex/unnamed-chunk-4-1.pdf Graphic file (type pdf
 )
 <use Homework8_files/figure-latex/unnamed-chunk-4-1.pdf>
 Package pdftex.def Info: Homework8_files/figure-latex/unnamed-chunk-4-1.pdf  us
-ed on input line 340.
+ed on input line 339.
 (pdftex.def)             Requested size: 234.87692pt x 144.53964pt.
 [4
 
@@ -746,75 +746,75 @@ File: Homework8_files/figure-latex/unnamed-chunk-5-1.pdf Graphic file (type pdf
 )
 <use Homework8_files/figure-latex/unnamed-chunk-5-1.pdf>
 Package pdftex.def Info: Homework8_files/figure-latex/unnamed-chunk-5-1.pdf  us
-ed on input line 389.
+ed on input line 425.
 (pdftex.def)             Requested size: 234.87692pt x 144.53964pt.
-<Homework8_files/figure-latex/unnamed-chunk-6-1.pdf, id=97, 469.755pt x 289.08p
-t>
+[5
+
+ <./Homework8_files/figure-latex/unnamed-chunk-5-1.pdf>]
+<Homework8_files/figure-latex/unnamed-chunk-6-1.pdf, id=114, 469.755pt x 289.08
+pt>
 File: Homework8_files/figure-latex/unnamed-chunk-6-1.pdf Graphic file (type pdf
 )
 <use Homework8_files/figure-latex/unnamed-chunk-6-1.pdf>
 Package pdftex.def Info: Homework8_files/figure-latex/unnamed-chunk-6-1.pdf  us
-ed on input line 410.
+ed on input line 487.
 (pdftex.def)             Requested size: 234.87692pt x 144.53964pt.
-<Homework8_files/figure-latex/unnamed-chunk-6-2.pdf, id=98, 469.755pt x 289.08p
-t>
+<Homework8_files/figure-latex/unnamed-chunk-6-2.pdf, id=115, 469.755pt x 289.08
+pt>
 File: Homework8_files/figure-latex/unnamed-chunk-6-2.pdf Graphic file (type pdf
 )
 <use Homework8_files/figure-latex/unnamed-chunk-6-2.pdf>
 Package pdftex.def Info: Homework8_files/figure-latex/unnamed-chunk-6-2.pdf  us
-ed on input line 411.
+ed on input line 488.
 (pdftex.def)             Requested size: 234.87692pt x 144.53964pt.
-<Homework8_files/figure-latex/unnamed-chunk-6-3.pdf, id=99, 469.755pt x 289.08p
-t>
+<Homework8_files/figure-latex/unnamed-chunk-6-3.pdf, id=116, 469.755pt x 289.08
+pt>
 File: Homework8_files/figure-latex/unnamed-chunk-6-3.pdf Graphic file (type pdf
 )
 <use Homework8_files/figure-latex/unnamed-chunk-6-3.pdf>
 Package pdftex.def Info: Homework8_files/figure-latex/unnamed-chunk-6-3.pdf  us
-ed on input line 412.
+ed on input line 489.
 (pdftex.def)             Requested size: 234.87692pt x 144.53964pt.
-<Homework8_files/figure-latex/unnamed-chunk-6-4.pdf, id=100, 469.755pt x 289.08
+<Homework8_files/figure-latex/unnamed-chunk-6-4.pdf, id=117, 469.755pt x 289.08
 pt>
 File: Homework8_files/figure-latex/unnamed-chunk-6-4.pdf Graphic file (type pdf
 )
 <use Homework8_files/figure-latex/unnamed-chunk-6-4.pdf>
 Package pdftex.def Info: Homework8_files/figure-latex/unnamed-chunk-6-4.pdf  us
-ed on input line 413.
+ed on input line 490.
 (pdftex.def)             Requested size: 234.87692pt x 144.53964pt.
 
-Overfull \hbox (2.22104pt too wide) in paragraph at lines 410--414
+Overfull \hbox (2.22104pt too wide) in paragraph at lines 487--491
 [][] []
  []
 
 
-Overfull \hbox (2.22104pt too wide) in paragraph at lines 410--414
+Overfull \hbox (2.22104pt too wide) in paragraph at lines 487--491
 [] [] 
  []
 
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 416.
-[5
-
- <./Homework8_files/figure-latex/unnamed-chunk-5-1.pdf> <./Homework8_files/figu
-re-latex/unnamed-chunk-6-1.pdf> <./Homework8_files/figure-latex/unnamed-chunk-6
--2.pdf>] [6 <./Homework8_files/figure-latex/unnamed-chunk-6-3.pdf> <./Homework8
-_files/figure-latex/unnamed-chunk-6-4.pdf>]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 416.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 493.
+[6 <./Homework8_files/figure-latex/unnamed-chunk-6-1.pdf> <./Homework8_files/fi
+gure-latex/unnamed-chunk-6-2.pdf> <./Homework8_files/figure-latex/unnamed-chunk
+-6-3.pdf> <./Homework8_files/figure-latex/unnamed-chunk-6-4.pdf>]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 493.
 (./Homework8.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 416.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 416.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 493.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 493.
 Package rerunfilecheck Info: File `Homework8.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 416.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 493.
  ) 
 Here is how much of TeX's memory you used:
  11283 strings out of 494553
  159881 string characters out of 6177720
- 234532 words of memory out of 5000000
+ 235532 words of memory out of 5000000
  14777 multiletter control sequences out of 15000+600000
  39529 words of font info for 40 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
  28i,12n,35p,234b,327s stack positions out of 5000i,500n,10000p,200000b,80000s
-{/home/jai/.TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-rm.enc}{/home/jai/.TinyT
-eX/texmf-dist/fonts/enc/dvips/lm/lm-mathsy.enc}{/home/jai/.TinyTeX/texmf-dist/f
+{/home/jai/.TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathsy.enc}{/home/jai/.T
+inyTeX/texmf-dist/fonts/enc/dvips/lm/lm-rm.enc}{/home/jai/.TinyTeX/texmf-dist/f
 onts/enc/dvips/lm/lm-mathit.enc}{/home/jai/.TinyTeX/texmf-dist/fonts/enc/dvips/
 lm/lm-ec.enc}</home/jai/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx10.pfb></
 home/jai/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi10.pfb></home/jai/.TinyT
@@ -823,13 +823,13 @@ nts/type1/public/lm/lmr10.pfb></home/jai/.TinyTeX/texmf-dist/fonts/type1/public
 /lm/lmr17.pfb></home/jai/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmr7.pfb></h
 ome/jai/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmri12.pfb></home/jai/.TinyTe
 X/texmf-dist/fonts/type1/public/lm/lmsy10.pfb></home/jai/.TinyTeX/texmf-dist/fo
-nts/type1/public/lm/lmtk10.pfb></home/jai/.TinyTeX/texmf-dist/fonts/type1/publi
-c/lm/lmtt10.pfb></home/jai/.TinyTeX/texmf-dist/fonts/type1/public/amsfonts/symb
-ols/msbm10.pfb>
-Output written on Homework8.pdf (6 pages, 347166 bytes).
+nts/type1/public/lm/lmsy7.pfb></home/jai/.TinyTeX/texmf-dist/fonts/type1/public
+/lm/lmtk10.pfb></home/jai/.TinyTeX/texmf-dist/fonts/type1/public/lm/lmtt10.pfb>
+</home/jai/.TinyTeX/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
+Output written on Homework8.pdf (6 pages, 356859 bytes).
 PDF statistics:
- 201 PDF objects out of 1000 (max. 8388607)
- 160 compressed objects within 2 object streams
+ 205 PDF objects out of 1000 (max. 8388607)
+ 163 compressed objects within 2 object streams
  27 named destinations out of 1000 (max. 500000)
  51 words of extra memory for PDF output out of 10000 (max. 10000000)
 

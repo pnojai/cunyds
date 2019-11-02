@@ -187,10 +187,24 @@ box()
 \end{center}
 
 (a) Write out the linear model.
+
+$\widehat{heart\_weight}$ = -0.357 + 4.034 * $body\_weight$
+
 (b) Interpret the intercept.
+
+The intercept is -0.357. It is meaningless in this context, since an x value of 0 would represent an overall weightless cat, and its heart would be a negative weight.
+
 (c) Interpret the slope.
+
+Out of each kilogram of body weight, 4.034 grams of that is heart weight, on average.
+
 (d) Interpret $R^2$.
+
+Body weight accounts for 64.66% of the variability in heart weight.
+
 (e) Calculate the correlation coefficient.
+
+Root of $R^2$: `r sqrt(0.6466)`
 
 
 
@@ -236,8 +250,30 @@ box()
 \end{center}
 
 (a) Given that the average standardized beauty score is -0.0883 and average teaching evaluation score is 3.9983, calculate the slope. Alternatively, the slope may be computed using just the information provided in the model summary table.
+
+We can figure out the slope based on the calculation of the known T value.
+
+$T = \frac{estimate - null\ value}{SE}$
+
+$4.13 = \frac{estimate - 0}{0.0322}$
+
+$estimate = 4.13 * 0.0322$
+
+$estimate$ = `r 4.13 * 0.0322`
+
 (b) Do these data provide convincing evidence that the slope of the relationship between teaching evaluation and beauty is positive? Explain your reasoning.
+
+Yes, because the p value is reported as 0.0000, within our precision. This is an observational experiment, though, rather than a random controlled trial. It is suggestive, but requires more experimentation to establish causality.
+
 (c) List the conditions required for linear regression and check if each one is satisfied for this model based on the following diagnostic plots.
+
+(1). Linearity. The first plot appears linear.
+
+(2). Nearly normal residuals. The first plot displays no prominant outliers. The histogram is bell-shaped but is pretty skewed to the left. The residuals could stand to be more normal. However, there are 463 observations, so I judge it to be okay.
+
+(3). Constant variability. Plot 1 appears to show constant variability.
+
+(4). Independent observations. In the fourth plot, for order of data collection, I think my eyes see a series of waves. I think these data lack independence.
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.show="hold", out.width="50%", fig.height=4}
 # residuals plot ----------------------------------------------------
