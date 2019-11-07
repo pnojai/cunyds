@@ -1,0 +1,136 @@
+---
+title: "Project 4"
+author: "Jai Jeffryes"
+date: "11/3/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readr)
+library(stringr)
+library(dplyr)
+library(tidyr)
+library(tidytext)
+library(widyr) # pairwise counting
+library(ggplot2)
+```
+
+```{r corpus_exp, eval=FALSE}
+dir_spam <- "./data/spam"
+dir_ham <- "./data/easy_ham"
+
+fils_ham <- list.files(dir_ham, full.names = TRUE)
+fils_spam <- list.files(dir_spam, full.names = TRUE)
+
+create_corpus <- function(fils, class) {
+	for (i in seq_along(fils)) {
+		raw_text <- read_file(fils[i])
+		if (i == 1) {
+			corpus <- VCorpus(VectorSource(raw_text))
+		} else {
+		corpus_1doc <- VCorpus(VectorSource(raw_text))
+		corpus <- c(corpus, corpus_1doc)
+		}
+		# meta(ret_Corpus, tag = "class", type = "indexed") <- class
+	}
+	meta(corpus, tag = "class") <- class
+	return(corpus)
+}
+
+corpus_ham <- create_corpus(fils_ham, "ham")
+corpus_spam <- create_corpus(fils_spam, "spam")
+```
+
+```{r}
+dir_spam <- "./data/spam"
+dir_ham <- "./data/easy_ham"
+
+fils_ham <- list.files(dir_ham, full.names = TRUE)
+fils_spam <- list.files(dir_spam, full.names = TRUE)
+
+get_text_df <- function(files, class) {
+	raw_email <- sapply(files, read_file)
+	id <- str_extract(files, "\\w*$")
+	text_df <- tibble(id = id, class = class, email = raw_email)
+
+	return(text_df)
+}
+
+ham_df <- get_text_df(fils_ham, "ham")
+spam_df <- get_text_df(fils_spam, "spam")
+
+email_df <- rbind(ham_df, spam_df)
+rm(list = c("ham_df", "spam_df"))
+gc()
+
+```
+
+```{r}
+# Look at 2 emails.
+email_df %>% 
+	select(email) %>% 
+	sample_n(2)
+
+# Tokenize all emails.
+email_tokens_df <- email_df %>% 
+	unnest_tokens(word, email) %>% 
+	anti_join(stop_words)
+```
+
+```{r}
+# Look at some counts.
+# Could use some cleaning if these words are unimportant.
+
+# Possible cleansing.
+# Remove headers.
+# Create custom stop list.
+
+email_tokens_df %>% 
+	count(word, sort = TRUE)
+```
+
+```{r cooccur, eval=FALSE}
+# Do we care about co-occurrances and correlations?
+# My environment is too fragile to do it.
+# email_word_pairs <- email_tokens_df %>%
+# 	pairwise_count(word, id, sort = TRUE, upper = FALSE)
+```
+
+```{r}
+# TF IDF
+email_tf_idf <- email_tokens_df %>% 
+  count(class, word, sort = TRUE) %>%
+  ungroup() %>%
+  bind_tf_idf(word, class, n)
+
+email_tf_idf %>% 
+  arrange(-tf_idf)
+
+email_tf_idf %>%
+  arrange(desc(tf_idf)) %>%
+  mutate(word = factor(word, levels = rev(unique(word)))) %>% 
+  group_by(class) %>% 
+  top_n(15) %>% 
+  ungroup() %>%
+  ggplot(aes(word, tf_idf, fill = class)) +
+  geom_col(show.legend = FALSE) +
+  labs(x = NULL, y = "tf-idf") +
+  facet_wrap(~class, ncol = 2, scales = "free") +
+  coord_flip()
+
+# Word counts and then a document term matrix.
+word_counts <- email_tokens_df %>%
+  #anti_join(my_stop_words) %>%
+  count(id, word, sort = TRUE) %>%
+  ungroup()
+
+head(word_counts)
+
+email_dtm <- word_counts %>% 
+	cast_dtm(id, word, n)
+```
+
