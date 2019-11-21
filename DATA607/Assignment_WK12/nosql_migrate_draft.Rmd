@@ -1,0 +1,72 @@
+---
+title: "no_sql_migrate2"
+author: "Jai Jeffryes"
+date: "11/20/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(RMySQL)
+library(jsonlite)
+library(mongolite)
+library(stringr)
+```
+
+```{r}
+con <- dbConnect(
+	drv = MySQL(),
+	host = "127.0.0.1",
+	user = "jairpt",
+	password = "a",
+	dbname = "flights")
+
+table_names <- dbListTables(con)
+table_dfs <- vector(mode = "character", length = 0)
+
+for (tbl in table_names) {
+	table_name <- paste0(tbl, "_df")
+	assign(table_name, dbReadTable(conn = con, tbl))
+	table_dfs <- c(table_dfs, table_name)
+}
+
+ls()
+```
+
+## Tables to collections
+A table in a relational database corresponds to a collection in MongoDB.
+
+```{r}
+# Import a collection and report action.
+mongo_insert <- function(collection, db, df) {
+	mongo_con <- mongo(collection = collection, db = db)
+	
+	cat("Dropping collection if it is there...\n")
+	mongo_con$drop()
+	print(mongo_con$count())
+	
+	# To print the name of the input data frame (instead of its contents),
+	# use this fun trick with deparse() and substitute().
+	cat(str_c("Inserting collection: ", collection, "\nDatabase: ", db,
+			  "\nData frame: ", deparse(substitute(df)), "\n"))
+	
+	mongo_con$insert(df)
+	cnt <- mongo_con$count()
+	cat(str_c("Records inserted: ", cnt, "\n\n"))
+	
+	# Read
+	mongo_dat <- mongo_con$find(limit = 5)
+
+	# Output
+	print("Top records from MongoDB...")
+	print(mongo_dat)
+	
+	mongo_con$disconnect()
+}
+```
+
+### Load MongoDB
+```{r}
+mongo_insert("airports", "flights", airports_df)
+```
+

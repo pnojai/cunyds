@@ -1,0 +1,154 @@
+---
+title: "Migrate to NoSQL"
+author: "Jai Jeffryes"
+date: "11/20/2019"
+output: 
+  html_document:
+    code_folding: hide
+    highlight: pygments
+    theme: flatly
+    toc: yes
+    toc_float: yes
+---
+
+```{r setup}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Packages.
+library(RMySQL)
+library(jsonlite)
+library(mongolite)
+library(stringr)
+
+# MySQL connectivity
+host = "127.0.0.1"
+user = "jairpt"
+password = "a"
+dbname = "flights"
+```
+
+# Migrate to NoSQL
+This assignment migrates data from a relational database to a NoSQL database, specifically from MySQL to MongoDB.
+
+## Approach
+- The approach relies on memory buffers. The process reads each table into a data frame in memory. A scalable solution could make use of file streams.
+- Iterate through the relational tables, migrating one at a time. This minimizes the memory requirement under this approach.
+- The data frame created from a table is inserted into a new collection of documents in MongoDB.
+- As this process is illustrative, it drops the target collection if present. In other words, the migration is a replacement of data sourced from MySQL, not an append. By design, it preserves no existing data in MongoDB.
+- All database connections are explicitly closed immediately after an operation.
+
+### Assumptions
+- MySQL and MongoDB are installed on a local device.
+- Their services are running.
+- The `flights` database exists in MySQL and contains data.
+- The MySQL user has read permission.
+- Preservation of data in the target MongoDB database is unrequired.
+
+## Review the migration
+List the relational tables and record counts.
+
+```{r}
+# MySQL connection.
+mysql_con <- dbConnect(
+	drv = MySQL(),
+	host = host,
+	user = user,
+	password = password,
+	dbname = dbname)
+
+# MySQL tables.
+table_name <- dbListTables(mysql_con)
+
+# Get the record counts
+record_count <- vector(mode = "integer", length = 0L)
+for (tbl in table_name) {
+	sql <- str_c("select count(*) from ", tbl, ";")
+	# print(sql)
+	cnt <- as.integer(dbGetQuery(mysql_con, sql))
+	record_count <- c(record_count, cnt)
+}
+dbDisconnect(mysql_con)
+
+migration_summary <- cbind(table_name, record_count)
+print(migration_summary)
+```
+
+## MySQL read
+The function `mysql_read()` gets one MySQL table and stores it in a data frame.
+
+```{r}
+mysql_read <- function(tbl) {
+	cat("Reading MySQL..\n")
+	cat(str_c("Table: ", tbl, "\n"))
+	
+	mysql_con <- dbConnect(
+		drv = MySQL(),
+		host = host,
+		user = user,
+		password = password,
+		dbname = dbname)
+	
+	df <- dbReadTable(mysql_con, tbl)
+	dbDisconnect(mysql_con)
+	
+	cat(str_c("Records read: ", nrow(df), "\n\n"))
+
+	return(df)
+}
+```
+
+## MongoDB insertion
+The function `mongo_insert()` creates a collection and inserts a data frame.
+
+```{r}
+# Import a collection and report action.
+mongo_insert <- function(collection, db, df) {
+	cat("Inserting into MongoDB...\n")
+	cat(str_c("Collection: ", collection, "\nDatabase: ", db, "\n"))
+
+	mongo_con <- mongo(collection = collection, db = db)
+
+	cat("Dropping collection if it is in MongoDB...\n")
+	mongo_con$drop()
+
+	cat("Inserting collection...\n")
+	mongo_con$insert(df)
+	cnt <- mongo_con$count()
+	cat(str_c("Documents inserted: ", cnt, "\n\n"))
+	
+	# Read
+	mongo_dat <- mongo_con$find(limit = 5)
+
+	# Output
+	print("Top documents from MongoDB")
+	print(mongo_dat)
+	
+	mongo_con$disconnect()
+	cat("\n")
+}
+```
+
+## Migrate
+```{r}
+cat("MIGRATION BEGINNING...\n\n")
+
+for (tbl in table_name) {
+	df <- mysql_read(tbl = tbl)
+	mongo_insert(collection = tbl, db = "flights", df = df)
+}
+
+cat("MIGRATION COMPLETE")
+```
+
+## Comparison of RDBMS and NoSQL
+The overarching advantage of an RDBMS is its optimization for data entry. Enforcement of normalization forms fosters data cleanliness and integrity. The most compelling advantage I am aware of for a NoSQL database is its capacity for data interchange.
+
+Each of these respective advantages may turn into a disadvantage in certain contexts. Consider the contexts of an application data tier and a data stream service.
+
+An RDBMS serves an application data tier well, for example for an inventory system. However, if inventory data were to be published to customers outside of the enterprise, that RDBMS would be disadvantageous. It would be undesirable and unfeasable to share that database to all comers.
+
+In the latter case, a NoSQL database could be a preferred solution that could transfer documents via an API. This interchange can be platform agnostic. A consumer of the inventory data would have latitude in the consumption and use of that data.
+
+In a context requiring data integrity, I have a question about the effectiveness of NoSQL technologies. Although JSON can be validated, I do not know how NoSQL stands up to an RDBMS in this regard. It appears to me that NoSQL is good for speed, like searching web pages. For an operations system, it might not be the choice. The newspaper *The Guardian* notably dropped MongoDB in a migration of great cost, though that appears to have been less related specifically to NoSQL itself and more to the toolset and customer support from MongoDB.
+
+cf. [Bye, bye Mongo, Hello Postgres](https://www.theguardian.com/info/2018/nov/30/bye-bye-mongo-hello-postgres)
