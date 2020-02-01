@@ -1,0 +1,144 @@
+---
+title: "DATA605: Homework 1"
+author: "Jai Jeffryes"
+date: "1/30/2020"
+output: pdf_document
+---
+
+## Problem set 1
+
+1) Calculate the dot product u.v where u = [0.5; 0.5] and v = [3; -4]
+
+```{r}
+u <- c(0.5, 0.5)
+v <- c(3, 4)
+
+# By hand
+dp_1 <- 0.5 * 3 + 0.5 * 4
+
+# Check with Matlab named function.
+library(pracma)
+uv.dot <- dot(u, v)
+uv.dot
+```
+$\begin{bmatrix}0.5\\0.5\end{bmatrix}\begin{bmatrix}3\\4\end{bmatrix}$ = $0.5 \times 3 + 0.5 \times 4$ = `r dp_1`
+
+(2) What are the lengths of u and v? Please note that the mathematical notion of the length of a vector is not the same as a computer science definition.
+
+```{r}
+u.length <- sqrt(dot(u, u))
+v.length <- sqrt(dot(v, v))
+```
+
+- Length of **u** ($\sqrt{(u \cdot u)}$): `r u.length`
+- Length of **v**: `r v.length`
+
+(3) What is the linear combination: 3u - 2v?
+```{r}
+ans <- 3 * u - 2 * v
+ans
+```
+
+I confess the question is a little unclear to me, so I'm going to talk a little bit in order to convey some of my understanding of the topic.
+
+A linear combination expressed in vectors has 3 parts:
+
+1. Coefficient matrix.
+1. Scalars, which are the solution to the linear combination.
+1. Constraints.
+
+In the problem as stated, I think **u** and **v**, column-bound, look like a coefficent matix, and the constants look like the scalars. The constraints are not provided.
+
+In other words, consider the equation $Ax = b$.
+
+- We have $A$. That's **u** and **v**, concatenated.
+- We have $x$. That is the vector, (3, 2).
+- What we don't have is **b**, the constraints. My reading of the problem is that I'm being asked to calculate **b**. I'm talking a lot because that calculation is so easy, I fear I'm missing something important!
+
+I could write the calculation like this:
+
+$3\begin{bmatrix}0.5\\0.5\end{bmatrix} + (-2)\begin{bmatrix}3\\4\end{bmatrix} = \begin{bmatrix}-4.5\\-6.5\end{bmatrix}$
+
+Or I could write it out like this, which would resolve as a dot product of the coefficient matrix and $x$:
+
+$\begin{bmatrix}0.5 & 3\\0.5 & 4\end{bmatrix} \begin{bmatrix}3\\2\end{bmatrix} = \begin{bmatrix}-4.5\\-6.5\end{bmatrix}$
+
+The resulting constant vector: `r ans`
+
+(4) What is the angle between u and v?
+
+- The dot product of two unit vectors is the cosine of the angle between them. The vectors we're given are not unit vectors. However, we can normalize their dot product by dividing by the product of their lengths.
+- Once we have the cosine, we can take the arccosine to determine the angle.
+
+```{r}
+uv.cos <- uv.dot / (u.length * v.length) 
+uv.angle <- acos(uv.cos)
+```
+
+Angle between **u** and **v**: `r uv.angle` radians. 
+
+## Problem set 2
+Set up a system of equations with 3 variables and 3 constraints and solve for x. Write a function in R that will take two variables (matrix A & constraint vector b) and solve.
+
+### Expected results
+I'll do this the easy way with pre-existing functions first, in the spirit of Test Driven Development, so I know what I'm shooting for.
+
+```{r}
+library(pracma)
+A <- matrix(c(
+	1, 1, 3,
+	2, -1, 5,
+	-1, -2, 4
+), nrow = 3, byrow = TRUE)
+rref(A)
+# It's the Identity matrix, so I know there is a single solution.
+
+b <- c(1, 2, 6)
+
+A_aug <- cbind(A, b)
+A_aug
+rref(A_aug)
+```
+
+In the reduced row echelon form, **b** equals the expected results provided in the assignment. So far, so good. Let's get to work with the design of a function.
+
+### Answer
+I chose the algorithm for the Gauss-Jordan Elimination from [Beezer], p. 31. Here it is in R.
+
+```{r}
+gauss_jordan <- function(A, b) {
+	A_aug <- cbind(A, b)
+	m <- nrow(A)
+	n <- ncol(A)
+	j <- 0
+	r <- 0
+	
+	for (j in 1:n) {
+		i <- r + 1
+		while (i <= m && A_aug[i, j] == 0) {
+			i <- i + 1
+		}
+		if (i < m + 1) {
+			r <- r + 1
+			A_aug[c(i, r), ] <- A_aug[c(r, i), ]
+			A_aug[r, ] <- A_aug[r, ] / A_aug[r, j]
+			for (k in 1:m) {
+				if (k != r) {
+					A_aug[k, ] <- -A_aug[k, j] * A_aug[r, ] + A_aug[k, ]
+				}
+			}
+		}
+	}
+	return(A_aug[ , (n + 1)])
+}
+```
+
+### Test
+Compare to rref() results.
+
+```{r}
+gauss_jordan(A, b)
+```
+
+### Conclusion
+The calculation matches the expected results, so my function, `gauss_jordan()`, works.
