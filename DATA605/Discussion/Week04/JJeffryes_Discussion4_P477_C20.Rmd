@@ -1,0 +1,62 @@
+---
+title: "DATA605 Discussion Week 4"
+subtitle: "Page 477, Exercise C20"
+author: "Jai Jeffryes"
+date: "2/16/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## C20
+Example **SAR** concludes with an expression for a vector $u \in \mathbb{C}^5$ that we believe will create the vector $v \in \mathbb{C}^5$ when used to evaluate $T$. That is, $T(u) = v$. Verify this assertion by actually evaluating $T$ with $u$. If you do not have the patience to push around all these symbols, try choosing a numerical instance of $v$, compute $u$, and then compute $T(u)$, which should result in $v$.
+
+### Given
+```{r}
+# Archetype R
+R <- matrix(c(
+	-65, 128, 10, -262, 40,
+	36, -73, -1, 151, -16,
+	-44, 88, 5, -180, 24,
+	34, -68, -3, 140, -18,
+	12, -24, -1, 49, -5
+), nrow = 5, byrow = T)
+R
+
+# Beezer assertion. R is non-singular and has an inverse.
+R.inv <- solve(R)
+R.inv
+```
+
+### Verify
+- Choose numerical instance of $v$
+```{r}
+v <- c(22, -3, 100, 5, 17)
+v
+```
+
+- Compute $u$
+```{r}
+u <- R.inv %*% v
+u
+```
+
+- Compute $T(u)$ and compare
+```{r}
+t.u <- R %*% u
+t.u
+```
+
+- Compare the two results
+```{r}
+# Here is v.
+v
+
+# Here is T(u). Expected: same as v.
+t.u
+```
+
+## Conclusion
+Expected result is confirmed. Archetype **R** is a surjective linear transformation.
