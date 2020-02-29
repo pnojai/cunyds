@@ -1,0 +1,191 @@
+---
+title: "Chapter 2, Page 52"
+author: "Jai Jeffryes"
+date: "2/26/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Monte Carlo
+I was curious to try the Monte Carlo simulations in [Grinstead] because of my interest in Bayesian Analysis. Outside of CUNY, I participate in a weekly study group that is learning Bayesian Analysis from the book, *Statistical Rethinking*, by Richard McElreath and the videos of his complete course on YouTube. We started simulations. Later, we'll get to Markov Chain Monte Carlo.
+
+The [Grinstead] book has accompanying programs, and I read the Monte Carlo program in its TrueBasic version. It's easy. I wrote a version in R that utilizes vectors instead of a loop.
+
+```{r}
+MonteCarlo <- function(trials) {
+	x <- runif(trials, min = 0, max = 1)
+	y <- runif(trials, min = 0, max = 1)
+	
+	is_under_curve <- sum(y <= x^2)
+	area <- is_under_curve / trials
+	
+	return(area)
+}
+
+options(digits = 3)
+trials <- 10000
+
+# Expected error.
+error <- (1 / sqrt(trials)) * c(-1, 1)
+print(error)
+
+# From calculus, the area is 1 / 3.
+area <- 1 / 3
+print(area)
+
+# Estimate
+set.seed(42) # The answer to Life, the Universe, and Everything.
+estimate <- MonteCarlo(trials)
+print(estimate)
+
+# Confidence interval
+print(estimate + error)
+```
+
+This estimate falls within the confidence interval.
+
+Let's take on some of the related exercises.
+
+## Ex. 2.3
+Alter the program MonteCarlo to estimate the area of the circle of radius 1/2 with center at (1/2,1/2) inside the unit square by choosing 1000 points at random. Compare your results with the true value of $\pi/4$. Use your results to estimate the value of $\pi$. How accurate is your estimate?
+
+```{r}
+MonteCarlo_2_3 <- function(trials) {
+	x <- runif(trials, min = 0, max = 1)
+	y <- runif(trials, min = 0, max = 1)
+
+
+	is_in_circle <- sum((x^2 + y^2) <= 1)
+	area <- is_in_circle / trials
+	
+	return(area)
+}
+
+options(digits = 3)
+
+# From calculus, the area is pi / 4.
+area <- pi / 4
+print(area)
+
+# Estimate area.
+set.seed(42) # The answer to Life, the Universe, and Everything.
+trials <- 1000
+estimate <- MonteCarlo_2_3(trials)
+print(estimate)
+
+# True value of pi.
+pi
+
+# Estimate of pi.
+pi_estimate <- estimate * 4
+print(pi_estimate)
+
+# Accuracy of pi estimate in percentage.
+(1 - ((pi_estimate - pi) / pi)) * 100
+```
+
+## Ex. 2.4
+Alter the program MonteCarlo to estimate the area under the graph of $y = sin \pi x$ inside the unit square by choosing 10,000 points at random. Now calculate the true value of this area and use your results to estimate the value of $\pi$. How accurate is your estimate?
+
+```{r}
+MonteCarlo_2_4 <- function(trials) {
+	x <- runif(trials, min = 0, max = 1)
+	y <- runif(trials, min = 0, max = 1)
+
+
+	is_under_curve <- sum(y <= sin(pi * x))
+	area <- is_under_curve / trials
+	
+	return(area)
+}
+```
+
+### Area, from calculus
+We need the definite integral of the curve to compute the area.
+
+$\int_{0}^{1} sin \pi x dx$
+
+Which equals:
+
+$(- \frac{1}{\pi}cos \pi (1)) - (- \frac{1}{\pi}cos \pi (0))$
+
+Or:
+$\frac{2}{\pi}$
+
+```{r}
+area <- (1 - cos(pi)) / pi
+print(area)
+
+# Estimate area.
+options(digits = 3)
+set.seed(42) # The answer to Life, the Universe, and Everything.
+trials <- 10000
+estimate <- MonteCarlo_2_4(trials)
+print(estimate)
+
+# True value of pi.
+pi
+
+# Estimate of pi.
+pi_estimate <- 2 / estimate
+print(pi_estimate)
+
+# Accuracy of pi estimate in percentage.
+(1 - ((pi_estimate - pi) / pi)) * 100
+```
+
+## Ex. 2.5
+Alter the program MonteCarlo to estimate the area under the graph of $y = 1/(x + 1)$ in the unit square in the same way as in Exercise 4. Calculate the true value of this area and use your simulation results to estimate the value of $log 2$. How accurate is your estimate?
+
+```{r}
+MonteCarlo_2_5 <- function(trials) {
+	x <- runif(trials, min = 0, max = 1)
+	y <- runif(trials, min = 0, max = 1)
+
+
+	is_under_curve <- sum(y <= 1/(x + 1))
+	area <- is_under_curve / trials
+	
+	return(area)
+}
+```
+
+### Area, from calculus
+We need the definite integral of the curve to compute the area.
+
+$\int_{0}^{1} \frac{1}{x + 1} dx$
+
+Which equals:
+
+$ln(1 + 1) - ln(0 + 1)$
+
+Which equals:
+
+$ln(2) - 0$
+
+Therefore, our estimate of the area under the curve is an estimate of $ln2$
+
+```{r}
+area <- log(2)
+print(area)
+
+# Estimate area.
+options(digits = 3)
+set.seed(42) # The answer to Life, the Universe, and Everything.
+trials <- 10000
+estimate <- MonteCarlo_2_5(trials)
+print(estimate)
+
+# True value of ln(2).
+log(2)
+
+# Estimate of ln(2).
+ln2_estimate <- estimate
+print(ln2_estimate)
+
+# Accuracy of ln(2) estimate in percentage.
+(1 - (ln2_estimate - log(2))) * 100
+```

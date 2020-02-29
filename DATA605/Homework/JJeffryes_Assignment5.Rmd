@@ -1,0 +1,158 @@
+---
+title: "DATA605 - Assignment 5"
+author: "Jai Jeffryes"
+date: "2/27/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Problem set
+Choose independently two numbers B and C at random from the interval [0, 1] with uniform density. Prove that B and C are proper probability distributions.
+Note that the point (B,C) is then chosen at random in the unit square.
+Find the probability that
+
+### (a) B + C < 1/2.
+
+```{r}
+MonteCarlo.a <- function(trials) {
+	B <- runif(trials, min = 0, max = 1)
+	C <- runif(trials, min = 0, max = 1)
+	
+	is_under_curve <- sum(B + C < 1.0 / 2.0)
+	area <- is_under_curve / trials
+	
+	return(area)
+}
+
+options(digits = 3)
+trials <- 10000
+
+# Expected error.
+error <- (1 / sqrt(trials))
+print(error)
+
+# Estimate
+set.seed(42)
+estimate <- MonteCarlo.a(trials)
+print(estimate)
+```
+
+**ANSWER, with 95% confidence: `r estimate` $\pm$ `r error`**
+
+### (b) BC < 1/2.
+
+```{r}
+MonteCarlo.b <- function(trials) {
+	B <- runif(trials, min = 0, max = 1)
+	C <- runif(trials, min = 0, max = 1)
+	
+	is_under_curve <- sum(B * C < 1.0 / 2.0)
+	area <- is_under_curve / trials
+	
+	return(area)
+}
+
+options(digits = 3)
+trials <- 10000
+
+# Expected error.
+error <- (1 / sqrt(trials))
+print(error)
+
+# Estimate
+set.seed(42)
+estimate <- MonteCarlo.b(trials)
+print(estimate)
+```
+
+**ANSWER, with 95% confidence: `r estimate` $\pm$ `r error`**
+
+### (c) |B - C| < 1/2.
+
+```{r}
+MonteCarlo.c <- function(trials) {
+	B <- runif(trials, min = 0, max = 1)
+	C <- runif(trials, min = 0, max = 1)
+	
+	is_under_curve <- sum(abs(B - C) < 1.0 / 2.0)
+	area <- is_under_curve / trials
+	
+	return(area)
+}
+
+options(digits = 3)
+trials <- 10000
+
+# Expected error.
+error <- (1 / sqrt(trials))
+print(error)
+
+# Estimate
+set.seed(42)
+estimate <- MonteCarlo.c(trials)
+print(estimate)
+
+```
+
+**ANSWER, with 95% confidence: `r estimate` $\pm$ `r error`**
+
+### (d) max{B,C} < 1/2.
+
+```{r}
+MonteCarlo.d <- function(trials) {
+	B <- runif(trials, min = 0, max = 1)
+	C <- runif(trials, min = 0, max = 1)
+	
+	# Use pairwise maximum function.
+	is_under_curve <- sum(pmax(B, C) < 1.0 / 2.0)
+	area <- is_under_curve / trials
+	
+	return(area)
+}
+
+options(digits = 3)
+trials <- 10000
+
+# Expected error.
+error <- (1 / sqrt(trials))
+print(error)
+
+# Estimate
+set.seed(42)
+estimate <- MonteCarlo.d(trials)
+print(estimate)
+```
+
+**ANSWER, with 95% confidence: `r estimate` $\pm$ `r error`**
+
+### (e) min{B,C} < 1/2.
+ 
+```{r}
+MonteCarlo.e <- function(trials) {
+	B <- runif(trials, min = 0, max = 1)
+	C <- runif(trials, min = 0, max = 1)
+	
+	# Use pairwise minimum function.
+	is_under_curve <- sum(pmin(B, C) < 1.0 / 2.0)
+	area <- is_under_curve / trials
+	
+	return(area)
+}
+
+options(digits = 3)
+trials <- 10000
+
+# Expected error.
+error <- (1 / sqrt(trials))
+print(error)
+
+# Estimate
+set.seed(42)
+estimate <- MonteCarlo.e(trials)
+print(estimate)
+```
+
+**ANSWER, with 95% confidence: `r estimate` $\pm$ `r error`**
