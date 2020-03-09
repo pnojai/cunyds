@@ -1,0 +1,373 @@
+---
+title: "DATA605 - Assignment 6"
+author: "Jai Jeffryes"
+date: "3/8/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(digits = 4)
+```
+
+## Problem 1
+A box contains 54 red marbles, 9 white marbles, and 75 blue marbles. If a marble is randomly selected from the box, what is the probability that it is red or blue? Express your answer as a fraction or a decimal number rounded to four decimal places.
+
+```{r}
+red <- 54
+white <- 9
+blue <- 75
+
+# Pr(red or white)
+answer <- (red + blue) / (red + white + blue)
+
+print(answer)
+```
+
+## Problem 2
+You are going to play mini golf. A ball machine that contains 19 green golf balls, 20 red golf balls, 24 blue golf balls, and 17 yellow golf balls, randomly gives you your ball. What is the probability that you end up with a red golf ball? Express your answer as a simplified fraction or a decimal rounded to four decimal places.
+
+```{r}
+green <- 19
+red <- 20
+blue <- 24
+yellow <- 17
+
+# Pr(red)
+answer <- (red) / (green + red + blue + yellow)
+
+print(answer)
+```
+## Problem 3
+A pizza delivery company classifies its customers by gender and location of residence. The research department has gathered data from a random sample of 1399 customers. The data is summarized in the table below.
+
+What is the probability that a customer is not male or does not live with parents? Write your answer as a fraction or a decimal number rounded to four decimal places.
+
+### Answer
+This is the logical equivalent of asking for the complement of the probability of males who do live with their parents.
+
+```{r}
+customers <- data.frame(males = c(81, 116, 215, 130, 129),
+						females = c(228, 79, 252, 97, 72),
+						row.names = c("Apartment", "Dorm",
+									  "WithParents", "GreekHouse", "Other"))
+
+print(customers)
+
+answer <- 1 - (customers["WithParents", "males"] / sum(customers))
+
+print(answer)
+```
+
+## Problem 4
+Determine if the following events are independent. Going to the gym. Losing weight.
+Answer: A) Dependent B) Independent
+
+### Answer
+A: Dependent.
+
+## Problem 5
+A veggie wrap at City Subs is composed of 3 different vegetables and 3 different condiments wrapped up in a tortilla. If there are 8 vegetables, 7 condiments, and 3 types of tortilla available, how many different veggie wraps can be made?
+
+### Wrong answer
+*I include this wrong answer first because I think it is an interesting mistake. I misread the question, failing to observe that the number of choices is constrained. Probably this is because I'm a trouble-maker, never failing to request a substitution at a restaurant. I brute-forced some of the tallying I needed for this misinterpreted calculation.*
+
+This one is interesting because I think you need to include the data generation process. How is a veggie wrap prepared? The ingredients are not all counted in the same way.
+
+- You always include at least one vegetable, and you may include any number of others.
+- You may include any number of condiments, and you may have none.
+- You only choose one tortilla.
+
+```{r}
+vegetables <- 8
+condiments <- 7
+tortillas <- 3
+
+# Compute number of vegetable combinations. Probably there is a theorem and function
+# that do this more easily. I'm considering this an N choose K problem. Since I may
+# vary K, I hand-rolled tallying code.
+
+veggie_combos <- 0
+# Choose at least 1 vegetable.
+for (choose in 1:vegetables) {
+	veggie_combos <- veggie_combos +
+		(factorial(vegetables) / (factorial(choose) * factorial(vegetables - choose)))
+}
+
+condiment_combos <- 0
+# You may choose no condiments, so the loop starts at 0.
+for (choose in 0:condiments) {
+	condiment_combos <- condiment_combos +
+		(factorial(condiments) / (factorial(choose) * factorial(condiments - choose)))
+}
+
+# You must choose one and only one tortilla.
+
+# How many wrap combinations are there?
+answer <- veggie_combos * condiment_combos * tortillas
+print(answer)
+```
+
+### Wrong answer redux
+Sorry, I hated my hand-rolled code, so I wasted time improving what I already know is wrong anyway.
+
+#### I'm thinking, I'm thinking...
+(No, I'm not old enough to remember Jack Benny's show, but my Dad told me his jokes all the time...)
+![](img/benny.jpg)
+
+```{r}
+vegetables <- 8
+condiments <- 7
+tortillas <- 3
+
+# Compute number of vegetable combinations. Use choose() instead of calculating the
+# factorials myself, and use sapply() instead of a loop.
+
+veggie_combos <- sum(sapply(1:vegetables, function(x) {choose(vegetables, x)}))
+condiment_combos <- sum(sapply(0:condiments, function(x) {choose(condiments, x)}))
+
+# You must choose one and only one tortilla.
+
+# How many wrap combinations are there?
+answer <- veggie_combos * condiment_combos * tortillas
+print(answer)
+```
+
+*... back to regularly scheduled programming.*
+
+### Right answer
+```{r}
+vegetables <- 8
+condiments <- 7
+tortillas <- 3
+choose <- 3
+
+veggie_combos <- choose(vegetables, choose)
+condiment_combos <- choose(condiments, choose)
+
+# How many wrap combinations are there?
+answer <- veggie_combos * condiment_combos * tortillas
+print(answer)
+```
+
+## Problem 6
+Determine if the following events are independent.
+Jeff runs out of gas on the way to work. Liz watches the evening news.
+Answer: A) Dependent B) Independent
+
+**Answer: B, Independent.**
+
+## Problem 7
+The newly elected president needs to decide the remaining 8 spots available in the cabinet they are appointing. If there are 14 eligible candidates for these positions (where rank matters), how many different ways can the members of the cabinet be appointed?
+
+### Answer
+The problem states that rank matters for these positions. I read that to mean these positions are ordered. Therefore, this is a problem for permutations rather than combinations, and it is without replacement. You have 14 choices to begin with, then 13, then 12, etc. You do **not** want the `choose()` function here because that has an extra reduction to eliminate the multiple ways a single set of choices can be arranged. This problem says rank matters. If I'm reading that correctly, the answer is staggering, in the millions.
+
+```{r}
+answer <- factorial(14) / factorial(14 - 8)
+print(answer)
+```
+
+## Probem 8
+A bag contains 9 red, 4 orange, and 9 green jellybeans. What is the probability of reaching into the bag and randomly withdrawing 4 jellybeans such that the number of red ones is 0, the number of orange ones is 1, and the number of green ones is 3? Write your answer as a fraction or a decimal number rounded to four decimal places.
+
+The unnerving thing about this week is I'm relying on thinking for myself. Gee whiz!
+
+Let's see if I'm thinking correctly about this...
+
+- If I draw one orange jellybean from a set of four, there are $4 \choose 1$ ways to do that.
+- There are $9 \choose 3$ ways to draw the green ones.
+- I think I multiply those together to come up with all the combinations of a successful draw.
+- Divide that number by the total combinations of drawing any four jelly beans, which is $9 + 4 + 9 \choose 4$. That gives you the probability requested.
+
+```{r}
+red <- 9
+orange <- 4
+green <- 9
+
+red.draw <- 0
+orange.draw <- 1
+green.draw <- 3
+
+# Interesting to note that there is one way to choose 0! (As in the red jellybean.)
+success_combos <- choose(red, red.draw) * choose(orange,
+												 orange.draw) * choose(green,green.draw)
+total_combos <- choose(red + orange + green, red.draw + orange.draw + green.draw)
+
+answer <- success_combos / total_combos
+print(answer)
+```
+How about that. I'm getting 5 decimal places. I just figured out that the command `options(digits = 4)` sets significant digits, not decimal places. Well, I failed to follow the instructions for this one, but I'm looking that one up in the morning. `<whining>`I must go to bed.`</whining>`
+
+## Problem 9
+Evaluate the following expression.
+
+$\frac{11!}{7!}$
+
+The $7!$ in the denominator cancels out in the numerator, so the expression reduces to the following.
+
+$11 * 10 * 9 * 8$
+
+```{r}
+11 * 10 * 9 * 8
+
+# Or verifying...
+factorial(11) / factorial(7)
+```
+
+## Problem 10
+Describe the complement of the given event.
+67% of subscribers to a fitness magazine are over the age of 34.
+
+### Answer
+37% of subscribers are 34 and under. It's a little ambiguous. Strictly speaking, 34 years and 3 months is "over 34," but no one speaks that strictly about age. The problem implies that 67% of subscribers are 35 years in age and above.
+
+## Problem 11
+If you throw exactly three heads in four tosses of a coin you win $97. If not, you pay me $30.
+
+- **Step 1.** Find the expected value of the proposition. Round your answer to two decimal places.
+
+This is a Bernoulli trial, 3 successes in 4 trials. I can compute that using a binomial function in `R`.
+
+```{r}
+p.success <- dbinom(x = 3, size = 4, prob = .5)
+print(p.success)
+```
+
+That's the probability of winning after the four tosses. I'm trying to figure out what is meant by the value of the proposition. Since the probability of success is `r p.success`, I would expect to win 1 out of 4 times. I'd get $97 once and pay $30 three times, for a net gain of $7. The value for me per game of four tosses is 7 / 4.
+
+```{r}
+# Benefit of success.
+win <- 97
+# Cost of failure.
+loss <- -30
+
+# Value of proposition to me.
+game_value <- win * p.success + loss * (1 - p.success)
+print(game_value)
+```
+
+- **Step 2.** If you played this game 559 times how much would you expect to win or lose? (Losses must be entered as negative.)
+
+```{r}
+answer <- game_value * 559
+print(answer)
+```
+
+## Problem 12
+Flip a coin 9 times. If you get 4 tails or less, I will pay you $23. Otherwise you pay me $26.
+
+- **Step 1.** Find the expected value of the proposition. Round your answer to two decimal places.
+
+### Answer
+Again, I have a feeling there is a theorem or function that arrives at the answer more elegantly. I calculate the probability of success by iterating through the range of Bernoulli trials given in the problem; one success through four of them.
+
+```{r}
+p.success <- sum(sapply(1:4, function(x) {dbinom(x = x, size = 9, prob = 0.5)}))
+print(p.success)
+```
+
+That's the probability of success. Next, I compute the value of the proposition.
+
+```{r}
+# Benefit of success.
+win <- 23
+# Cost of failure.
+loss <- -26
+
+# Value of proposition to me.
+game_value <- win * p.success + loss * (1 - p.success)
+print(game_value)
+```
+I'm losing, on average, in this game.
+
+- **Step 2.** If you played this game 994 times how much would you expect to win or lose? (Losses must be entered as negative.)
+
+### Answer
+I lose in this one. This is the amount of the loss, in dollars.
+
+```{r}
+answer <- game_value * 994
+print(answer)
+```
+
+## Problem 13
+The sensitivity and specificity of the polygraph has been a subject of study and debate for years. A 2001 study of the use of polygraph for screening purposes suggested that the probability of detecting a liar was .59 (sensitivity) and that the probability of detecting a "truth teller" was .90 (specificity). We estimate that about 20% of individuals selected for the screening polygraph will lie.
+
+- a. What is the probability that an individual is actually a liar given that the polygraph detected them as such? (Show me the table or the formulaic solution or both.)
+
+### Answer
+We know:
+
+- Positive test result indicates liar (I'm choosing that by definition).
+- Negative test result indicates truth teller (definition).
+- $Pr(Positive | Liar) = 0.59$
+- $Pr(Negative | Truth\_teller = 0.90$
+- $Pr(Liar) = 0.20$ This estimate is a prior probability and we're computing a posterior probability.
+
+We want:
+
+- $Pr(Liar | Positive)$
+
+We use Bayes Formula.
+
+$Posterior = \frac{Likelihood \times Prior}{Average\_Likelihood}$
+
+Average likelihood is something I always have to think about. It's the average likelihood of the data. In this case, the average likelihood of getting a positive polygraph result.
+
+$Pr(Liar | Positive) = \frac{Pr(Positive | Liar) \times Pr(Liar)}{Pr(Positive)}$
+
+We have to expand that denominator, totalling up the results that are positive.
+
+- You get positives for liars. What's the probability of that? Multiply that by the probability of liars. $Pr(Positive|Liar)Pr(Liar)$
+- You also get false positives for truth tellers. We know the probability of a negative result for a truth teller. The probability of a false positive is 1 minus that. Then you multiply that by the probability of a truth teller, which is 1 minus the probability of a liar. $(1 - Pr(Negative|Truth\_teller)) \times (1 - Pr(Liar))$
+
+$Pr(Liar | Positive) = \frac{Pr(Positive | Liar) \times Pr(Liar)}{Pr(Positive|Liar)Pr(Liar) + (1 - Pr(Negative|Truth\_teller))(1 - Pr(Liar))}$
+
+$Pr(Liar | Positive) = \frac{0.59 \times 0.20}{(0.59)(0.20) + (1 - 0.90)(1 - 0.20))}$
+
+I'll calculate it and cross my fingers that I set this up correctly.
+
+```{r}
+answer <- (0.59 * 0.20) / (0.59 * 0.20 + (1 - 0.90) * (1 - 0.20))
+print(answer)
+```
+
+- b. What is the probability that an individual is actually a truth-teller given that the polygraph detected them as such? (Show me the table or the formulaic solution or both.)
+
+$Pr(Truth\_teller | Negative) = \frac{Pr(Negative | Truth\_teller) \times Pr(Truth\_teller)}{Pr(Negative)}$
+
+We have to expand that denominator, totalling up the results that are negative.
+
+- You get negatives for truth tellers. What's the probability of that? Multiply that by the probability of truth tellers, which is 1 minus the probability of a liar. $Pr(Negative|Truth\_teller) \times (1 - Pr(Liar))$
+- You also get false negatives for liars. We know the probability of a positive result for a liar. The probability of a false negative is 1 minus that. Then you multiply that by the probability of a liar. $(1 - Pr(Positive|Liar)) \times Pr(Liar)$
+
+$Pr(Truth\_teller | Negative) = \frac{Pr(Negative | Truth\_teller) \times (1 - Pr(Liar))}{Pr(Negative | Truth\_teller) \times (1 - Pr(Liar)) + (1 - Pr(Positive|Liar)) \times Pr(Liar)}$
+
+$Pr(Truth\_teller | Negative) = \frac{0.90 \times (1 - 0.20)}{0.90 \times (1 - 0.20) + (1 - 0.59)(0.20)}$
+
+Crossing my fingers again.
+
+```{r}
+answer <- (0.90 * (1 - 0.20)) / ((0.90 * (1 - 0.20)) + ((1 - 0.59) * 0.20))
+print(answer)
+```
+
+- c. What is the probability that a randomly selected individual is either a liar or was identified as a liar by the polygraph? Be sure to write the probability statement.
+
+### Answer
+I think there is double counting expressed in this question, but I interpret the intent not to be as such. The polygraph returns true positives and false positives. I think the question is asking for the sum of liars and false positives.
+
+$Pr(Liar) + Pr(Positive | Truth\_teller)$
+
+Which is the equivalent of:
+
+$Pr(Liar) + (1 - Pr(Negative | Truth\_teller))$
+
+```{r}
+answer <- 0.20 + (1 - 0.90)
+print(answer)
+```
+
+
+ 
