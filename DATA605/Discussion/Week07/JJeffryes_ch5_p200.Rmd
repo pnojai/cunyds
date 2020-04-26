@@ -1,0 +1,34 @@
+---
+title: "Chapter 5, Page 200"
+author: "Jai Jeffryes"
+date: "3/11/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Section 5.1. Problem 22.
+Assume that we are making raisin cookies. We put a box of 600 raisins into our dough mix, mix up the dough, then make from the dough 500 cookies. We then ask for the probability that a randomly chosen cookie will have 0, 1, 2, ... raisins. Consider the cookies as trials in an experiment, and let $X$ be the random variable which gives the number of raisins in a given cookie. Then we can regard the number of raisins in a cookie as the result of $n = 600$ independent trials with probability $p = 1/500$ for success on each trial. Since $n$ is large and $p$ is small, we can use the Poisson approximation with $\lambda = 600(1/500) = 1.2$. Determine the probability that a given cookie will have at least five raisins.
+
+### Answer
+I'm adopting the approach outlined in Example 5.4 on page 191. Problem 22 deals with raison cookies instead of bombs. We approximate the probability of getting $j$ raisons using the Poisson distribution.
+
+$\lambda = 1.2$
+
+$p(j) = e^{-\lambda}\lambda^j/j!$
+
+I think I want to calculate the probability for 1, 2, 3, and 4 raisons. Then subtract that sum from 1.
+```{r}
+p_1to4 <- 0
+lambda = 1.2
+
+for(j in 1:4) {
+	p_1to4 = p_1to4 + (exp(-lambda) * lambda^j) / factorial(j)
+}
+
+1 - p_1to4
+```
+
+However, that doesn't look at all right to me, so I'm turning in what I have and it's back to the drawing board in the morning.

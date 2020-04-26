@@ -1,0 +1,27 @@
+---
+title: "ahajjam_disc09_p339_ex10"
+author: "Jai Jeffryes"
+date: "3/26/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Abdelmalek, you have a nice, simple solution for finding the probability that among 10,000 random digits the digit 3 appears not more than 931 times.
+
+I was looking at this one in the way I think I understand in the book. Each random digit is a Bernoulli trial with $p = 0.1$. Then:
+
+- The expected value is: $\mu = np = 10000 \cdot 0.1$
+- $\sigma = \sqrt{npq} = \sqrt{1000 \cdot (1 - 0.1)} = \sqrt{900} = 30$
+
+Therefore, $x = \frac{j - np}{\sqrt{npq}} = \frac{931 - 1000}{30} = -2.3$
+
+This is where I get stuck, and maybe your use of `pbinom()` is all there is to it. I wanted to follow the book and calculate the definite integral:
+
+$\int_{-\infty}^{-2.3}\phi(x)dx$
+
+I thought there was a way to do that in `R` easily. Do I really just want the `pbinom()` distribution function?

@@ -1,0 +1,269 @@
+---
+title: "Discussion 10"
+author: "Jai Jeffryes"
+date: "3/31/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Getting this one
+I'm delighted I can see what is going on with the material this week. I did a bunch of the exercises, and I'll probably be able to add to them even.
+
+## p. 413, ex. 11.1
+It is raining in the Land of Oz. Determine the probabilities for the next three days of weather. $w^{(1)}$, $w^{(2)}$, $w^{(3)}$
+
+I understand this! Here is the transition matrix.
+```{r}
+P <- matrix(c(
+	.5, .25, .25,
+	.5, 0, .5,
+	.25, .25, .5),
+	nrow = 3, byrow = T
+)
+colnames(P) <- c("R", "N", "S")
+rownames(P) <- c("R", "N", "S")
+```
+
+We're given a probability vector for the starting distribution. The problem says it's raining in the Land of Oz, so that entry is equal to 1.
+
+```{r}
+u = c(1, 0, 0)
+```
+
+Theorem 11.2 gives the probability that the chain is in $s_i$ after $n$ steps.
+
+$u^{(n)} = uP^n$
+
+```{r}
+w1 <- u %*% P
+w1
+w2 <- u %*% P %*% P
+w2
+w3 <- u %*% P %*% P %*% P
+w3
+```
+
+## Ex. 11.2
+In example 11.4, let $a = 0$ and $b = 1/2$. Find $P$, $P^2$, and $P^3$. What would $P^n$ be? What happens to $P^n$ as $n$ tends to infinity.
+
+I'd like a little more convenience with raising dot products multiple times.
+```{r}
+dot_power <- function(x, n){
+	if (n < 2) stop("Invalid n")
+	
+	ans <- x
+	for(i in 2:n){
+		ans <- ans %*% x
+	}
+	return(ans)
+}
+```
+
+```{r}
+P <- matrix(c(
+	1.0, 0.0,
+	0.5, 0.5),
+	nrow = 2, byrow = T
+)
+colnames(P) <- c("yes", "no")
+rownames(P) <- c("yes", "no")
+```
+
+Here are $P$, $P^2$, and $P^3$.
+```{r}
+P
+dot_power(P, 2)
+dot_power(P, 3)
+```
+
+Bump $n$ up to 100 and this is the result.
+```{r}
+dot_power(P, 100)
+```
+
+The Markov Chain has reached a stationary state, for which the starting state is irrelevant. With enough transitions, all no answers will have been changed to yes answers, no matter what the president said..
+
+## Ex. 11.3
+In example 11.5 find $P$, $P^2$, and $P^3$. What would $P^n$ be?
+
+```{r}
+P <- matrix(c(
+	.5, .25, .25,
+	.5, .25, .25,
+	.5, .25, .25),
+	nrow = 3, byrow = T
+)
+colnames(P) <- c("W", "P", "S")
+rownames(P) <- c("W", "P", "S")
+
+P
+dot_power(P, 2)
+dot_power(P, 3)
+dot_power(P, 100)
+```
+
+Answer: For all $n$, $P^n = P$
+
+## Ex. 11.4
+For Example 11.6, find the probability that the grandson of a Harvard alum went to Harvard.
+
+```{r}
+P <- matrix(c(
+	.8, .2, 0,
+	.3, .4, .3,
+	.2, .1, .7),
+	nrow = 3, byrow = T
+)
+
+statespace <- c("H", "Y", "D")
+dimnames(P) <- list(statespace, statespace)
+
+dot_power(P, 2)
+```
+
+Answer: 0.70
+
+## Ex. 11.5
+For Example 11.7, find the probability that the grandson of a Harvard alum went to Harvard.
+
+```{r}
+P <- matrix(c(
+	1, 0, 0,
+	.3, .4, .3,
+	.2, .1, .7),
+	nrow = 3, byrow = T
+)
+
+statespace <- c("H", "Y", "D")
+dimnames(P) <- list(statespace, statespace)
+
+dot_power(P, 2)
+```
+
+Answer: 1.0
+
+## Ex. 11.6
+For Example 11.9, assume we start with a hybrid bred to a hybrid. Find $u^{(1)}$, $u^{(2)}$, and $u^{(3)}$. What would $u^{(n)}$ be?
+
+```{r}
+P <- matrix(c(
+	.5, .5, 0,
+	.25, .5, .25,
+	.0, .5, .5),
+	nrow = 3, byrow = T
+)
+
+statespace <- c("GG", "Gg", "gg")
+dimnames(P) <- list(statespace, statespace)
+
+u = c(0, 1, 0)
+
+u %*% P
+u %*% dot_power(P, 2)
+u %*% dot_power(P, 3)
+```
+
+Answer: for all $n$, $u{(n)} = (.25, .5, .25)$
+
+## Ex. 11.7
+Find the matrices $P^2$, $P^3$, $P^4$, and $P^n$ for the given transition matrices.
+
+```{r}
+# FIRST MATRIX
+P <- matrix(c(
+	1, 0,
+	0, 1),
+	nrow = 2, byrow = T
+)
+
+dot_power(P, 2)
+dot_power(P, 3)
+dot_power(P, 4)
+dot_power(P, 100)
+
+# SECOND MATRIX
+P <- matrix(c(
+	0, 1,
+	1, 0),
+	nrow = 2, byrow = T
+)
+
+dot_power(P, 2)
+dot_power(P, 3)
+dot_power(P, 4)
+dot_power(P, 100)
+dot_power(P, 101)
+```
+
+Answer:
+
+- For the first matrix, which is the Identity matrix, $P^n = P$
+- For the second, when $n$ is odd, $P^n = P$. When $n$ is even, $P^n$ = the Identity matrix.
+
+## Supplementary article
+An intro to Markov Chains in R: [https://dataconomy.com/2018/03/an-introduction-to-markov-chains-using-r/](https://dataconomy.com/2018/03/an-introduction-to-markov-chains-using-r/)
+
+Movements of Uber drivers between zones.
+```{r}
+# State space.
+DriverZone <- c("North", "South", "West")
+# Transition matrix.
+ZoneTransition <- matrix(c(0.3, 0.3, 0.4, 0.4, 0.4, 0.2, 0.5, 0.3, 0.2), nrow = 3, byrow = T)
+dimnames(ZoneTransition) <- list(DriverZone, DriverZone)
+ZoneTransition
+```
+
+```{r}
+# install.packages("markovchain")
+# install.packages("diagram")
+
+library(markovchain)
+library(diagram)
+
+# Use the markovchain function to create a markovchain object
+McZone <- new("markovchain", states = DriverZone, byrow = T,
+			  transitionMatrix = ZoneTransition, name = "Driver Movement")
+# Calling the object gives the transition matrix.
+McZone
+
+# Plot the transition matrix.
+plotmat(ZoneTransition, pos = c(1, 2), lwd = 1, cex.txt = 0.5, box.size = 0.1,
+		box.type = "circle", box.prop = 0.5, box.col = "light yellow", arr.length = .1,
+		arr.width = .1, self.cex = .4, self.shifty = -.01, self.shiftx = .13,
+		main = "Transition Diagram")
+```
+
+The plot can be used to find state transitions to multiply and add up. If a driver starts in the North Zone, what is the probability he'll be there after two trips?
+
+$NN + SN + WN = 0.3*0.3 + 0.4*0.3 + 0.5*0.4$
+```{r}
+0.3*0.3 + 0.4*0.3 + 0.5*0.4
+```
+
+Using the Markov Chain model, we can run this code and read the NN element.
+
+```{r}
+McZone^2
+
+# Here's three trips
+McZone^3
+```
+
+Run enough trips and you eventually reach equilibrium at a stationary state, for which the starting point was irrelevant. We're there by 25 trips
+
+```{r}
+steadyStates(McZone)
+McZone^25
+```
+
+If 50 drivers started in the North and completed 25 trips in a day, here's where we expect them to end up.
+
+```{r}
+50 * steadyStates(McZone)
+```
+

@@ -1,0 +1,725 @@
+---
+title: "OpenIntro Statistics"
+subtitle: "Chapter 2 Exercises"
+author: "Jai Jeffryes"
+date: "2/24/2020 - 3/11/2020"
+output:
+  pdf_document: default
+---
+
+## Notes - reviewing meetup
+[9/4/2019](https://www.youtube.com/watch?v=o_Eh-mXvG5c&feature=youtu.be)
+
+### Qualitative variables
+```{r}
+devtools::install_github("seankross/lego")
+
+library(lego)
+data(legosets)
+```
+
+- Mixed feelings about Tibbles. Few problems with how it behaves with legacy code.
+- Descriptive statistics.
+  - Contingency tables.
+  - Proportional tables.
+- Plot types.
+  - Bar plots.
+
+```{r}
+# One-way contingency table.
+# I don't think you can call it that. There is no contingency with a single variable.
+# I call that a frequency table.
+table(legosets$Availability, useNA = "ifany")
+
+# Two-way contingency table.
+table(legosets$Availability, legosets$Packaging, useNA = "ifany")
+
+# Proportional table.
+prop.table(table(legosets$Availability))
+
+# Bar plot.
+barplot(prop.table(table(legosets$Availability)), las = 3)
+```
+
+### Quantitative variables
+```{r}
+
+```
+Descriptive statistics
+
+- Mean
+- Median
+- Quartiles
+- Variance: $s^2 = \sum_{i=1}^n \frac{(x - \bar{x})^2}{n - 1}$
+- Standard deviation: $s = \sqrt{s^2}$
+
+Plot types
+
+- Dot plots
+- Histograms
+- Density plots
+- Box plots
+- Scatterplots
+
+Measures of center
+```{r}
+mean(legosets$Pieces, na.rm = T)
+median(legosets$Pieces, na.rm = T)
+```
+
+Measures of spread
+```{r}
+var(legosets$Pieces, na.rm = T)
+sqrt(var(legosets$Pieces, na.rm = T))
+sd(legosets$Pieces, na.rm = T)
+fivenum(legosets$Pieces, na.rm = T)
+IQR(legosets$Pieces, na.rm = T)
+```
+
+`summary()` function
+
+- Same as `fivenum()`, but adds a count of `NA`.
+```{r}
+summary(legosets$Pieces)
+```
+
+### The `psych` package
+There are a hundred functions that do useful things, but Dr. Bryer especially likes two.
+
+- `describe`
+- `describeBy`
+
+```{r}
+library(psych)
+describe(legosets$Pieces, skew = F)
+
+# Summarize a quantitative variable, grouping by a qualitative variable.
+describeBy(legosets$Pieces, group = legosets$Availability, skew = F, mat = T)
+```
+
+Dot plot
+```{r}
+stripchart(legosets$Pieces)
+
+par.orig <- par(mar = c(1, 10, 1, 1))
+stripchart(legosets$Pieces ~ legosets$Availability, las = 1)
+```
+
+Histograms
+
+```{r}
+hist(legosets$Pieces)
+```
+
+Transformations
+
+```{r}
+hist(log(legosets$Pieces))
+```
+
+Density plots
+
+- The width of binning can affect the interpretation of histograms.
+- Smooth that with density plots.
+
+```{r}
+plot(density(legosets$Pieces, na.rm = T), main = "Pieces per Lego Set")
+plot(density(log(legosets$Pieces), na.rm = T), main = "Pieces per Lego Set")
+```
+
+Box plots
+
+Dr. Bryer uses them when he's doing ANOVA, for post hoc analysis. Usually has a quantitative outcome variable, and wants to know if there are in-group or between-group differences. Box plots are fantastic for that.
+```{r}
+boxplot(legosets$Pieces)
+boxplot(log(legosets$Pieces))
+```
+
+Scatterplots
+```{r}
+plot(legosets$Pieces, legosets$USD_MSRP)
+```
+
+Examining outliers (expensive sets)
+
+```{r}
+# Base R subsetting
+legosets[which(legosets$USD_MSRP >= 400), ]
+```
+
+Examining outliers (big sets)
+
+```{r}
+# Base R subsetting
+legosets[which(legosets$Pieces >= 4000), ]
+```
+
+Pie charts, say no.
+
+- Tukey.
+- Cleveland.
+
+Dual scales
+
+- Avoid them.
+- If you can't, rescale using z-scores.
+- What you really want is a scatter plot.
+
+`library(DATA606)
+shiny_demo("DualScales", package = "DATA606")`
+
+[](http://blog.revolutionanalytics.com/2016/08/dual-axis-time-series.html)
+[](http://ellisp.github.io/blog/2016/08/18/dualaxes)
+
+## p. 56, ex. 2.1
+Mammal life spans. Data were collected on life spans (in 
+years) and gestation lengths (in days) for 62 mammals. A scatterplot of life span versus 
+length of gestation is shown below.
+
+- What type of an association is apparent between life span and length of gestation? **Positive, linear.**
+- What type of an association would you expect to see if the axes of the plot were reversed, i.e. if we plotted length of gestation versus life span? **The same.**
+- Are life span and length of gestation independent? Explain your reasoning. **No, they are dependent because they display a correlation.**
+
+## p. 56, ex. 2.2
+Associations. 
+Indicate which of the plots show
+
+(a) a positive association, **1, 3.**
+(b) a negative association, or **4.**
+(c) no-association. **2.**
+
+Also determine if the positive and negative associations
+are linear or nonlinear.
+
+- Linear. **1, 4.**
+- Non-linear. **3.**
+
+Each part may refer to more than one plot.
+
+## p. 56, ex. 2.3
+
+Reproducing bacteria. Suppose that there is only 
+sufficient space and nutrients to support one million bacterial cells in a petri dish. 
+You place a few bacterial cells in this petri dish, allow them to reproduce freely, and 
+record the number of bacterial cells in the dish over time. Sketch a plot representing 
+the relationship between number of bacterial cells and time.
+
+```{r}
+x <- seq(from = 0, to = 1200)
+y <- ifelse(x^2 <= 1000000, x^2, 1000000)
+plot(x, y)
+```
+
+**ANSWER:** The book showed a concave up curve. That's closer to what I really expect, but I have (and assume) less knowledge of biology. I went for simply capping my plot at 1 million.
+
+## p. 56, ex. 2.4
+
+Office productivity. Office productivity is relatively low 
+when the employees feel no stress about their work or job security. However, high levels 
+of stress can also lead to reduced employee productivity. Sketch a plot to represent the 
+relationship between stress and productivity.
+
+```{r}
+x <- seq(from = 0, to = 100)
+ y <- -(x-50)^2
+plot(x, y)
+```
+
+I might expect the curve to be skewed somehow, but this sketch captures the idea of a productivity peak.
+
+## p. 56, ex. 2.5
+Parameters and statistics. Identify which value represents 
+the sample mean and which value represents the claimed population mean.
+
+- American households spent an average of about $52 in 2007 on Halloween 
+merchandise such as costumes, decorations and candy. To see if this number had changed, 
+researchers conducted a new survey in 2008 before industry numbers were reported. The 
+survey included 1,500 households and found that average Halloween spending was $58 per 
+household. $\mu_{2007} = \$52$. $\bar{x}_{2008} = \$58$
+- The average GPA of students in 2001 at a private university was 3.37. A survey 
+on a sample of 203 students from this university yielded an average GPA of 3.59 
+a decade later. $\mu_{2001} = 3.37$ $\bar{x}_{2011} = 3.59$
+
+## p. 56, ex. 2.6
+Sleeping in college, A recent article in a college newspaper 
+stated that college students get an average of 5.5 hrs of sleep each night. A student who 
+was skeptical about this value decided to conduct a survey by randomly sampling 25 
+students. On average, the sampled students slept 6.25 hours per night. Identify which 
+value represents the sample mean and which value represents the claimed population mean. **Population mean: 5.5 hours. Sample mean: 6.25.**
+
+## p. 57, ex. 2.7
+Days off at a mining plant. Workers at a particular mining 
+site receive an average of 35 days paid vacation, which is lower than the national 
+average. The manager of this plant is under pressure from a local union to increase the 
+amount of paid time off. However, he does not want to give more days off to the workers 
+because that would be costly. Instead he decides he should fire 10 employees in such a 
+way as to raise the average number of days off that are reported by his employees. In 
+order to achieve this goal, should he fire employees who have the most number of days 
+off, least number of days off, or those who have about the average number of days off? **He should fire the employees with the least number of days off (especially if he is among them).**
+
+## p. 57, ex. 2.8
+Medians and IQRs. For each part, compare distributions (1) and (2) based on their medians and IQRs. You do not need to calculate these statistics; simply state how the medians and IQRs compare. Make sure to explain your reasoning. 
+
+- (1) 3, 5, 6, 7, 9
+(2) 3, 5, 6, 7, 20
+
+**Median and IQR are the same, unaffected by the extreme values.**
+
+- (1) 3, 5, 6, 7, 9
+(2) 3, 5, 7, 8, 9
+
+**Median and upper IQR is higher in #2. Lower IQR is the same.**
+
+- (1) 1, 2, 3, 4, 5
+(2) 6, 7, 8, 9, 10
+
+**Both higher in #2.**
+
+- (1) 0, 10, 50, 60, 100
+(2) 0, 100, 500, 600, 1000
+
+**Both higher in #2.**
+
+## p. 57, ex. 2.9
+Means and SDs. For each part, compare distributions (1) and (2) based on their means and standard deviations. You do not need to calculate these statistics; simply state how the means and the standard deviations compare. Make sure to explain your reasoning. *Hint:* It may be useful to sketch dot plots of the distributions.
+
+- (1) 3, 5, 5, 5, 8, 11, 11, 11, 13
+(2) 3, 5, 5, 5, 8, 11, 11, 11, 20
+
+```{r}
+library(openintro)
+x_1 <- c(3, 5, 5, 5, 8, 11, 11, 11, 13)
+x_2 <- c(3, 5, 5, 5, 8, 11, 11, 11, 20)
+
+xmin <- min(c(x_1, x_2))
+xmax <- max(c(x_1, x_2))
+
+par(mar = c(5, 0, 0, 0), mfrow = c(2, 1))
+dotPlot(x_1, xlim = c(xmin, xmax), axes = F, ann = F)
+dotPlot(x_2, xlim = c(xmin, xmax))
+```
+In the second set, the mean is higher, pulled up by the maximum value, and SD is higher, because of the greater variance.
+
+- (1) -20, 0, 0, 0, 15, 25, 30, 30
+(2) -40, 0, 0, 0, 15, 25, 30, 30
+
+```{r}
+x_1 <- c(-20, 0, 0, 0, 15, 25, 30, 30)
+x_2 <- c(-40, 0, 0, 0, 15, 25, 30, 30)
+
+xmin <- min(c(x_1, x_2))
+xmax <- max(c(x_1, x_2))
+
+par(mar = c(5, 0, 0, 0), mfrow = c(2, 1))
+dotPlot(x_1, xlim = c(xmin, xmax), axes = F, ann = F)
+dotPlot(x_2, xlim = c(xmin, xmax))
+```
+
+In the second set, the mean is lower, pulled down by the minimum value, and SD is higher, because of the greater variance.
+
+- (1) 0, 2, 4, 6, 8, 10
+(2) 20, 22, 24, 26, 28, 30
+
+In the second set, the mean is higher, because the range is higher, and SD is the same, because the variance is identical.
+
+```{r}
+x_1 <- c(0, 2, 4, 6, 8, 10)
+x_2 <- c(20, 22, 24, 26, 28, 30)
+
+xmin <- min(c(x_1, x_2))
+xmax <- max(c(x_1, x_2))
+
+par(mar = c(5, 0, 0, 0), mfrow = c(2, 1))
+dotPlot(x_1, xlim = c(xmin, xmax), axes = F, ann = F)
+dotPlot(x_2, xlim = c(xmin, xmax))
+```
+
+- (1) 100, 200, 300, 400, 500
+(2) 0, 50, 300, 550, 600
+
+```{r}
+x_1 <- c(100, 200, 300, 400, 500)
+x_2 <- c(0, 50, 300, 550, 600)
+
+xmin <- min(c(x_1, x_2))
+xmax <- max(c(x_1, x_2))
+
+par(mar = c(5, 0, 0, 0), mfrow = c(2, 1))
+dotPlot(x_1, xlim = c(xmin, xmax), axes = F, ann = F)
+dotPlot(x_2, xlim = c(xmin, xmax))
+```
+
+The mean is the same in both datasets, with a central value of 300, while the variance is higher in the second set, resulting in a higher SD.
+
+## p. 57, ex. 2.10
+Mix-and-match. Describe the distribution in the histograms below and match them to the box plots.
+
+(a) The distribution is unimodal and symmetric centered near a value of 60 and few outliers. Its box plot is #2.
+(b) The distribution is close to uniform throughout its range of 0-100. There are no prominent peaks. Box plot #3.
+(c) The distribution is unimodal and right-skewed. Its central value is a little below 2, and outliers extending above a value of 6. Box plot #1.
+
+## p. 58, ex. 2.11
+Air quality. Daily air quality is measured by the air 
+quality index (AQI) reported by the Environmental Protection Agency. This index reports 
+the pollution level and what associated health effects might be a concern. The index is 
+calculated for five major air pollutants regulated by the Clean Air Act and takes values 
+from 0 to 300, where a higher value indicates lower air quality. AQI was reported for a 
+sample of 91 days in 2011 in Durham, NC. The relative frequency histogram below shows 
+the distribution of the AQI values on these days.
+
+- Estimate the median AQI value of this sample. **25. ANSWER: book estimated 30.**
+- Would you expect the mean AQI value of this sample to be higher or lower than the 
+median? Explain your reasoning. **Higher. The distribution is skewed to the right.**
+- Estimate Q1, Q3, and IQR for the distribution. **Q1 = 15, Q3 = 40, IQR = 25.**
+- Would any of the days in this sample be considered to have an unusually low or 
+high AQI? Explain your reasoning. **Yes, there are short bins at each end of the distribution, below 10 and above 60. ANSWER: the book points out how you decide that, and my approach is not it. You want to look at the how the whiskers of a box plot would extend, namely to 1.5 times the inter-quartile range. By my estimate the lower whisker would reach down to -22.5, the upper would reach up to 77.5. All measurements lie within those extrema, so there are no unusually low or high AQI measurements.**
+
+## p. 58, ex. 2.12
+Median vs. mean. Estimate the median for the 
+400 observations shown in the histogram, and note whether you expect the mean 
+to be higher or lower than the median. **Median: 75-80. The mean is lower than the median because the distribution is skewed to the left.**
+
+## p. 58, ex. 2.13
+Histograms vs. box plots. Compare the two plots below. What 
+characteristics of the distribution are apparent in the histogram and not in the box 
+plot? What characteristics are apparent in the box plot but not in the histogram?
+
+- **In histogram: bimodality, frequencies in binned ranges.**
+- **In box plot: Exact locations of median and IQR, limits of typical values, exact values of outliers.**
+
+## p. 58, ex. 2.14
+Facebook friends. Facebook data indicate that 
+50% of Facebook users have 100 or more friends, and that the average friend 
+count of users is 190. What do these findings suggest about the shape of the 
+distribution of number of friends of Facebook users? **It is right-skewed.**
+
+## p. 58, ex. 2.15
+Distributions and appropriate statistics, Part I.
+For each of the following, state whether you expect the distribution to be 
+symmetric, right skewed, or left skewed. Also specify whether the mean or 
+median would best represent a typical observation in the data, and whether 
+the variability of observations would be best represented using the 
+standard deviation or IQR. Explain your reasoning.
+
+- Number of pets per household. **Right-skewed because there are cat ladies with extreme numbers of cats. Since there are are high outliers, a typical observation and the variability of observations are better represented by the robust statistics of median and IQR.**
+- Distance to work, i.e. number of miles between work and home. **I expect the distribution to be symmetric, since people tend to have available to them the same modes of transportation. Mean and standard deviation. ANSWER: the book contradicted me, pointing out that there is a natural boundary at 0 and a few people who work a great distance, which skews the distribution to the right.**
+- Heights of adult males. **Symmetric. There are outliers at both extremes, midgets and giants. Mean and standard deviation.**
+
+## p. 59, ex. 2.16
+Distributions and appropriate statistics, Part II. 
+For each of the following, state whether you expect the distribution to be symmetric, 
+right skewed, or left skewed. Also specify whether the mean or median would better 
+represent a typical observation in the data, and whether the variability of observations 
+would be better represented using the standard deviation or IQR. Explain your reasoning.
+
+- Housing prices in a country where 25% of the houses cost below $350,000, 
+50% of the houses cost below $450,000, 75% of the houses cost below $1,000,000 
+and there are a meaningful number of houses that cost more than $6,000,000. **Right-skewed. The median is $450,000 while outliers extend to the right above $6M. Median and IQR.**
+- Housing prices in a country where 2% of the houses cost below $300,000, 
+50% of the houses cost below $600,000, 75% of the houses cost below $900,000 
+and very few houses that cost more than $1,200,000. **Left-skewed. Median and IQR.**
+- Number of alcoholic drinks consumed by college students in a given week. 
+Assume that most of these students don't drink since they are under 21 years old, 
+and only a few drink excessively. **Left-skewed. Median and IQR.**
+- Annual salaries of the employees at a Fortune 500 company where only a few 
+high level executives earn much higher salaries than all the other employees. **Symmetric. Mean and standard deviation.**
+
+## p. 59, ex. 2.17
+Income at the coffee shop. The first histogram 
+below shows the distribution of the yearly incomes of 40 patrons at a college 
+coffee shop. Suppose two new people walk into the coffee shop: one making 
+$225,000 and the other $250,000. The second histogram shows the new income 
+distribution. Summary statistics are also provided.
+
+\begin{minipage}[c]{0.4\textwidth}
+\begin{center}
+\begin{tabular}{rrr}
+\hline
+        & (1)       & (2) \\ 
+\hline
+n       & 40        & 42 \\ 
+Min.    & 60,680    & 60,680 \\ 
+1st Qu. & 63,620    & 63,710 \\ 
+Median  & 65,240    & 65,350 \\ 
+Mean    & 65,090    & 73,300 \\ 
+3rd Qu. & 66,160    & 66,540 \\ 
+Max.    & 69,890    & 250,000 \\ 
+SD      & 2,122     & 37,321 \\ 
+\hline
+\end{tabular}
+\end{center}
+\end{minipage}
+
+- Would the mean or the median better represent what we might think of as a 
+typical income for the 42 patrons at this coffee shop? What does this say about 
+the robustness of the two measures? **Median.**
+- Would the standard deviation or the IQR better represent the amount of 
+variability in the incomes of the 42 patrons at this coffee shop? What does 
+this say about the robustness of the two measures? **IQR. Median and IQR are more robust than mean and standard deviation. In other words, they are less affected by outliers.**
+
+## p. 59, ex. 2.18
+Midrange. The *midrange* of a distribution is defined as 
+the average of the maximum and the minimum of that distribution. Is this statistic 
+robust to outliers and extreme skew? Explain your reasoning. **No. Just like the statistics of mean and standard deviation, the midrange statistic is vulnerable to outliers and skew because the values of the outliers are used in the calculation of the statistic. This contrasts from median, for example, because the value of an outlier is not used in its calculation, but rather its location in the distribution or index in the dataset.**
+
+## p. 59, ex. 2.19
+Commute times. The US census collects data on 
+time it takes Americans to commute to work, among many other variables. The 
+histogram below shows the distribution of average commute times in 3,142 US 
+counties in 2010. Also shown below is a spatial intensity map of the same data.
+
+- Describe the numerical distribution and comment on whether or not a log 
+transformation may be advisable for these data. **The numerical distribution is unimodal and symmetric (which I estimated in an earlier problem), the median commute is about 22 minutes and few commute times amount to more than 40 minutes. The normal distribution is apparent in the plot, so a transformation is unnecessary for adding information to the distribution. ANSWER: the book estimates the standard deviation at 5 minutes. I don't know how you eyeball that. I guess you carve off the tails and say that's two standard deviations. With that approach, I might have estimated 6 minutes. The book says there are no unusually high or low commute times. I keep forgetting to include that. I come up with a few values below 2.5 and a few above 41.5.**
+- Describe the spatial distribution of commuting times using the map below. **Spot checking the locations of densely populated cities reveals higher commute times. The greater sizes of regions in the West suggest that those counties encompass greater geographical areas.**
+
+## p. 59, ex. 2.20
+Hispanic population. The US census collects 
+data on race and ethnicity of Americans, among many other variables. The 
+histogram below shows the distribution of the percentage of the population 
+that is Hispanic in 3,142 counties in the US in 2010. Also shown is a 
+histogram of logs of these values.
+
+- Describe the numerical distribution and comment on why we might want 
+to use log-transformed values in analyzing or modeling these data. **The distribution is highly skewed to the right, so much that details of the distribution are unapparent.**
+- What features of the distribution of the Hispanic population in US 
+counties are apparent in the map but not in the histogram? **The populations are higher in the Southwest.** What features are 
+apparent in the histogram but not the map? **The central tendency is about 10%. However, I don't understand the x coordinate. It extends above a value of 4, which on a log scale would suggest the population exceeds 40000%! Something is wrong with that transformation and scale. *Update*: the `log()` function is a natural log.**
+- Is one visualization more appropriate or helpful than the other? Explain 
+your reasoning. **Yes, when the analytic question relates to an element elucidated more in one visualization over the other.**
+
+## p. 69, ex. 2.21
+Antibiotic use in children. The bar plot 
+and the pie chart below show the distribution of pre-existing medical 
+conditions of children involved in a study on the optimal duration of 
+antibiotic use in treatment of tracheitis, which is an upper respiratory 
+infection.
+
+- What features are apparent in the bar plot but not in the pie chart? **Degree of difference in relative frequency, and their order..**
+- What features are apparent in the pie chart but not in the bar plot? **None.**
+- Which graph would you prefer to use for displaying these categorical data? **Bar plot.**
+
+## p. 69, ex. 2.22
+Views on immigration. 910 randomly sampled registered 
+voters from Tampa, FL were asked if they thought workers who have illegally 
+entered the US should be (i) allowed to keep their jobs and apply for 
+US citizenship, (ii) allowed to keep their jobs as temporary guest workers 
+but not allowed to apply for US citizenship, or (iii) lose their jobs and 
+have to leave the country. The results of the survey by political ideology 
+are shown below.
+
+\begin{center}
+\begin{tabular}{l l c c c c}
+                        &                           & \multicolumn{3}{c}{\textit{Political ideology}} \\
+\cline{3-5}
+                        &                           & Conservative  & Moderate  & Liberal   & Total \\
+\cline{2-6}
+                        & (i) Apply for citizenship & 57            & 120       & 101       & 278 \\
+                        & (ii) Guest worker         & 121           & 113       & 28        & 262 \\
+\raisebox{1.5ex}[0pt]{\emph{Response}} & (iii) Leave the country    & 179       & 126       & 45        & 350 \\ 
+                        & (iv) Not sure             & 15            & 4         & 1         & 20\\
+\cline{2-6}
+                        & Total                     & 372           & 363       & 175       & 910
+\end{tabular}
+\end{center}
+
+- What percent of these Tampa, FL voters identify themselves as conservatives? `r (372/910) * 100`%.
+- What percent of these Tampa, FL voters are in favor of the citizenship option? `r (278/910) * 100`%.
+- What percent of these Tampa, FL voters identify themselves as conservatives 
+and are in favor of the citizenship option? `r (57/910) * 100`%.
+- What percent of these Tampa, FL voters who identify themselves as 
+conservatives are also in favor of the citizenship option? `r (57/372) * 100`%.  What percent of 
+moderates share this view? `r (120/363) * 100`%. What percent of liberals share this view? `r (120/363) * 100`%.
+- Do political ideology and views on immigration appear to be independent? **No.**
+Explain your reasoning. **Considering the column proportions under each political idealogy, given favor for applying for citizenship, the proportion of voters varies across political ideology. Stated another way, conditioning on Opinion about applying for citizenship predicts ideology.** 
+
+## p. 70, ex. 2.23
+Views on the DREAM Act. A random sample of registered 
+voters from Tampa, FL were asked if they support the DREAM Act, a proposed law which would provide a path to citizenship for people brought illegally to the US as children.
+The survey also collected information on the political ideology of the respondents. 
+Based on the mosaic plot shown below, do views on the DREAM Act and  
+political ideology appear to be independent? Explain your reasoning. **They are dependent. Given support for the Act, the percentage of voters differs between ideologies.**
+
+## p. 70, ex. 2.24
+Raise taxes. A random sample of registered 
+voters nationally were asked whether they think it's better to raise taxes 
+on the rich or raise taxes on the poor. The survey also collected information 
+on the political party affiliation of the respondents. Based on the mosaic 
+plot shown below, do views on raising taxes and  
+political affiliation appear to be independent? Explain your reasoning. **They are dependent. Given support for raising taxes on the rich, the proportion differs between parties. This is also the case with support for raising taxes on the poor.**
+
+## p. 75, ex. 2.25
+Side effects of Avandia. Rosiglitazone is the 
+active ingredient in the controversial type~2 diabetes medicine Avandia and has 
+been linked to an increased risk of serious cardiovascular problems such as 
+stroke, heart failure, and death. A common alternative treatment is pioglitazone, 
+the active ingredient in a diabetes medicine called Actos. In a nationwide 
+retrospective observational study of 227,571 Medicare beneficiaries aged  
+65 years or older, it was found that 2,593 of the 67,593 patients using 
+rosiglitazone and 5,386 of the 159,978 using pioglitazone had serious 
+cardiovascular problems. These data are summarized in the contingency 
+table below.
+
+- Determine if each of the following statements is true or false. If false, explain why. *Be careful:* The reasoning may be wrong even if the statement's conclusion is correct. In such cases, the statement should be considered false.
+  - Since more patients on pioglitazone had cardiovascular problems (5,386 vs. 2,593), we can conclude that the rate of cardiovascular problems for those on a pioglitazone treatment is higher. **False. Though there are more patients with cardiovascular problems, there are also more in the group receiving pioglitazone and the proportion of those with cardiovascular problems is lower.**
+  - The data suggest that diabetic patients who are taking rosiglitazone are more likely to have cardiovascular problems since the rate of incidence was (2,593 / 67,593 = 0.038) 3.8\% for patients on this treatment, while it was only (5,386 / 159,978 = 0.034) 3.4\% for patients on pioglitazone. **True.**
+  - The fact that the rate of incidence is higher for the rosiglitazone group proves that rosiglitazone causes serious cardiovascular problems. **False. It remains to be determined if the higher rate of incidence could be due to chance. This is an observational study that cannot determine causility. At best, we have observed an association.**
+  - Based on the information provided so far, we cannot tell if the difference between the rates of incidences is due to a relationship between the two variables or due to chance. **True.**
+- What proportion of all patients had cardiovascular problems? `r 7979 / 227571`.
+- If the type of treatment and having cardiovascular problems were independent, about how many patients in the rosiglitazone group would we expect to have had cardiovascular problems? `r (5386 / 159978) * 67593` **ANSWER: the book multiplied the number of patients in the group by the ratio of cardiovascular problems across the whole study, `r (7979 / 227571) * 67593`**.
+- We can investigate the relationship between outcome and treatment in this study using a randomization technique.  While in reality we would carry out the simulations required for randomization using statistical software, suppose we actually simulate using index cards. In order to simulate from the independence model, which states that the outcomes were independent of the treatment, we write whether or not each patient had a cardiovascular problem on cards, shuffled all the cards together, then deal them into two groups of size 67,593 and 159,978. We repeat this simulation 1,000 times and each time record the number of people in the rosiglitazone group who had cardiovascular problems. Use the relative frequency histogram of these counts to answer (i)-(iii).
+  - What are the claims being tested? **Rosiglitazone is associated with in increased risk of serious cardiovascular problems. ANSWER: really the book was looking for an identification of the null and alternative hypotheses.**
+  - Compared to the number calculated in part (b), which would provide more support for the alternative hypothesis, *more* or *fewer* patients with cardiovascular problems in the rosiglitazone group? **More.**
+- What do the simulation results suggest about the relationship between taking rosiglitazone and having cardiovascular problems in diabetic patients? **Taking rosiglitazone increases the risk of serious cardiovascular problems. The simulation demonstrates that incidence of cardiovascular problems in the frequency measured in the experiment would be the result of chance only very rarely.**
+
+## p. 76, ex. 2.26
+Heart transplants. The Stanford 
+University Heart Transplant Study was conducted to determine whether an 
+experimental heart transplant program increased lifespan. Each patient 
+entering the program was designated an official heart transplant candidate, 
+meaning that he was gravely ill and would most likely benefit from a new heart. 
+Some patients got a transplant and some did not. The variable **transplant**
+indicates which group the patients were in; patients in the treatment group got a 
+transplant and those in the control group did not. Of the 34 patients in the 
+control group, 30 died. Of the 69 people in the treatment group, 45 died. Another 
+variable called **survived** was used to indicate whether or not the patient 
+was alive at the end of the study.
+
+- Based on the mosaic plot, is survival independent of whether or not the 
+patient got a transplant? Explain your reasoning. **No, it is dependent. Conditioning on group predicts differing probability of survival.**
+- What do the box plots below suggest about the efficacy (effectiveness) of the heart transplant treatment. **Transplants lengthen survival time.**
+- What proportion of patients in the treatment group and what proportion of 
+patients in the control group died? **0.65 of the treatment group died and 0.88 of the control group.**
+- One approach for investigating whether or not the treatment is effective 
+is to use a randomization technique.
+  - What are the claims being tested? **An experimental heart transplant program increases the lifespan of the gravely ill.**
+  - The paragraph below describes the set up for such approach, if we were 
+to do it without using statistical software. Fill in the blanks with a number 
+or phrase, whichever is appropriate.
+
+We write **alive** on **`r (34 - 30) + (69 - 45)`** cards representing patients who were 
+alive at the end of the study, and **dead** on **`r 30 + 45`** cards 
+representing patients who were not. Then, we shuffle these cards and split them 
+into two groups: one group of size **69**, representing treatment, and 
+another group of size **34**, representing control. We calculate the 
+difference between the proportion of **dead** cards in the treatment and 
+control groups (treatment - control) and record this value. We repeat this 100 
+times to build a distribution centered at **(I'm guessing) zero**. Lastly, we calculate 
+the fraction of simulations where the simulated differences in proportions are 
+**less than or equal to `r (45 / 69) - (30 / 34)`**. If this fraction is low, we conclude that it is unlikely to 
+have observed such an outcome by chance and that the null hypothesis should 
+be rejected in favor of the alternative.
+
+  - What do the simulation results shown below suggest about the effectiveness 
+of the transplant program? **The transplant program is effective. The experimental results would appear by chance very rarely.**
+
+## p. 77, ex. 2.27
+Make-up exam. In a class of 25 students, 24 of them took an exam 
+in class and 1 student took a make-up exam the following day. The professor graded the 
+first batch of 24 exams and found an average score of 74 points with a standard 
+deviation of 8.9 points. The student who took the make-up the following day scored 64 
+points on the exam.
+
+- Does the new student's score increase or decrease the average score? **Decrease.**
+- What is the new average? `r (24 * 74 + 64) / 25`
+- Does the new student's score increase or decrease the standard deviation of the 
+scores? **The new score lies 10 points away from the previous average of 74, and that is greater than the old SD of 8.9 points, so the new score increases SD.**
+
+## p. 77, ex. 2.28
+Infant mortality. The infant mortality rate is defined as 
+the number of infant deaths per 1,000 live births. This rate is often used as an 
+indicator of the level of health in a country. The relative frequency histogram below 
+shows the distribution of estimated infant death rates for 224 countries for which such 
+data were available in 2014.
+
+- Estimate Q1, the median, and Q3 from the histogram.
+  - **Q1: 10.**
+  - **Median: 20.**
+  - **Q3: 50.**
+- Would you expect the mean of this data set to be smaller or larger than the 
+median? Explain your reasoning. **The mean is higher than the median because the distribution is skewed to the right.**
+
+## p. 77, ex. 2.29
+TV watchers. Students in an AP Statistics class 
+were asked how many hours of television they watch per week (including online 
+streaming). This sample yielded an average of 4.71 hours, with a standard 
+deviation of 4.18 hours. Is the distribution of number of hours students watch 
+television weekly symmetric? If not, what shape would you expect this distribution 
+to have? Explain your reasoning. **No, it is skewed to the right. In a symmetric distribution, 96% of the results lie within 2 SD. However, the lower limit of this distribution is less than than, just a little over 1 SD. More observations must lie to the right than to the left. ANSWER: the book refers to two other reasons I'm right. There is a natural boundary at 0, and SD is large compared to the mean. I think my answer is in the same spirit. If SD were 0.2, the boundary at 0 would be inconsequential.**
+
+## p. 77, ex. 2.30
+A new statistic. The statistic $\frac{\bar{x}}{median}$ can 
+be used as a measure of skewness. Suppose we have a distribution where all 
+observations are greater than 0, $x_i > 0$. What is the expected shape of 
+the distribution under the following conditions? Explain your reasoning.
+
+- $\frac{\bar{x}}{median} = 1$ Symmetric. Express the equality as a comparison of mean and median. $\bar{x} = median$
+- $\frac{\bar{x}}{median} < 1$ Left skewed. $\bar{x} < median$
+- $\frac{\bar{x}}{median} > 1$ Right skewed. $\bar{x} > median$
+
+## p. 77, ex. 2.31
+Oscar winners. The first Oscar awards for best actor 
+and best actress were given out in 1929. The histograms below show the age 
+distribution for all of the best actor and best actress winners from 1929 to 
+2018. Summary statistics for these distributions are also provided. Compare the 
+distributions of ages of best actor and actress winners.
+
+\begin{tabular}{l c}
+\hline
+        & Best Actress  \\
+\hline
+Mean    & 36.2      \\
+SD      & 11.9      \\
+n       & 92        \\  
+        & \\
+        & \\
+        & \\
+        & \\
+        & \\
+\hline
+        & Best Actor \\
+\hline
+Mean    & 43.8 \\
+SD      & 8.83 \\
+n       & 92
+\end{tabular}
+
+**The distributions of winning female and male actors are both unimodal and skewed. They differ in their central tendency, skewness, and variability. Female actors are younger (the mean age is lower at 36 vs. 44 for male actors), and the variability in age is higher (standard deviation is higher). Both genders of actor have similar age boundaries, 20 - 80. Both are skewed to the right, but since male actors have a higher central tendency, their skew is less.** 
+
+## p. 78, ex. 2.32
+Exam scores. The average on a history exam 
+(scored out of 100 points) was 85, with a standard deviation of 15. Is the 
+distribution of the scores on this exam symmetric? If not, what shape would 
+you expect this distribution to have? Explain your reasoning. **Left skewed. There is an upper boundary of 100, and SD is high in relation to the average.**
+
+## p. 78, ex. 2.33
+Stats scores. Below are the final exam scores of twenty 
+introductory statistics students.
+
+\begin{center}
+57, 66, 69, 71, 72, 73, 74, 77, 78, 78, 79, 79, 81, 81, 82, 83, 83, 88, 89, 94
+\end{center}
+Create a box plot of the distribution of these scores. The five number summary provided below may be useful.
+\begin{center}
+\renewcommand\arraystretch{1.5}
+\begin{tabular}{ccccc}
+Min & Q1    & Q2 (Median)   & Q3    & Max \\
+\hline
+57  & 72.5  & 78.5          & 82.5  & 94 \\
+\end{tabular}
+\end{center}
+
+```{r}
+exams <- c(57, 66, 69, 71, 72, 73, 74, 77, 78, 78, 79, 79, 81, 81, 82, 83, 83, 88, 89, 94)
+
+boxplot(exams)
+```
+**I drew this by hand first, to test that I knew how to build it. It reminded me of one point. The whiskers reach only as far as the absolute value of 1.5 times the IQR, or the extrema, whichever is closer. In this data, Q3 is 82.5 and IQR is 10, so the upper range goes to 97.5 or the maximum data point, whichever is closer. The maximum data point is 94, so the whisker goes only that far. It may never reach further than the data. Helps my interpretation of the plot. You always know the extrema from the plot. They're either the whiskers, or outliers.**
+
+
+## p. 78, ex. 2.34
+Marathon winners. The histogram and box plots below show the distribution of finishing times for male and female winners of the New York Marathon between 1970 and 1999.
+
+- What features of the distribution are apparent in the histogram and not the box plot? What features are apparent in the box plot but not in the histogram? **The histogram reveals bimodality. The box plot identifies extreme values more precisely than the bins of the histogram. For example, we know from the lower whisker that the minimum time is about 2.1.**
+- What may be the reason for the bimodal distribution? Explain. **Gender is a confounder.**
+- Compare the distribution of marathon times for men and women based on the box plot shown below. **The times for men are lower than for women. The range is lower and the median is lower.**
+- The time series plot shown below is another way to look at these data. Describe what is visible in this plot but not in the others. **The performance changed over time, longer times in the earlier years.**

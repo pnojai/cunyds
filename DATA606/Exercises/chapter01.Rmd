@@ -1,0 +1,890 @@
+---
+title: "Chapter 1 Exercises"
+author: "Jai Jeffryes"
+date: "2/2/2020 - 2/18/2020"
+output:
+  pdf_document: default
+---
+
+## Notes - reviewing meetup
+[8/28/2019](https://www.youtube.com/watch?v=LJKxn7hPdnQ&feature=youtu.be)
+
+- Learning analytics, i.e. data science for education. Emphasizing simulation over calculus.
+- Reasonable understanding of parametric and frequentist statistics, predictive modeling.
+- Will examine Bayes, partly to solidify frequentist.
+- Sampling vs. census. Big data. Many applications, we have population data now.
+- Sampling bias. Even though RCT is gold standard for inference, have to show baseline equivalence, no bias in sampling or distribution, like treatment assignment.
+- Design, design, design. Observational study vs. experiment.
+- Principles of experimental design.
+  - Replication crisis, Dr. Bryer thinks the press exaggerates this.
+  - Replication not valued in social sciences.
+  - Random assignment vs. random sampling. No statistical methods at this point, design only. How did I set up data collection and measurements.
+- Causality. Where is randomization unfeasible. Splitting a subject into two universes, only difference is one condiction, measure outcomes at precisely same time. Impossible. [Rubin Causal Effect](https://en.wikipedia.org/wiki/Rubin_causal_model). We can never observe causality directly. Instead, we get a lot of research subjects, randomize them between two conditions so we can observe the causal effect on average.
+- Sampling bias. Ways to test for it.
+- [What Works Clearinghouse](https://ies.ed.gov/ncee/wwc/)
+- RCT is a compromise. Demo with simulated data. 30 individuals. Fixed the [counterfactual](https://en.wikipedia.org/wiki/Counterfactual_conditional) at 4.5. IQ designed to have a mean of 100 and SD 15. Treatment increases by 4.5 units. RCT only lets me observe one outcome per case. Cases assigned to control or treatment. Treatment effect is the difference between the average of the blue lines and the average of the red lines. RCT says difference is 8.47. Also introduced the idea of measurement error.
+- Bayes intro videos. [Rasmus Baath](https://www.youtube.com/user/rasmusab/videos).
+
+## p. 11, ex. 1.1
+Migraine and acupuncture, Part I. 
+A migraine is a particularly painful type of headache,
+which patients sometimes wish to treat with acupuncture.
+To determine whether acupuncture relieves migraine 
+pain, researchers conducted a randomized controlled study
+where 89 females diagnosed with migraine headaches were
+randomly assigned to one of two groups:
+treatment or control.
+43 patients in the treatment group received acupuncture 
+that is specifically designed to treat migraines.
+46 patients in the control group received placebo acupuncture
+(needle insertion at non-acupoint locations).
+24 hours after patients received acupuncture, they were asked 
+if they were pain free.
+Results are summarized in the contingency table
+below.
+
+```{r}
+treat_pct <- (10/43) * 100
+control_pct <- (2/46) * 100
+```
+- What percent of patients in the treatment group were pain free 24 hours 
+after receiving acupuncture? **`r treat_pct`%.**
+- What percent were pain free in the control group? **`r control_pct`%.**
+- In which group did a higher percent of patients become pain free 24 hours 
+after receiving acupuncture? **Treatment group.**
+- Your findings so far might suggest that acupuncture is an effective treatment 
+for migraines for all people who suffer from migraines. However this is not the 
+only possible conclusion that can be drawn based on your findings so far. What is one other possible explanation for the observed difference between the percentages 
+of patients that are pain free 24 hours after receiving acupuncture in the two groups? **We haven't looked yet at significance. It could be random variation.**
+
+## p. 11, ex. 1.2
+Sinusitis and antibiotics, Part I. Researchers studying the effect of antibiotic treatment for acute sinusitis 
+compared to symptomatic treatments randomly assigned 166 adults diagnosed 
+with acute sinusitis to one of two groups: treatment or control. Study 
+participants received either a 10-day course of amoxicillin (an antibiotic) 
+or a placebo similar in appearance and taste. The placebo consisted of 
+symptomatic treatments such as acetaminophen, nasal decongestants, etc.
+At the end of the 10-day period, patients were asked if
+they experienced improvement in symptoms.
+The distribution of responses is summarized below.
+
+```{r}
+treat_pct <- (66 / 85) * 100
+control_pct <- (65 / 81) * 100
+```
+
+- What percent of patients in the treatment group experienced improvement 
+in symptoms? **`r treat_pct`%**.
+- What percent experienced improvement in symptoms in the 
+control group? **`r control_pct`%.**
+- In which group did a higher percentage of patients experience improvement
+in symptoms? **Control group.**
+- Your findings so far might suggest a real difference
+    in effectiveness of antibiotic and placebo treatments
+    for improving symptoms of sinusitis.
+    However, this is not the only possible conclusion that
+    can be drawn based on your findings so far.
+    What is one other possible explanation for the observed
+    difference between the percentages of patients in the
+    antibiotic and placebo treatment groups that experience
+    improvement in symptoms of sinusitis? **Variation due to chance.**
+
+## p. 19, ex. 1.3
+Air pollution and birth outcomes, study components. 
+Researchers collected data to examine the relationship between air pollutants 
+and preterm births in Southern California. During the study air pollution levels
+were measured by air quality monitoring stations. Specifically, levels of carbon monoxide were recorded in parts per million, nitrogen dioxide and ozone in parts per hundred million, and coarse particulate matter (PM$_{10}$) in $\mu g/m^3$. 
+Length of gestation data were collected on 143,196 births between the years 1989 and 1993, and air pollution exposure during gestation was calculated for each 
+birth. The analysis suggested that increased ambient PM$_{10}$ and, to a lesser 
+degree, CO concentrations may be associated with the occurrence of preterm births.
+
+- Identify the main research question of the study. **Is there an association between air pollution and preterm births?**
+- Who are the subjects in this study, and how many are included? **The subjects of the study were mothers in California who gave birth between 1989 and 1993. The study collected 143,196 cases.**
+- What are the variables in the study? Identify each variable as numerical or 
+categorical. If numerical, state whether the variable is discrete or continuous.
+If categorical, state whether the variable is ordinal.
+  - **Carbon monoxide level: numerical, discrete.**
+  - **Nitrogen dioxide level: numerical, discrete.**
+  - **Ozone level: numerical, discrete.**
+  - **Gestation period: numerical; the abstract does not indicate if gestation period included fractions of days. I presume it did not and guess that the variable is discrete.**
+  - **The answer key in the book said these were all continuous variables, but I think it is arguable and would require an examination of the data to settle it.**
+
+## p.19, ex. 1.4
+Buteyko method, study components. The Buteyko method is a shallow breathing technique developed by Konstantin 
+Buteyko, a Russian doctor, in 1952. Anecdotal evidence suggests that the Buteyko method can reduce asthma symptoms and improve quality of life. In a scientific 
+study to determine the effectiveness of this method, researchers recruited 600 
+asthma patients aged 18-69 who relied on medication for asthma treatment. These 
+patients were randomnly split into two research groups: one practiced the Buteyko method and the other did not. Patients were scored on quality of life, activity, asthma symptoms, and medication reduction on a scale from 0 to 10. On average, the participants in the Buteyko group experienced a significant reduction in asthma symptoms and an improvement in quality of life.
+
+- Identify the main research question of the study.  **Does practice of the Buteyko method by sufferers of asthma reduce their asthma symptoms and improve their quality of life?**
+- Who are the subjects in this study, and how many are included? **The subjects are asthma patients under medication between the ages of 18 and 69. There are 600 subjects.**
+- What are the variables in the study? Identify each variable as numerical or 
+categorical. If numerical, state whether the variable is discrete or continuous.
+If categorical, state whether the variable is ordinal.
+  - **Quality of life.**
+  - **Activity.**
+  - **Asthma symptoms.**
+  - **Medication reduction.**
+  - **All variables are discrete, numerical variables**.
+
+## p. 19, ex. 5
+Cheaters, study components. Researchers studying the relationship between honesty, age and self-control conducted an experiment on 160 children between the ages of 5 and 15. Participants reported their age, sex, and whether they were an only child or not. The researchers asked each child to toss a fair coin in private and to record the outcome (white or black) on a paper sheet, and said they would only reward children who report white.
+
+- Identify the main research question of the study. **Do children reveal a relationship between honesty, age, and self-control? A better answer is, does explicitly telling children not to cheat affect their likelihood to cheat?**
+- Who are the subjects in this study, and how many are included? **The subjects are children between the ages of 5 and 15. There are 160 subjects.**
+- The study's findings can be summarized as follows: Half the students were 
+explicitly told not to cheat and the others were not given any explicit 
+instructions. In the no instruction group probability of cheating was found to 
+be uniform across groups based on child's characteristics.
+In the group that was explicitly told to not cheat, girls were less likely to cheat, and while rate of cheating didn't vary by age for boys, it decreased with age for girls. How many variables were recorded for each subject in the study in order to conclude these findings? State the variables and their types.
+  - **Child's age: numeric, continuous.**
+  - **Child's sex: categorical, nominal.**
+  - **Only child indicator: categorical, nominal.**
+  - **Reported coin toss count: numeric, discrete.**
+  - **Reported outcome: numeric discrete.**
+  - **The book did not include coin tosses and, instead, suggested the variable, cheating indicator. I think my answer is better.**
+
+## p. 20, ex. 6
+Stealers, study components. 
+In a study of the relationship between socio-economic class and unethical 
+behavior, 129 University of California undergraduates at Berkeley were asked 
+to identify themselves as having low or high social-class by comparing 
+themselves to others with the most (least) money, most (least) education, and 
+most (least) respected jobs. They were also presented with a jar of 
+individually wrapped candies and informed that the candies were for children
+in a nearby laboratory, but that they could take some if they wanted. After 
+completing some unrelated tasks, participants reported the number of candies 
+they had taken.
+
+- Identify the main research question of the study. **Does socio-economic class predict unethical behavior? A better answer: does self-reported socio-economic class predict taking candy reserved for children?** 
+- Who are the subjects in this study, and how many are included? **The subjects are undergraduates from the University of Caifornia at Berkeley. There are 129 subjects.**
+- The study found that students who were identified as upper-class took more 
+candy than others. How many variables were recorded for each subject in the study in order to conclude these findings? State the variables and their types.
+  - **Economic class: categorical, nominal.**
+  - **Count of candies taken: numerical, discrete.**
+
+## p. 20, ex. 1.7
+Migraine and acupuncture, Part II Exercise 1.1 
+introduced a study exploring whether acupuncture had any
+effect on migraines.
+Researchers conducted a randomized controlled study
+where patients were randomly assigned to one of two groups:
+treatment or control.
+The patients in the treatment group received acupuncture
+that was specifically designed to treat migraines.
+The patients in the control group received placebo acupuncture
+(needle insertion at non-acupoint locations).
+24 hours after patients received acupuncture, they were asked 
+if they were pain free.
+What are the explanatory and response variables in this study?
+
+- **Explanatory: acupoint location.**
+- **Response: pain free indicator.**
+
+# p. 20. ex. 1.8
+Sinusitis and antibiotics, Part II.  
+Exercise 1.2 introduced a study exploring the effect of antibiotic treatment
+for acute sinusitis.
+Study participants either received either a 10-day course of
+an antibiotic (treatment)
+or a placebo similar in appearance and taste (control).
+At the end of the 10-day period, patients were asked if
+they experienced improvement in symptoms.
+What are the explanatory and response variables in this study?
+
+- **Explanatory: Group.**
+- **Response: Indicator for self-reported improvement in symptoms.**
+
+## p. 20, ex. 1.9
+Fisher's irises.Sir Ronald Aylmer Fisher was an 
+English statistician, evolutionary biologist, and geneticist who worked on a 
+data set that contained sepal length and width, and petal length and width from 
+three species of iris flowers (*setosa*, *versicolor*, and *virginica*). There were 50 flowers from each species in the data set. 
+
+- How many cases were included in the data? **150.**
+- How many numerical variables are included in the data? Indicate what 
+they are, and if they are continuous or discrete. **Four numeric, discrete variables: sepal length, sepal width, petal length, petal width.**
+- How many categorical variables are included in the data, and what are 
+they? List the corresponding levels (categories). **One categorical, nominal variable, specie. Levels: setosa, versicolor, virginica.**
+
+## p. 20, ex. 1.10
+Smoking habits of UK residents. A survey 
+was conducted to study the smoking habits of UK residents. Below is a data 
+matrix displaying a portion of the data collected in this survey. Note that 
+"$\pounds$" stands for British Pounds Sterling, "cig" stands for cigarettes, 
+and "N/A" refers to a missing component of the data.
+
+\begin{center}
+\begin{tabular}{rccccccc}
+\hline
+	& sex 	 & age 	& marital 	& grossIncome 					     & smoke & amtWeekends	& amtWeekdays \\ 
+\hline
+1 	& Female & 42 	& Single 	& Under $\pounds$2,600 			     & Yes 	 & 12 cig/day   & 12 cig/day \\ 
+2 	& Male	 & 44	& Single 	& $\pounds$10,400 to $\pounds$15,600 & No	 & N/A 			& N/A \\ 
+3 	& Male 	 & 53 	& Married   & Above $\pounds$36,400 		     & Yes 	 & 6 cig/day 	& 6 cig/day \\ 
+\vdots & \vdots & \vdots & \vdots & \vdots 				             & \vdots & \vdots 	    & \vdots \\ 
+1691 & Male  & 40   & Single 	& $\pounds$2,600 to $\pounds$5,200   & Yes 	 & 8 cig/day 	& 8 cig/day \\   
+\hline
+\end{tabular}
+\end{center}
+
+- What does each row of the data matrix represent? **A case, a UK resident.**
+- How many participants were included in the survey? **1691.**
+- Indicate whether each variable in the study is numerical or categorical. If numerical, identify as 
+continuous or discrete. If categorical, indicate if the variable is ordinal.
+  - **sex: categorical, nominal.**
+  - **age: numerical, discrete.**
+  - **marital: categorical, nominal.**
+  - **grossIncome: categorical, ordinal.**
+  - **smoke: categorical, nominal.**
+  - **amtWeekends: numerical, discrete.**
+  - **amt Weekdays: numerical, discrete.**
+
+## p. 21, ex. 1.11
+US Airports. The visualization below shows the
+geographical distribution of airports in the contiguous United States
+and Washington, DC.
+This visualization was constructed based on a dataset where
+each observation is an airport.
+
+- List the variables used in creating this visualization.
+- Indicate whether each variable in the study is numerical
+    or categorical.
+    If numerical, identify as continuous or discrete.
+    If categorical, indicate if the variable is ordinal.
+  - **Public use/private use indicator: categorical, nominal.**
+  - **Publicly owned/privately owned indicator: categorical, nominal.**
+  - **Geographic latitude: numeric, continuous.**
+  - **Geographic longitude: numeric, continuous.**
+
+## p. 21, ex. 1.12
+UN Votes. The visualization below shows voting patterns in 
+the United States, Canada, and Mexico in the United Nations General Assembly 
+on a variety of issues. Specifically, for a given year between 1946 and 2015, 
+it displays the percentage of roll calls in which the country voted yes for 
+each issue. This visualization was constructed based on a dataset where each 
+observation is a country/year pair.
+
+- List the variables used in creating this visualization.
+- Indicate whether each variable in the study is numerical or categorical. 
+If numerical, identify as continuous or discrete. If categorical, indicate if 
+the variable is ordinal.
+  - **Country: categorical, nominal.**
+  - **Year: numeric, discrete.**
+  - **Issue: categorical, nominal.**
+  - **Roll call vote percentage: numeric, continuous.**
+  
+# Sampling principles and strategies
+- Anecdotal. (What would a Baynesian say? It's all data.)
+- Haphazard.
+- Bias.
+- Simple random sample.
+- Non-response rate.
+- Non-response bias.
+- Convenience sample.
+- Representative.
+
+## Observational studies
+- Confounding variable.
+- Observational.
+  - Retrospective.
+  - Prospective.
+  
+## Sampling methods
+1. Simple.
+1. Stratified.
+1. Clustered.
+1. Multi-stage.
+
+## p. 29, ex. 1.13
+Air pollution and birth outcomes, scope of inference.  
+Exercise 1.3 introduces a study where researchers 
+collected data to examine the relationship between air pollutants and preterm 
+births in Southern California. During the study air pollution levels were 
+measured by air quality monitoring stations. Length of gestation data were 
+collected on 143,196 births between the years 1989 and 1993, and air pollution 
+exposure during gestation was calculated for each birth.
+
+- Identify the population of interest and the sample in this study. **The target population is mothers in Southern California who gave birth between the years of 1989 and 1993. An observational case is one mother from that population. ANSWER: I missed the point. The book corrected me. The population is not mothers, it's births, and all of them. The sample is births in Southern California during those years.**
+- Comment on whether or not the results of the study can be generalized to the 
+population, and if the findings of the study can be used to establish causal relationships. **Since the sample appears large and collected randomly, the findings may be generalized to the population. However, as this is a prospective observational study, it does not establish causality.**
+
+## p. 29, ex. 1.14
+Cheaters, scope of inference.  
+Exercise 1.5 introduces a study where researchers 
+studying the relationship between honesty, age, and self-control conducted an 
+experiment on 160 children between the ages of 5 and 15. The researchers asked 
+each child to toss a fair coin in private and to record the outcome (white or black) 
+on a paper sheet, and said they would only reward children who report white. 
+Half the students were explicitly told not to cheat and the others were not given 
+any explicit instructions. Differences were observed in the cheating rates in the
+instruction and no instruction groups, as well as some differences across 
+children's characteristics within each group.
+
+- Identify the population of interest and the sample in this study. **The population of interest is all children and the sample is 160 of them between the ages of 5 and 15.**
+- Comment on whether or not the results of the study can be generalized to the 
+population, and if the findings of the study can be used to establish causal 
+relationships. **The results may be generalized, and the findings can be used to establish causality.**
+
+## p. 29, ex. 1.15
+Buteyko method, scope of inference. Exercise 1.4 introduces a study on using the Buteyko 
+shallow breathing technique to reduce asthma symptoms and improve quality of life.
+As part of this study 600 asthma patients aged 18-69 who relied on medication for 
+asthma treatment were recruited and randomly assigned to two groups: one practiced 
+the Buteyko method and the other did not. Those in the Buteyko group experienced,
+on average, a significant reduction in asthma symptoms and an improvement in quality 
+of life.
+
+- Identify the population of interest and the sample in this study. **The population of interest is asthma patients and the sample is 600 of them between the ages of 18 and 69 who rely on mediation.**
+- Comment on whether or not the results of the study can be generalized to the 
+population, and if the findings of the study can be used to establish causal 
+relationships. **The ages are widely sampled, so the findings may be generalized to the population, and this is a random controlled experiment, so it can be used to establish causality. ANSWER: the book calls the population asthma patients aged 18-69 on medication. I find the book inconsistent. In exercise 1.13, the author did not apply sampling criteria in the definition of population of interest, while in exercise 1.15, they did.**
+
+## p. 29, ex. 16
+Stealers, scope of inference. 
+Exercise 1.6 introduces a study on the relationship 
+between socio-economic class and unethical behavior. As part of this study 129 
+University of California Berkeley undergraduates were asked to identify themselves 
+as having low or high social-class by comparing themselves to others with the most 
+(least) money, most (least) education, and most (least) respected jobs. They were 
+also presented  with a jar of individually wrapped candies and informed that the
+candies were for children in a nearby laboratory, but that they could take some if 
+they wanted. After completing some unrelated tasks, participants reported the 
+number of candies they had taken. It was found that those who were identified as
+upper-class took more candy than others.
+
+- Identify the population of interest and the sample in this study. **The population of interest is undergraduates from University of California Berkeley. Researchers sampled 129 of them for the study.**
+- Comment on whether or not the results of the study can be generalized to the 
+population, and if the findings of the study can be used to establish causal 
+relationships. **If the samples were representative of the student population, then the results can be generalized to the entire student population. However, there is no description of the sampling method, so the question cannot be answered. The findings are inadequate for establishing causality since there is no control for the effect in question, ethical behavior. This is a prospective observational study. I asked about this on [Cross Validated (Stack Exchange)](https://stats.stackexchange.com/questions/448399/how-to-establish-causality-beyond-observational-study).**
+
+## p. 29, ex. 1.17
+Relaxing after work. The General Social Survey asked the question, "After an average work day, about how many 
+hours do you have to relax or pursue activities that you enjoy?" to a random 
+sample of 1,155 Americans. The average relaxing time was found to be 1.65 
+hours. Determine which of the following is an observation, a variable, a 
+sample statistic (value calculated based on the observed sample), or a 
+population parameter.
+
+- An American in the sample. **Observation.**
+- Number of hours spent relaxing after an average work day. **Variable.**
+- 1.65. **Sample statistic.**
+- Average number of hours all Americans spend relaxing after an average 
+work day. **Population parameter.**
+
+## p. 30, ex. 1.18
+Cats on YouTube. Suppose you want to 
+estimate the percentage of videos on YouTube that are cat videos. It is 
+impossible for you to watch all videos on YouTube so you use a random video 
+picker to select 1000 videos for you. You find that 2% of these videos are 
+cat videos.
+Determine which of the following is an observation, a variable, 
+a sample statistic (value calculated based on the observed sample), 
+or a population parameter.
+
+- Percentage of all videos on YouTube that are cat videos. **Population parameter.**
+- 2%. **Sample statistic.**
+- A video in your sample. **Observation.**
+- Whether or not a video is a cat video. **Variable.**
+
+## p. 30, ex. 1.19
+Course satisfaction across sections. A large college class has 160 students. All 160 students attend the lectures 
+together, but the students are divided into 4 groups, each of 40 students, 
+for lab sections administered by different teaching assistants. The professor 
+wants to conduct a survey about how satisfied the students are with the course, 
+and he believes that the lab section a student is in might affect the student's 
+overall satisfaction with the course.
+
+- What type of study is this? **Retrospective observational study.**
+- Suggest a sampling strategy for carrying out this study. **Stratfied sampling, with the strata defined as the groups of lab sections for each teaching assistant. ANSWER: the book went further and defined a fixed sample size of 10 from each group for a total sample size of 40.**
+
+## p. 30, ex. 1.20
+Housing proposal across dorms. On a large 
+college campus first-year students and sophomores live in dorms located on 
+the eastern part of the campus and juniors and seniors live in dorms located 
+on the western part of the campus. Suppose you want to collect student opinions 
+on a new housing structure the college administration is proposing and you want 
+to make sure your survey equally represents opinions from students from all years.
+
+- What type of study is this? **Observational.**
+- Suggest a sampling strategy for carrying out this study. **Stratified sampling. Survey a random selection of 50 students from the eastern dorms and western dorms each, for a total survey sample of 100.**
+
+## p. 30, ex. 1.21
+Internet use and life expectancy. The 
+following scatterplot was created as part of a study evaluating the 
+relationship between estimated life expectancy at birth (as of 2014) and 
+percentage of internet users (as of 2009) in 208 countries for which such 
+data were available.
+
+- Describe the relationship between life expectancy and percentage of 
+internet users. **Positive association. ANSWER: the book goes further to describe the shape, strength, and inflection point, and expresses a data story in English. Countries in which a higher percentage of the population have access to the internet also tend to have higher average life expectancies, however rise in life expectancy trails off before around 80 years old.**
+- What type of study is this? **Retrospective observational study.**
+- State a possible confounding variable that might explain this relationship 
+and describe its potential effect. **Wealth could be associated both with life expectancy and internet use. More wealth may increase access to health care and better nutrition, leading to higher life expectancy. More wealth may increase access to technology through purchase of computers and internet provider services.**
+
+## p. 30, ex. 1.22
+Stressed out, Part I. A study that 
+surveyed a random sample of otherwise healthy high school students found that 
+they are more likely to get muscle cramps when they are stressed. The study 
+also noted that students drink more coffee and sleep less when they are 
+stressed.
+
+- What type of study is this? **Retrospective observational study.**
+- Can this study be used to conclude a causal relationship between 
+increased stress and muscle cramps? **No.**
+- State possible confounding variables that might explain the observed 
+relationship between increased stress and muscle cramps. **The study mentioned two, coffee consumption and sleeplessness. Diet could be another if, under high stress, students eat less healthily and that triggers cramps due to deficiencies in magnesium or potassium.**
+
+## p. 30, ex. 1.23
+Evaluate sampling methods. A university wants to 
+determine what fraction of its undergraduate student body support a new \$25 annual fee 
+to improve the student union. For each proposed method below, indicate whether 
+the method is reasonable or not.
+
+- Survey a simple random sample of 500 students. **Reasonable. Best approach if the implication is that the samples are taken from undergraduate students, not graduate students.**
+- Stratify students by their field of study, then sample 10% of students from  
+each stratum. **Seems reasonable, but I don't know why you call this stratification and not clustering. The students within a stratum seem dissimilar.**
+- Cluster students by their ages (e.g. 18 years old in one cluster, 19 years 
+old in one cluster, etc.), then randomly sample three clusters and survey all 
+students in those clusters. **Less reasonable. If the consequence is that you sample only older students, it may weight the responses against the fee, as older students may feel they receive less opportunity to benefit from the improvements. ANSWER: a few more good notes from the book. It’s rare for simple random sampling to not be a reasonable sampling method. Students of similar ages are probably going to have more similar opinions, and we want clusters to be diverse with respect to the outcome of interest, so this would not be a good approach. The clusters in this case may also have very different numbers of people, which can also create unexpected sample sizes. Take away: seek diversity in samples.**
+
+## p. 31, ex. 1.24
+Random digit dialing. The Gallup Poll uses a 
+procedure called random digit dialing, which creates phone numbers based on 
+a list of all area codes in America in conjunction with the associated number 
+of residential households in each area code. Give a possible reason the Gallup 
+Poll chooses to use random digit dialing instead of picking phone numbers 
+from the phone book. **Sampling from the phone book would fail to include unlisted numbers.**
+
+## p. 31, ex. 1.25
+Haters are gonna hate, study confirms.
+A study published in the
+*Journal of Personality and Social Psychology*
+asked a group of 200 randomly sampled men and
+women to evaluate how they felt about various subjects,
+such as camping, health care, architecture, taxidermy, 
+crossword puzzles, and Japan in order to measure their
+attitude towards mostly independent stimuli.
+Then, they presented the participants with information
+about a new product: a microwave oven. This microwave oven
+does not exist, but the participants didn't know this,
+and were given three positive and three negative fake reviews.
+People who reacted positively to the subjects on the
+dispositional attitude measurement also tended to react 
+positively to the microwave oven, and those who reacted
+negatively tended to react negatively to it.
+Researchers concluded that ``some people tend to 
+like things, whereas others tend to dislike things, and a more thorough 
+understanding of this tendency will lead to a more thorough understanding of 
+the psychology of attitudes."
+
+- What are the cases? **Each of the 200 selected men and women.**
+- What is (are) the response variable(s) in this study? **The subject's attitude about the microwave oven.**
+- What is (are) the explanatory variable(s) in this study? **The subject's attitudes about each of the subjects, like camping, architecture, etc. ANSWER: the book identifies a single explanatory variable, dispositional attitude. I think my answer is better as disposition is calculated from the other variables and is consequently a summary statistic.**
+- Does the study employ random sampling? **Yes.**
+- Is this an observational study or an experiment? Explain your reasoning. **Observational. Though subjects are randomly sampled, there is no control in this study.**
+- Can we establish a causal link between the explanatory and response 
+variables? **No.**
+- Can the results of the study be generalized to the population at large? **Yes.**
+
+## p. 31, ex. 1.26
+Family size. Suppose we want to estimate household 
+size, where a "household" is defined as people living together in the 
+same dwelling, and sharing living accommodations. If we select students 
+at random at an elementary school and ask them what their family size is, 
+will this be a good measure of household size? Or will our average be 
+biased? If so, will it overestimate or underestimate the true value? **This sampling approach has a likelihood of overestimating the number of households with more people in them because it can select multiple members of the same household.**
+
+## p. 31, ex. 1.27
+Sampling strategies. A statistics student who is curious about the relationship between the amount of time students spend on social networking sites and their performance at school decides to conduct a survey. Various research strategies for collecting data are described below. In each, name the sampling method proposed and any bias you might expect.
+
+- He randomly samples 40 students from the study's population, gives them the survey, asks them to fill it out and bring it back the next day. **Simple random sample. Non-response bias. ANSWER: the book notes a potential consequence of non-response bias. If only those with strong opinions respond, the sample may not be representative of the population.**
+- He gives out the survey only to his friends, making sure each one of them fills out the survey. **Non-random sample. Convenience bias. ANSWER: the book adds answers not covered in the main text. This is a convenience sample and it may have under coverage bias, not representing the population as it is only his friends.**
+- He posts a link to an online survey on Facebook and asks his friends to fill out the survey. **Non-random. Convenience bias. ANSWER: similarly, convenience sample and under coverage bias.**
+- He randomly samples 5 classes and asks a random sample of students from those classes to fill out the survey. **Multi-stage sample. No bias.**
+
+## p. 31, ex. 1.28
+Reading the paper. Below are excerpts from two 
+articles published in the *NY Times*:
+
+- An article titled *Risks: Smokers Found More Prone to Dementia* 
+states the following: 
+
+"Researchers analyzed data from 23,123 health plan members who 
+participated in a voluntary exam and health behavior survey from 1978 to 1985, 
+when they were 50-60 years old. 23 years later, about 25% of the group had 
+dementia, including 1,136 with Alzheimer's disease and 416 with vascular 
+dementia. After adjusting for other factors, the researchers concluded that 
+pack-a-day smokers were 37% more likely than nonsmokers to develop dementia, 
+and the risks went up with increased smoking; 44% for one to two packs a day; 
+and twice the risk for more than two packs."
+
+Based on this study, can we conclude that smoking causes dementia later in 
+life? Explain your reasoning. **No, because this is a retrospective observational study.**
+
+- Another article titled *The School Bully Is Sleepy* states the 
+following: 
+
+"The University of Michigan study, collected survey data from 
+parents on each child's sleep habits and asked both parents and teachers to 
+assess behavioral concerns. About a third of the students studied were 
+identified by parents or teachers as having problems with disruptive behavior 
+or bullying. The researchers found that children who had behavioral issues and 
+those who were identified as bullies were twice as likely to have shown 
+symptoms of sleep disorders."
+
+A friend of yours who read the article says, "The study shows that sleep 
+disorders lead to bullying in school children." Is this statement justified? 
+If not, how best can you describe the conclusion that can be drawn from this 
+study? **No, this is an observational study. The results demonstrate a correlation between sleep disorders and bullying, which may merit further investigation through an experiment.**
+
+## p. 35, ex. 1.29
+Light and exam performance. A study is designed to 
+test the effect of light level on exam performance of students. The researcher believes 
+that light levels might have different effects on males and females, so wants to make 
+sure both are equally represented in each treatment. The treatments are fluorescent 
+overhead lighting, yellow overhead lighting, no overhead lighting (only desk lamps). 
+
+- What is the response variable? **Exam score.**
+- What is the explanatory variable? **Lighting level.** What are its levels? **Fluorescent overhead, yellow overhead, and desk lamp.**
+- What is the blocking variable? **Sex.** What are its levels? **Male, female.**
+
+## p. 35, ex. 1.30
+Vitamin supplements.
+To assess the effectiveness of taking large doses
+of vitamin C in reducing the duration of the common cold, 
+researchers recruited 400 healthy volunteers from staff
+and students at a university.
+A~quarter of the patients were assigned a placebo,
+and the rest were evenly divided between 1g Vitamin C,
+3g Vitamin C, or 3g Vitamin C plus additives to be
+taken at onset of a cold for the following two days.
+All tablets had identical appearance and packaging.
+The nurses who handed the prescribed pills to the
+patients knew which patient received which treatment,
+but the researchers assessing the patients when they
+were sick did not. 
+No significant differences were observed in any measure
+of cold duration or severity between the four groups,
+and the placebo group had the shortest duration of 
+symptoms.
+
+- Was this an experiment or an observational study? **An experiment.** Why? **Researchers assigned patients to treatment groups.**
+- What are the explanatory and response variables in this study?
+  - **Explanatory: Vitamin C dosage.**
+  - **Response: cold duration, cold severity.**
+- Were the patients blinded to their treatment? **Yes.**
+- Was this study double-blind? **Yes.**
+- Participants are ultimately able to choose whether or not to use the pills 
+prescribed to them. We might expect that not all of them will adhere and take their 
+pills. Does this introduce a confounding variable to the study? Explain your reasoning. **No. Randomization of treatment group more or less evens out the effects of this possible difference.**
+
+## p. 35, ex. 1.31
+Light, noise, and exam performance. A study is 
+designed to test the effect of light level and noise level on exam performance of 
+students. The researcher believes that light and noise levels might have different 
+effects on males and females, so wants to make sure both are equally represented in each 
+treatment. The light treatments considered are fluorescent overhead lighting, yellow 
+overhead lighting, no overhead lighting (only desk lamps). The noise treatments 
+considered are no noise,  construction noise, and human chatter noise.
+
+- What type of study is this? **Experiment.**
+- How many factors are considered in this study? Identify them, and describe their 
+levels.
+  1. **Light level: Fluorescent overhead, yellow overhead, no overhead.**
+  2. **Noise: Construction noise, human chatter noise, no noise.**
+- What is the role of the sex variable in this study? **Blocking. In consideration of the possibility that sex might influence the effect of interest, researchers blocked the treatment groups to make sure each treatment group has an equal number of cases from each level of the blocking variable.** 
+
+## p. 35, ex. 1.32
+Music and learning. You would like to conduct an experiment in 
+class to see if students learn better if they study without any music, with music that 
+has no lyrics (instrumental), or with music that has lyrics. Briefly outline a design for 
+this study. **We will test students on their exam performance after studying in conjunction with music. We will randomly assign students to treatment groups. In case sex influences exam performance, we will block on sex first and then randomly select for treatment group from each block. This will insure the sexes are equally represented in each treatment group. The treatment will consist of three levels. During study sessions, students will either listen to music with no lyrics, music with lyrics, or no music.**
+
+## p. 35, ex. 1.33
+Soda preference. You would like to conduct an experiment in 
+class to see if your classmates prefer the taste of regular Coke or Diet Coke. Briefly 
+outline a design for this study. **ANSWER: Need randomization and blinding. One possi- ble outline: (1) Prepare two cups for each participant, one containing regular Coke and the other contain- ing Diet Coke. Make sure the cups are identical and contain equal amounts of soda. Label the cups A (regular) and B (diet). (Be sure to randomize A and B for each trial!) (2) Give each participant the two cups, one cup at a time, in random order, and ask the participant to record a value that indicates how much she liked the beverage. Be sure that neither the participant nor the person handing out the cups knows the identity of the beverage to make this a double-blind experiment.**
+
+## p. 35, ex. 1.34
+Exercise and mental health. A researcher is interested 
+in the effects of exercise on mental health and he proposes the following study: Use 
+stratified random sampling to ensure representative proportions of 18-30, 31-40 and 41-55 year olds from the population. Next, randomly assign half the subjects from each age 
+group to exercise twice a week, and instruct the rest not to exercise. Conduct a mental 
+health exam at the beginning and at the end of the study, and compare the results.
+
+- What type of study is this? **Experiment.**
+- What are the treatment and control groups in this study?
+  - **Treatment: Exercise twice a week.**
+  - **Control: No exercise.**
+- Does this study make use of blocking? **Yes.** If so, what is the blocking variable? **Age.**
+- Does this study make use of blinding? **No.**
+- Comment on whether or not the results of the study can be used to establish a 
+causal relationship between exercise and mental health, and indicate whether or not the 
+conclusions can be generalized to the population at large. **The design of the experiment supports determination of causality and generalization.**
+- Suppose you are given the task of determining if this proposed study should get 
+funding. Would you have any reservations about the study proposal? **Though the overarching design of the experiment is good, its details have some weaknesses. First, the exercise program is undefined. Each treatment group should have identical treatments, but in absence of a defined exercise program, cases of different ages might pick different forms or duration of exercise. Second, there is no provision for monitoring the exercise to make sure the subjects comply with the protocol of their assigned group, exercising or not, as required. Third, there is no evaluation of subjects' daily activity level outside of explicit exercise regimens. Though this difference, if it exists, might shake out in random assignment to treatment group, it might be worthwhile to block on daily non-exercise activity level.**
+
+## p. 36, ex. 1.35
+
+Pet names. The city of Seattle, WA has an open data portal that
+includes pets registered in the city.
+For each registered pet,
+we have information on the pet's name and species.
+The following visualization plots the proportion of dogs
+with a given name versus the proportion of cats with the
+same name.
+The 20 most common cat and dog names are displayed.
+The diagonal line on the plot is the $x = y$ line;
+if a name appeared on this line, the name's popularity
+would be exactly the same for dogs and cats.
+
+- Are these data collected as part of an experiment
+    or an observational study? **Observational study.**
+- What is the most common dog name? What is the most
+    common cat name?
+  - **Dog: Lucy.**
+  - **Cat: Luna.**
+- What names are more common for cats than dogs? **Lily, Oliver.**
+- Is the relationship between the two variables
+    positive or negative? **Positive.**
+    What does this mean in context of the data? **Common names tend to be used on all pets, both cats and dogs.**
+
+## p. 36, ex. 1.36
+Stressed out, Part II. In a study evaluating the 
+relationship between stress and muscle cramps, half the subjects are randomly assigned to be exposed to increased stress by being placed into an elevator that falls rapidly and stops abruptly and the other half are left at no or baseline stress.
+
+- What type of study is this? **Experiment.**
+- Can this study be used to conclude a causal relationship between increased stress 
+and muscle cramps? **No, the treatment group is exposed to a confounder, physical perturbation, that could effect muscles apart from the emotional effect of experiencing stress.**
+
+## p. 36, ex. 1.37
+Chia seeds and weight loss. Chia Pets -- those terra-cotta 
+figurines that sprout fuzzy green hair -- made the chia plant a household name. But chia 
+has gained an entirely new reputation as a diet supplement.  In one 2009 study, a team 
+of researchers recruited 38 men and divided them randomly into two groups: treatment or 
+control. They also recruited 38 women, and they randomly placed half of these 
+participants into the treatment group and the other half into the control group. One 
+group was given 25 grams of chia seeds twice a day, and the other was given a placebo. 
+The subjects volunteered to be a part of the study. After 12 weeks, the scientists found 
+no significant difference between the groups in appetite or weight loss.
+
+- What type of study is this? **Experiment.**
+- What are the experimental and control treatments in this study?
+  - **Experimental treatment: Consumption of 25 g. of chia seeds, twice daily.**
+  - **Control treatment: Consumption of 25 g. of placebo, twice daily.**
+- Has blocking been used in this study? **Yes.** If so, what is the blocking variable? **Sex.**
+- Has blinding been used in this study? **Yes, the subjects are blind to the treatment. It is unstated if their was double blinding, in which researchers administering the treatment would also be blind to the group.**
+- Comment on whether or not we can make a causal statement, and indicate whether or 
+not we can generalize the conclusion to the population at large. **Yes, the design of the experiment supports inference and it can generalize. ANSWER: the book corrected an error of mine. Since the patients were volunteers instead of randomly sampled, the results cannot be generalized to the population.**
+
+## p. 38, ex. 1.38
+City council survey. A city council has requested a household survey be conducted
+in a suburban area of their city.
+The area is broken into many distinct and unique neighborhoods,
+some including large homes, some with only apartments, and others
+a diverse mixture of housing structures.
+For each part below,
+identify the sampling methods described,
+and describe the statistical pros and cons of the method
+in the city's context.
+
+-
+    Randomly sample 200 households from the city. **Random sample. This is the best sampling method.**
+-
+    Divide the city into 20 neighborhoods,
+    and sample 10 households from each neighborhood. **Stratification. This method can be effective if the strata contain cases that are similar with regard to the variables of interest. However, some of the neighborhoods in this study are diverse, so this method is inappropriate. In addition, stratification requires more advanced analytical methods and their should be a benefit to justify the effort. In this study, the number of proposed stratified samples is identical to the number of proposed random samples, so their is no benefit to stratification even if the strata were appropropriate, which they are not.**
+-
+    Divide the city into 20 neighborhoods,
+    randomly sample 3 neighborhoods,
+    and then sample all households from those 3 neighborhoods. **Clustering. This method has a cost advantage. However, it is appropriate when there is diversity within clusters and all clusters resemble one another, which is not the case in this population.**
+-
+    Divide the city into 20 neighborhoods,
+    randomly sample 8 neighborhoods,
+    and then randomly sample 50 households
+    from those neighborhoods. **Multistage sampling. Inadvisable here, for the same reasons as clustering.**
+-
+    Sample the 200 households closest to the city council offices. **Convenience sample. This method would not produce a representative sample.**
+
+## p. 37, ex. 1.39
+Flawed reasoning. Identify the flaw(s) in reasoning 
+in the following scenarios. Explain what the individuals in the study should 
+have done differently if they wanted to make such strong conclusions.
+
+- Students at an elementary school are given a questionnaire that they 
+are asked to return after their parents have completed it. One of the questions 
+asked is, "Do you find that your work schedule makes it difficult for you to 
+spend time with your kids after school?" Of the parents who replied, 85% said 
+"no". Based on these results, the school officials conclude that a great 
+majority of the parents have no difficulty spending time with their kids 
+after school. **There is opportunity for bias in this approach to data collection. Respondents may feel disinclined to reveal a truthful answer of "yes" or not respond at all, introducing bias by raising the non-response rate.**  
+- A survey is conducted on a simple random sample of 1,000 women who 
+recently gave birth, asking them about whether or not they smoked during 
+pregnancy. A follow-up survey asking if the children have respiratory problems 
+is conducted 3 years later.
+However, only 567 of these women are reached at the 
+same address. The researcher reports that these 567 women are representative 
+of all mothers. **There are two sources of bias. One, the mothers' responses about smoking are unverifiable. Two, the convenience sample of the follow up survey might be unrepresentative of the population.**
+- An orthopedist administers a questionnaire to 30 of his patients who do 
+not have any joint problems and finds that 20 of them regularly go running. 
+He concludes that running decreases the risk of joint problems. **This study lacks a control. Even a retrospective observational study should include data about patients who do have joint problems. ANSWER: the book also referred to the potential for confounding variables, these people may go running because they are generally healthier or do other exercises.**
+
+## p. 37, ex. 1.40
+Income and education in US counties. The scatterplot below shows the relationship between per capita income 
+(in thousands of dollars) and percent of population with a bachelor's 
+degree in 3,143 counties in the US in 2010.
+
+- What are the explanatory and response variables?
+  - **Explanatory: percent of population with a bachelor's degree.**
+- Describe the relationship between the two variables. Make sure to discuss 
+unusual observations, if any. **Positive association. The correlation is linear and strong. Counties with a higher percentage of their population having bachelor's degrees tend to have a higher per capita income. Per capita incomes range predominantly from about $10,000 to $40,000. Throughout the data range, there are outlier values showing incomes of about $20,000 greater than the central tendancy and $10,000 less. Most counties report a percentage with a bachelor's degree between the values of a little less than 10% up to almost 40%. The frequency drops for counties reporting 40% and greater, with the highest two counties reporting a little more than 70% of their population having a bachelor's degree. The highest per capita income reported is a little over $60,000, the lowest, a little under $10,000.**
+- Can we conclude that having a bachelor's degree increases one's income? **No, this is an observational study. The most obvious confounding variable is job. A job increases one's income! I expect one's job to be associated both with income and having a bachelor's degree.**
+
+## p. 37, ex. 1.41
+Eat better, feel better. In a public health 
+study on the effects of consumption of fruits and vegetables on psychological 
+well-being in young adults, participants were randomly assigned to three 
+groups: (1) diet-as-usual, (2) an ecological momentary intervention involving 
+text message reminders to increase their fruits and vegetable consumption plus 
+a voucher to purchase them, or (3) a fruit and vegetable intervention in 
+which participants were given two additional daily servings of fresh fruits and 
+vegetables to consume on top of their normal diet. Participants were asked to 
+take a nightly survey on their smartphones.
+Participants were student volunteers at the University of 
+Otago, New Zealand.
+At the end of the 14-day study, only participants in the third
+group showed improvements to their psychological well-being across
+the 14-days relative to the other groups.
+
+-
+    What type of study is this? **Randomized, controlled experiment.**
+-
+    Identify the explanatory and response variables.
+  - **Explanatory: consumption of fruits and vegetables, reminders to consume them. ANSWER: The book said the explanatory variable was "treatment group," and said it was a categorical variable with three levels. One of those levels was the control group, though. Is that how you always are to think of the explanatory variable in an experiment?**
+  - **Response: psychologica well being.**
+-
+    Comment on whether the results of the study can be generalized to
+    the population. **I think the results can be generalized to a population of young adults, but not to the population in general. Another answer in the book said that no generalization can be made if the subjects are volunteers, generalization requiring random sampling. ANSWER: the book repeated the random sample criterion here, too.**
+-
+    Comment on whether the results of the study can be used to establish
+    causal relationships. **Yes, the results establish a causal relationship within young adults who volunteered for the study. ANSWER: the book agreed with me.**
+-
+    A newspaper article reporting on the study states,
+    "The results of this study provide proof that giving young adults
+    fresh fruits and vegetables to eat can have psychological benefits,
+    even over a brief period of time."
+    How would you suggest revising this statement so that it can be
+    supported by the study? **Mostly, we just need to do something about the word "proof." Studies measure the plausibility of causal explanations. Revision: The results of this study show that it is plausible that giving young adults, etc. ANSWER: The book suggested replacing the word "proof" with "evidence."**
+
+## p. 38, ex. 1.42
+Screens, teens, and psychological well-being. In a study of three nationally representative large-scale data sets from Ireland, 
+the United States, and the United Kingdom (n = 17,247), teenagers between the 
+ages of 12 to 15 were asked to keep a diary of their screen time and answer questions about how they felt or acted.
+The answers to these questions 
+were then used to compute a psychological well-being score.
+Additional data were collected and included in the analysis,
+such as each child's sex and age, and on the mother’s education,
+ethnicity, psychological distress, and employment.
+The study concluded that there is little clear-cut evidence
+that screen time decreases adolescent
+well-being.
+
+-
+    What type of study is this? **Prespective, observational study.**
+-
+    Identify the explanatory variables. **Subject's screen time, sex, and age, and subject's mother's education, ethnicity, psychological distress, and employment.** 
+-
+    Identify the response variable. **Subject's psychological well being score.**
+-
+    Comment on whether the results of the study can be generalized
+    to the population, and why. **Yes, because the samples are representative.**
+-
+    Comment on whether the results of the study can be used
+    to establish causal relationships. **No, this is an observational study, not an experiment.**
+
+## p. 38, ex. 1.43
+Stanford Open Policing. The Stanford Open Policing project gathers, analyzes, and
+releases records from traffic stops by law enforcement 
+agencies across the United States.
+Their goal is to help researchers, journalists, and policymakers
+investigate and improve interactions between police and the
+public. The following is an excerpt from a summary table created based off of the data 
+collected as part of this project.
+\begin{center}
+\begin{tabular}{lllrrr}
+\hline
+               &           & Driver's  & No. of stops & \multicolumn{2}{c}{\% of stopped}  \\
+County         & State     & race      & per year     & cars searched & drivers arrested \\ 
+\hline
+Apaice County  & Arizona   & Black     & 266          & 0.08          & 0.02 \\ 
+Apaice County  & Arizona   & Hispanic  & 1008         & 0.05          & 0.02 \\ 
+Apaice County  & Arizona   & White     & 6322         & 0.02          & 0.01 \\ 
+Cochise County & Arizona   & Black     & 1169         & 0.05          & 0.01 \\ 
+Cochise County & Arizona   & Hispanic  & 9453         & 0.04          & 0.01 \\ 
+Cochise County & Arizona   & White     & 10826        & 0.02          & 0.01 \\ 
+$\cdots$       & $\cdots$  & $\cdots$  & $\cdots$     & $\cdots$      & $\cdots$ \\
+Wood County    & Wisconsin & Black     & 16           & 0.24          & 0.10 \\ 
+Wood County    & Wisconsin & Hispanic  & 27           & 0.04          & 0.03 \\ 
+Wood County    & Wisconsin & White     & 1157         & 0.03          & 0.03 \\ 
+\hline 
+\end{tabular}
+\end{center}
+
+-
+    What variables were collected on each individual traffic stop
+    in order to create to the summary table above?
+  - **County: categorical, nominal.**
+  - **State: categorical, nominal.**
+  - **Driver's race: categorical, nominal.**
+  - **Searched indicator: categorical, nominal.**
+  - **Arrest indicator: categorical, nominal.**
+  - **Note: stop is not a variable, it is an observation.**
+-
+    State whether each variable is numerical or categorical.
+    If numerical, state whether it is continuous or discrete.
+    If categorical, state whether it is ordinal or not.
+  
+-
+    Suppose we wanted to evaluate whether vehicle search rates
+    are different for drivers of different races.
+    In this analysis, which variable would be the response
+    variable and which variable would be the explanatory variable?
+  - **Explantory: driver's race.**
+  - **Response:  searched indicator.**
+
+## p. 38, ex. 1.44
+Space launches. The following summary table shows the number of space
+launches in the US by the type of launching agency and
+the outcome of the launch (success or
+failure).
+\begin{center}
+\begin{tabular}{l | rr | rr}
+\hline
+        & \multicolumn{2}{| c}{1957 - 1999} & \multicolumn{2}{| c}{2000 - 2018} \\
+        & Failure & Success & Failure & Success \\ 
+\hline
+Private &      13 &     295 &      10 &     562 \\ 
+State   &     281 &    3751 &      33 &     711 \\ 
+Startup &       - &       - &       5 &      65 \\
+\hline
+\end{tabular}
+\end{center}
+
+-
+    What variables were collected on each launch in order
+    to create to the summary table above?
+  - **Launch year: numerical, discrete.**
+  - **Launch success: categorical, nominal.**
+  - **Type of launching agency: categorical, nominal.**
+-
+    State whether each variable is numerical or categorical.
+    If numerical, state whether it is continuous or discrete.
+    If categorical, state whether it is ordinal or not.
+-
+    Suppose we wanted to study how the success rate of
+    launches vary between launching agencies and over time.
+    In this analysis, which variable would be the response
+    variable and which variable would be the explanatory
+    variable?
+  - **Explanatory: launching agency.**
+  - **Response: Launch success.**

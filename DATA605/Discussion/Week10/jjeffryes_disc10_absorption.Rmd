@@ -1,0 +1,64 @@
+---
+title: "Absorption Question"
+author: "Jai Jeffryes"
+date: "4/3/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Absorbing Markov chains behave differently depending on if I format the transition matrix in canonical form. Why?
+
+*ANSWER*: Ya gotta convert to canonical form correctly.
+
+## Drunkard's Walk
+```{r}
+library(expm)
+
+DrunkState <- as.character(c(0:4))
+DrunkTransition <- matrix(c(
+	1.0, 0.0, 0.0, 0.0, 0.0,
+	0.5, 0.0, 0.5, 0.0, 0.0,
+	0.0, 0.5, 0.0, 0.5, 0.0,
+	0.0, 0.0, 0.5, 0.0, 0.5,
+	0.0, 0.0, 0.0, 0.0, 1.0
+), nrow = 5, byrow = T)
+dimnames(DrunkTransition) <- list(DrunkState, DrunkState)
+
+# Canonical form
+DrunkState_canon <- as.character(c(1:3, 0, 4))
+DrunkTransition_canon <- matrix(c(
+	0.0, 0.5, 0.0, 0.5, 0.0,
+	0.5, 0.0, 0.5, 0.0, 0.0,
+	0.0, 0.5, 0.0, 0.0, 0.5,
+	0.0, 0.0, 0.0, 1.0, 0.0,
+	0.0, 0.0, 0.0, 0.0, 1.0
+), nrow = 5, byrow = T)
+dimnames(DrunkTransition_canon) <- list(DrunkState_canon, DrunkState_canon)
+
+DrunkTransition
+DrunkTransition_canon
+
+# This didn't absorb the same as the other when I didn't express the canonical form correctly.
+DrunkTransition%^%10000
+# Now, they're the same.
+DrunkTransition_canon%^%10000
+```
+
+## Try looking at this
+Compute the Fundamental Matrix.
+
+```{r}
+library(pracma)
+DrunkTransition_canon
+r <- 3 # Transition states
+
+Q <- DrunkTransition_canon[1:r, 1:r]
+DrunkTransition_fund <- inv(diag(r) - Q)
+DrunkTransition_fund
+```
+

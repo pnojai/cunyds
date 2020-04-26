@@ -1,0 +1,204 @@
+---
+title: "DATA 605 - Discussion 13"
+author: "Jai Jeffryes"
+date: "4/22/2020"
+output:
+  pdf_document:
+    toc: yes
+  html_document:
+    code_download: yes
+    highlight: pygments
+    number_sections: yes
+    theme: flatly
+    toc: yes
+    toc_float: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Assignment
+Using `R`, build a multiple regression model for data that interests
+you.  Include in this model at least one quadratic term, one
+dichotomous term, and one dichotomous vs. quantitative interaction
+term.  Interpret all coefficients. Conduct residual analysis.  Was the
+linear model appropriate? Why or why not?
+
+## Data
+### Risk Factors Associated with Low Infant Birth Weight
+The source of the `birthwt` data frame is the `MASS` `R` package. The data frame has 189 rows and 10 columns. The data were collected at Baystate Medical Center, Springfield, Mass during 1986.
+
+### Variables
+- `low`. indicator of birth weight less than 2.5 kg.
+- `age`. mother's age in years.
+
+- `lwt`. mother's weight in pounds at last menstrual period.
+- `race`. mother's race (1 = white, 2 = black, 3 = other).
+- `smoke`. smoking status during pregnancy.
+- `ptl`. number of previous premature labours.
+- `ht`. history of hypertension.
+- `ui`. presence of uterine irritability.
+- `ftv`. number of physician visits during the first trimester.
+- `bwt`. birth weight in grams.
+
+### Load libraries and data
+```{r}
+library(MASS)
+library(ISLR)
+data(birthwt)
+dataset <- birthwt
+rm(birthwt)
+gc()
+```
+## Clean the data
+### Inspect format
+```{r}
+str(dataset)
+
+head(dataset)
+tail(dataset)
+```
+
+### Convert datatypes
+```{r}
+# Logicals.
+dataset$low <- as.logical(dataset$low)
+dataset$smoke <- as.logical(dataset$smoke)
+dataset$ht <- as.logical(dataset$ht)
+dataset$ui <- as.logical(dataset$ui)
+
+# Factor.
+frequency.race <- table(dataset$race) #Before conversion.
+dataset$race <- as.factor(dataset$race)
+levels(dataset$race) <- list("White" = 1, "Black" = 2, "Other" = 3)
+
+# Inspect the conversions.
+str(dataset)
+frequency.race
+table(dataset$race)
+```
+### Plot pairs
+```{r}
+pairs(dataset)
+```
+Observe the last row of the pairs plot. It compares each variable, graphed on the `x` access,  to `bwt` (baby's birth weight in grams), graphed on the `y' access.
+
+- `bwt`. The scatterplot for `bwt` ~ `low` establishes the understanding of this plot. At a low weight, the variable `low` is 1 (signifying TRUE), at high weights `low` is 0 (FALSE).
+- Most variables are hard to discern, but `lst` might have a politive relationship with `bwt`.
+- `lwt`. Also hard to discern, but there might be a positive relationship.
+- `race`. There might be a lower baby weight from black mothers. It is hard to tell.
+- `ptl`' Could have a relationship.
+- `ftv`. It appears to have non-linear relationship.
+
+## Multiple linear regression
+In the initial analysis, I will fit nearly all predictors to the dependent variable and get a benchmark understanding of their predictive power. I omit `low` because of its redundance. It is a categorization of `bwt`.
+
+```{r}
+# Try fitting all predictors.
+lm.fit <- lm(bwt ~ . - low, data = dataset)
+
+# Summary. p values and standard errors for the coefficients.
+# R2 and F statistic.
+summary(lm.fit)
+```
+- $R^2$ is 0.2427 The predictor variables  account for about a quarter of the variability in birth weight. This model is not very predictive.
+- Athough the $F$ statistic has a p value near 0, it is not very far from 1. I don't feel comfortable yet in rejecting the null high hypothesis and saying the variability in birth weight is due to anything other than chance.
+- The residuals appear to be normally distributed. Quartiles 1 and 3 are roughly the same magnitude, as are the minimum and maximum.
+
+How do the diagnostic plots look at this point?
+```{r}
+par(mfrow = c(2,2))
+plot(lm.fit)
+```
+
+It's interesting that the Q-Q plot indicates strong linearity of the data while the residuals appear to cluster.
+
+I'm going to go with some intuition and just  choose some variables to include. Then I will inspect the results and go on to consider an interaction variable and a quadratic one.
+
+```{r}
+lm.fit <- lm(bwt ~ age + lwt + smoke, data = dataset)
+
+# Summary. p values and standard errors for the coefficients.
+# R2 and F statistic.
+summary(lm.fit)
+```
+
+The p value for `age` is still high and `R^2` has tanked. I will return to the original predictors and eliminate the ones with high p values.
+
+```{r}
+lm.fit <- lm(bwt ~ . - low - age - ptl - ftv, data = dataset)
+lm.fit.best <- lm.fit
+
+# Summary. p values and standard errors for the coefficients.
+# R2 and F statistic.
+summary(lm.fit)
+```
+
+$R^2$ is still the same as the first fit. On the other hand, the $F$ statistic has improved with a little more deviation from 0. I reject the null hypthosis and conclude the variability seen with these predictors comes not just from chance.
+
+Inspect the diagnostic plots.
+
+```{r}
+par(mfrow = c(2,2))
+plot(lm.fit)
+```
+
+The plot, Residuals vs Leverage, reveals there is less leverage than before with fewer outliers influencing the regression line.
+
+### Interaction term
+I'll experiment with adding an interaction term for mother's weight with smoking.
+
+```{r}
+#lm.fit <- lm(bwt ~ . - low - age - ptl - ftv, data = dataset)
+lm.fit <- lm(bwt ~ lwt * smoke + race + ht + ui, data = dataset)
+
+# Summary. p values and standard errors for the coefficients.
+# R2 and F statistic.
+summary(lm.fit)
+```
+
+#### Conclusion for interaction term
+The p value for `smoke` alone from the prior run was low. Here it is high and the interaction term `lwt:smoke` is high, presumably due to the association with `lwt` and its own high p value. In this data, the quantitative predictor variables, `lwt` and `age` are too low in predictive power to include in the model. I omit them and consider no additional interaction terms for this exercise.
+
+### Non-linear predictors
+The diagnostic plots show strong linearity. I expect that adding a non-linear transformation will disrupt the Q-Q diagnostic plot. Let's see.
+
+```{r}
+# lm.fit <- lm(bwt ~ . - low - age - ptl - ftv, data = dataset)
+lm.fit <- lm(bwt ~ lwt + race + smoke + ht + ui + I(age^2), data = dataset)
+
+# Summary. p values and standard errors for the coefficients.
+# R2 and F statistic.
+summary(lm.fit)
+```
+
+The non-linear transformation did not improve the model, with $R^2$ remaining the same. Since `age` is not predictive, does squaring it change anything. Now I believe it won't. here are the diagnostic plots.
+
+```{r}
+par(mfrow = c(2,2))
+plot(lm.fit)
+```
+
+#### Conclusion for non-linear transformation
+The predictor $age^2$ did not improve the model.
+
+## Interpretation of coefficients
+These are the coefficients for the best model, which excludes the interaction term and non-linear transformation which I tested.
+
+```{r}
+coef(lm.fit.best)
+```
+- Each additional pound of a mother's body weight correlates with, on average, an additional 4.24 g. in a baby's birth weight.
+- Race influences birth weight. The highest birth weights correlate with white mothers. If a mother is black, it reduces birth weight on average by 475.06 g. The aggregate of other races reduce birth weight on overage by 348.15 g. as compared to white mothers.
+- Smoking by a mother reduces birth weight on overage by 356.32 g.
+- Hypertension in a mother reduces birth weight on average by 585.19 g. compared to mothers who do not have hypertension.
+- The presence of uterine irritability in a mother reduces birth weight on average by 525.52 g.
+
+## Conclusions
+- The interpretation of coefficients should be tempered by consideration that this model is not strong and accounts for only a quarter of the variability observed in baby birth weights.
+- The weakness of the model is evident even though the data exhibit a high degree of linearity.
+- Attempts to optimize the model with an interaction term and a non-linear transformation failed to imrove the model.
+
+## Additional research
+Mother's age appeared not to correlate highly to a baby's birth weight. I did not expect that finding, and it leads me to question my method. Additional rigor in pursuing a better model might lead to other results, perhaps by employing backward and forward elimination in selection of predictor variables.

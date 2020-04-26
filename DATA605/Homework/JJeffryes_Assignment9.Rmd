@@ -1,0 +1,55 @@
+---
+title: "DATA605 - Assignment 9"
+author: "Jai Jeffryes"
+date: "3/29/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(digits = 4)
+```
+
+## p. 363, problem 11
+The price of one share of stock in the Pilsdorff Beer Company (see Exercise 8.2.12) is given by Yn on the nth day of the year. Finn observes that the differences Xn = Yn+1 - Yn appear to be independent random variables with a common distribution having mean $\mu$ = 0 and variance $\sigma^2$ = 1/4. If Y1 = 100, estimate the probability that Y365 is
+
+(a) $\ge 100$.
+(b) $\ge 110$.
+(c) $\ge 120$.
+
+First, I want to understand what the problem is saying. The stock price varies each day and for a given day is $Y_n$. The change on a day is the difference between successive days. That is what $X_n$ refers to. It is the change in price on a day.
+
+I saw the discussion about solving this using `pnorm()`. However, there are so many versions of approximation in this chapter, I don't know where the solution for this one comes from.
+
+At least, I can say I reason it this far. The distribution for changes is symmetric. So I think.
+
+(a) would be 0.5.
+(b) I'm trying to measure the interval of 10 above the starting point. The standard deviation is $1/2$. I think you are heading out 365 times and so have to normalize for the change of 10. Then you can use `pnorm()` to compute the interval of 10. I don't see where the discussion came up with that normalization, though.
+
+## Calculate the expected value and variance of the binomial distribution using the moment generating function.
+
+This is given in Grinstead. The MGF is:
+
+$g(t) = \sum_{j=1}^{\infty} e^{tx_j} p(x_j)$
+
+The last term is the PMF. We're looking at the binomial distribution, so substituting that in.
+
+$g(t) = \sum_{j=0}^n e^{tj} {n \choose j} p^jq^{n-j}$
+
+That rearranges to:
+
+$(pe^t + q)^n$
+
+To get the nth moment, $\mu_n$, you differentiate $n$ times and set $t$ to 0.
+
+The mean, $\mu$, is the first moment, $\mu_1$, and the variance, $\sigma^2 = \mu_2 - \mu_1^2$
+
+$\mu_1 = g'(0) = n(pe^t + q)^{n-1}pe^t|_{t=0} = np$
+
+$\mu_2 = g''(0) = n(n-1)p^2 + np$
+
+Therefore,
+
+- The mean: $\mu_1 = np$.
+- Variance, $\sigma^2$: $\mu_2 - \mu_1^2 = np(1-p)$
+

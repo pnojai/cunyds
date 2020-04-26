@@ -1,0 +1,84 @@
+---
+title: "Chapter 7"
+author: "Jai Jeffryes"
+date: "4/25/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen = 999)
+```
+
+# Ex. 1, p. 289
+```{r}
+P <- function(x) {
+	if (x %in% c(1:6)) {
+		return(1 / 6)
+	} else {
+		return(0)
+	}
+}
+
+S2 <- function(x, verbose = F) {
+	total <- 0
+	for (k in 0:x) {
+		total <- total + (P(k) * P(x - k))
+
+		if (verbose) {
+			print(paste0("x=", x))
+			print(paste0("k=", k, ", P(k)=", P(k)))
+			print(paste0("x-k=", x-k, ", P(x-k)=", P(x-k)))
+			print(paste0("P(k)P(x-k)=", P(k) * P(x - k)))
+			print(paste0("total=", total))
+		}
+	}
+	return(total)
+}
+    
+S3 <- function(x) {
+	total <- 0
+	for (k in 0:x) {
+		prob <- S2(k) * P(x - k)
+		total <- total + prob
+	}
+	return(total)
+}
+
+# part a
+total <- 0
+for (i in 1:9) {
+	total <- total + S3(i)
+}
+
+1 - total
+
+# part b
+total <- 0
+for (i in 0:((3 * 6) - 1)) {
+	if (i %% 2 == 1) {
+		total <- total + S3(i)
+	}
+}
+
+1 - total
+```
+
+[StackOverflow](https://stackoverflow.com/questions/23569133/adding-two-random-variables-via-convolution-in-r)
+```{r}
+f.X <- function(x) dnorm(x,1,0.5)        # normal (mu=1.5, sigma=0.5)
+f.Y <- function(y) dlnorm(y,1.5, 0.75)   # log-normal (mu=1.5, sigma=0.75)
+# convolution integral
+f.Z <- function(z) integrate(function(x,z) f.Y(z-x)*f.X(x),-Inf,Inf,z)$value
+f.Z <- Vectorize(f.Z)                    # need to vectorize the resulting fn.
+
+set.seed(1)                              # for reproducible example
+X <- rnorm(1000,1,0.5)
+Y <- rlnorm(1000,1.5,0.75)
+Z <- X + Y
+# compare the methods
+hist(Z,freq=F,breaks=50, xlim=c(0,30))
+z <- seq(0,50,0.01)
+lines(z,f.Z(z),lty=2,col="red")
+```
+

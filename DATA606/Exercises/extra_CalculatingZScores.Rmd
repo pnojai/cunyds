@@ -1,0 +1,34 @@
+---
+title: "Calculating Z scores"
+author: "Jai Jeffryes"
+date: "4/2/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Calculating Z scores
+- [Calculating Z-Scores with R code](https://stats.seandolinar.com/calculating-z-scores-with-r/)
+
+```{r}
+#DATA LOAD
+data <- read.csv('Height_data.csv')
+height <- data$Height
+ 
+hist(height) #histogram
+ 
+#POPULATION PARAMETER CALCULATIONS
+pop_sd <- sd(height)*sqrt((length(height)-1)/(length(height)))
+pop_mean <- mean(height)
+
+z <- (72 - pop_mean) / pop_sd
+p_yellow1 <- pnorm(72, pop_mean, pop_sd)    #using x, mu, and sigma
+p_yellow2 <- pnorm(z)                       #using z-score of 2.107
+
+p_blue1 <- 1 - p_yellow1   #using x, mu, and sigma
+p_blue2 <- 1 - p_yellow2   #using z-score of 2.107
+
+```
+

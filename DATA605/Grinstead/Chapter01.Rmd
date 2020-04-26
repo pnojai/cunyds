@@ -1,0 +1,74 @@
+---
+title: "Chapter01"
+author: "Jai Jeffryes"
+date: "4/4/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen = 999)
+```
+
+## Coin tosses
+
+```{r}
+coin_tosses <- function(n) {
+	outcome <- rep(NULL, n)
+	
+	for (i in 1:n) {
+		outcome[i] <- ifelse(runif(1) < 0.5, "H", "T")
+	}
+	
+	return(outcome)
+}
+
+outcome <- coin_tosses(20)
+table(outcome) / 20
+
+outcome <- coin_tosses(1000)
+table(outcome) / 1000
+
+outcome <- coin_tosses(10000)
+table(outcome) / 10000
+
+outcome <- coin_tosses(100000)
+table(outcome) / 100000
+```
+
+## De Mere
+```{r}
+demere1 <- function(games){
+	sixes <- 0
+	outcome <- 0
+	rolls <- 0
+		
+	for (i in 1:games) {
+		#print(paste0("Game: ", i))
+		outcome <- 0
+		rolls <- 0
+		
+		while(!(outcome == 6 || rolls == 4)) {
+			outcome <- floor(6 * runif(1) + 1)
+			rolls <- rolls + 1
+			
+			#print(paste0("Outcome: ", outcome))
+			#print(paste0("Rolls: ", rolls))
+		}
+		
+		if (outcome == 6) {
+			sixes <- sixes + 1
+		}
+	}
+	
+	print("The proportion of times that a six turned up")
+	print(paste0("in four rolls of a die was ", sixes/games))
+}
+
+demere1(1)
+demere1(1000)
+demere1(10000)
+demere1(27000)
+```
+
+The probability is: `r 1 - (5/6)^4`

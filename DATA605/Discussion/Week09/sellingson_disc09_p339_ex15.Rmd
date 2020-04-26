@@ -1,0 +1,95 @@
+---
+title: "sellingson_disc09_p339_ex_15"
+author: "Steve Ellingson"
+date: "3/26/2020"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+nchoosek = function(n,k) {
+  if (k==0 || k==n) {
+    return(1)
+  } else {
+    result = 1
+    j = n-k
+    while (n > 1) {
+      result = result * n / k / j
+      n = n-1
+      if(k>1) {
+        k=k-1
+      }
+      if(j>1) {
+        j=j-1
+      }
+    }
+    return(result)
+  }
+}
+```
+
+Next we have our binomial probability calculator
+```{r}
+binomial_prob = function(n,x,p) {
+  return(nchoosek(n,x) * p^x * (1-p)^(n-x))
+}
+```
+Then the cumulative version
+```{r}
+binomial_prob_cdf = function(n,x,p) {
+  prob = 0
+  while (x>=0) {
+    prob = prob + binomial_prob(n,x,p)
+    x = x - 1
+  }
+  return(prob)
+}
+```
+
+
+Now we need the same thing for the random variable in (b)
+```{r}
+normal_binomial_cdf = function(n,x,p) {
+  prob = 0
+  while (x>=0) {
+    prob = prob + pnorm(((x-n*p) / sqrt(n*p*(1-p))), 0, 1)
+    x = x - 1
+  }
+  return(prob)
+}
+
+```
+
+```{r}
+binomial_prob_cdf(9,4,0.5)
+pbinom(4,9,0.5)
+```
+
+```{r}
+library(ggplot2)
+plot_binomial = function(n, p) {
+  x = 1:n
+  df = data.frame(x)
+  df['a'] = sapply(x, function (x) binomial_prob_cdf(n, x, p))
+  df['b'] = sapply(x, function (x) pnorm(((x-n*p) / sqrt(n*p*(1-p))), 0, 1))
+  df['c'] = sapply(x, function(x) pnorm(x,n*p,sqrt(n*p*(1-p))))
+  return(df)
+}
+```
+
+```{r}
+n = 15
+p = 0.3
+
+for ( n in c(10,50,100)) {
+  plot = ggplot(plot_binomial(n,p), aes(x)) + 
+  geom_point(aes(y = b, color = paste("normalized variable, n =",n))) + 
+  geom_point(aes(y = c, color = paste("normal cdf, n=",n))) 
+  print(plot)
+}
+```

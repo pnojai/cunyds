@@ -1,0 +1,997 @@
+---
+title: "OpenIntro Statistics"
+subtitle: "Chapter 3 Exercises"
+author: "Jai Jeffryes"
+date: "3/16/2020 - 4/10/2020"
+output:
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# https://stackoverflow.com/questions/5352099/how-to-disable-scientific-notation
+# https://stackoverflow.com/questions/25946047/how-to-prevent-scientific-notation-in-r
+options(scipen = 999)
+```
+
+## Notes
+- We use probability to build tools to describe and understand apparent randomness. We often frame probability in terms of a **random process** giving rise to an **outcome**.
+- **Probability** of an outcome is the proportion of times the outcome would occur if we observed the random process an infinite number of times.
+- **Law of Large Numbers**: As more observations are collected, the proportion $\hat{p}_n$ of occurrences with a particular outcome converges to the probability $p$ of that outcome.
+- Disjoint, or mutually exclusive outcomes cannot both happen.
+- Addition Rule of Disjoint Outcomes. $P(A$ or $B)$ = $P(A) + P(B)$
+- A set of outcomes is an **event**.
+- General Addition Rule. Two events, disjoint or not. $P(A$ or $B)$ = $P(A) + P(B)$ - $P(A$ and $B)$
+- A **probability distribution** is a table of disjoint outcomes and their associated probabilities. They can be summarized in a bar plot. The **Rules for Probability Distributions** are
+  - Outcomes must be disjoint.
+  - Each probability must be between 0 and 1.
+  - The total probability must be 1.
+- The set of all possible outcomes is the **sample space**.
+- If $D$ is an event, its complement $D^c$ is the set of outcomes in the sample space not contained in $D$. $P(A) + P(A^c) = 1$, or $P(A) = 1 - P(A^c)$
+- **Multiplication Rule for Independent Processes**. $P(A$ and $B) = P(A) \times P(B)$
+- Does one outcome provide useful information about another? Are they independent? If so, $P(A$ and $B) = P(A) \times P(B)$
+- Two events $A$ and $B$ are independent if they satisfy $P(A$ and $B) = P(A) \times P(B)$.
+- **Conditional probability**: explore probabilities with a contingency table.
+- **Marginal probability**: a probability based on a single variable without regard to other variables.
+- **Joint probability**: a probability of outcomes for two or more variables or processes.
+- Table proportions: summarize joint probabilities by dividing each count by the table's total.
+- **Conditional probability**: Two parts, an outcome of interest and the condition. It's useful to think of the condition as information we know to be true. $P(A|B) = \frac{P(A\ and\ B)}{P(B)}$
+- **General Multiplication Rule**. If $A$ and $B$ represent two outcomes or events, then $P(A\ and\ B) = P(A|B) \times P(B)$. This is a rearrangement of the Conditional Probability equation.
+- **Sum of conditional probabilities**: Let $A_1, \dots, A_k$ represent all disjoint outcomes for a variable or process. $B$ is an event for another variable or process. $P(A_1|B) + \dots + P(A_k|B) = 1$. The rule for complements also holds when conditioned. $P(A|B) = 1 - P(A^c|B)$
+- **Tree diagrams**: useful when two or more processes occur in a sequence and each process is conditioned on its predecessors.
+- When a medical condition is rare, a single positive test isn't generally definitive.
+- **Bayes Theorem**: $P(A_1|B) = \frac{P(B|A_1)P(A_1)}{P(B|A_1)P(A_1) + P(B|A_2)P(A_2) + \dots + P(B|A_k)P(A_k)}$
+- To apply Bayes Theorem:
+  1. Identify the marginal probabilies of each possible outcome of the first variable: $P(A_1), P(A_2), \dots, P(A_k)$.
+  1. Identify the probability of the outcome $B$, conditioned on each possible scenario for the first variable: $P(B|A_1), P(B|A_2), \dots, P(B|A_k)$.
+- Sampling from a small population. If you sample more than 10% of a population without replacement, you no longer have independence between observations and it affects the analysis.
+- When a sample is a small fraction, under 10%, observations are nearly independent even when sampling without replacement.
+- **Random variable**: a variable or process with a numerical outcome. 
+- **Expected value of a discrete random variable**: If $X$ takes outcomes $x_1, \dots, x_k$ with probabilities $P(X = x_1), \dots, P(X = x_k)$, the expected value of $X$ is the sum of each outcome multiplied by its corresponding probability. $E(X) = x_1 \times P(X = x_1) + \dots + x_k \times P(X = x_k) = \sum_{i = 1}^k x_i P(X = X_i)$. The expected value represents the average outcome.
+- Variability in random variables. We compute squared deviations from the mean. However, when we sum them we weight them by their probabilities.
+- **General variance formula**: If $X$ takes outcomes $x_1, \dots, x_k$ with probabilities $P(X = x1), \dots, P(X = x_k)$ and expected value $\mu = E(X)$, then the variance of $X$ ($Var{X}$ or $\sigma^2$, is
+
+$\sigma^2 = (x_1 - \mu)^2 P(X = x_1) + \dots + (x_k - \mu)^2 P(X = x_k)$
+
+$= \sum_{i = 1}^k (x_i - \mu)^2 P(X = x_i)$
+
+The standard deviation of $X$, $\sigma$, is the square root of the variance.
+
+- Variance computation table. Review p. 118.
+- Linear combinations of random variables. The total gain or loss of a stock portfolio is the sum of the gains and losses of its components. Generally, the expected value of a sum of random variables is the sum of the expected value of each random variable.
+- Given the linear combination $aX + bY$, its expected value is $a \times E(X) + b \times E(Y)$.
+- **Variability in linear combinations of random variables**. Add the variances and square their coefficients. $Var(aX + bY) = a^2 Var(X) + b^2 Var(Y)$. Valid as long as the random variables are independent of each other. The standard deviation of the linear combination may be found by taking the square root of the variance.
+- Probabily density function, or density distribution. The area under the curve equals 1.
+
+## p. 92, ex. 3.1
+True or false. Determine if the statements 
+below are true or false, and explain your reasoning.
+
+- If a fair coin is tossed many times and the last eight tosses are all heads, 
+then the chance that the next toss will be heads is somewhat less than 50%. **False. The trials are independent.**
+- Drawing a face card (jack, queen, or king) and drawing a red card from a 
+full deck of playing cards are mutually exclusive events. **False. A card can be both a face card and a red suit.**
+- Drawing a face card and drawing an ace from a full deck of playing cards 
+are mutually exclusive events. **True. Face cards and aces are different.**
+
+## p. 92, ex. 3.2
+Roulette wheel. The game of roulette involves 
+spinning a wheel with 38 slots: 18 red, 18 black, and 2 green. A ball is spun 
+onto the wheel and will eventually land in a slot, where each slot has an equal 
+chance of capturing the ball.
+
+- You watch a roulette wheel spin 3 consecutive times and the ball lands on a 
+red slot each time. What is the probability that the ball will land on a red slot 
+on the next spin? **`r 18 / (18 + 18 + 2)`**
+- You watch a roulette wheel spin 300 consecutive times and the ball lands on 
+a red slot each time. What is the probability that the ball will land on a red 
+slot on the next spin? **`r 18 / (18 + 18 + 2)`**
+- Are you equally confident of your answers to parts~(a) and~(b)? Why or why 
+not? **Yes, probability does not 'accumulate' in these independent trials.**
+
+## p. 92, ex. 3.3
+Four games, one winner. Below are four 
+versions of the same game. Your archnemesis gets to pick the version of the game, 
+and then you get to choose how many times to flip a coin: 10 times or 100 times. 
+Identify how many coin flips you should choose for each version of the game. It 
+costs \$1 to play each game. Explain your reasoning.
+
+- If the proportion of heads is larger than 0.60, you win $1. **10 times. The proportion of heads approaches 0.50 with more flips. Minimize the loss.**
+- If the proportion of heads is larger than 0.40, you win $1. **100 times. More flips will tend towards 0.50.**
+- If the proportion of heads is between 0.40 and 0.60, you win $1. **100 times. Same reasoning.**
+- If the proportion of heads is smaller than 0.30, you win $1. **10 times. Reasoning similar to the first game.**
+
+## p. 92, ex. 3.4
+Backgammon. Backgammon is a board game for two 
+players in which the playing pieces are moved according to the roll of two dice. 
+Players win by removing all of their pieces from the board, so it is usually good 
+to roll high numbers. You are playing backgammon with a friend and you roll two 
+6s in your first roll and two 6s in your second roll. Your friend rolls two 3s in 
+his first roll and again in his second row. Your friend claims that you are 
+cheating, because rolling double 6s twice in a row is very unlikely. Using 
+probability, show that your rolls were just as likely as~his.
+
+## p. 92, ex. 3.5
+Coin flips. If you flip a fair coin 10 times, what is 
+the probability of
+
+- getting all tails? **`r 0.5^10`** 
+- getting all heads? **`r 0.5^10`** 
+- getting at least one tails? **Use the complement of getting no tails. `r 1 - 0.5^10`**
+
+## p. 92, ex. 3.6
+Dice rolls. If you roll a pair of fair dice, what is 
+the probability of
+
+- getting a sum of 1? **0.0**
+- getting a sum of 5? **`r 4 / 36`**
+- getting a sum of 12? **`r 1 /36`**
+
+## p. 93, ex. 3.7
+Swing voters. A Pew Research survey asked 2,373 
+randomly sampled registered voters their political affiliation (Republican, 
+Democrat, or Independent) and whether or not they identify as swing voters. 35% 
+of respondents identified as Independent, 23% identified as swing voters, and 
+11% identified as both.
+
+- Are being Independent and being a swing voter disjoint, i.e. mutually 
+exclusive? **No**
+- Draw a Venn diagram summarizing the variables and their associated 
+probabilities.
+  - What percent of voters are Independent but not swing voters? **`r 0.35 - 0.11`**
+  - What percent of voters are Independent or swing voters? **`r 0.35 + 0.23 - 0.11`**
+  - What percent of voters are neither Independent nor swing voters? **`r 1 - (0.35 + 0.23 - 0.11)`**
+  - Is the event that someone is a swing voter independent of the event that 
+someone is a political Independent? **No. ANSWER: This doesn't have to be consigned to intuition. Look to the Multiplication Rule for Independent Processes. We know P(A and B) = 0.11. Compare P(A) * P(B): `r 0.35 * .23`. They are not the same, so the events are dependent.**
+
+## p. 93, ex. 3.8
+Poverty and language. The American Community 
+Survey is an ongoing survey that provides data every year to give communities the 
+current information they need to plan investments and services. The 2010 American 
+Community Survey estimates that 14.6% of Americans live below the poverty line, 
+20.7% speak a language other than English (foreign language) at home, and 4.2% 
+fall into both categories.
+
+- Are living below the poverty line and speaking a foreign language at home 
+disjoint? **No, 4.2% of respondents fall into both categories.**
+- Draw a Venn diagram summarizing the variables and their associated 
+probabilities.
+- What percent of Americans live below the poverty line and only speak 
+English at home? **`r 14.6 - 4.2`%**
+- What percent of Americans live below the poverty line or speak a foreign 
+language at home? **`r 14.6 + 20.7 - 4.2`%**
+- What percent of Americans live above the poverty line and only speak 
+English at home? **`r 100 - (14.6 + 20.7 - 4.2)`%**
+- Is the event that someone lives below the poverty line independent of the 
+event that the person speaks a foreign language at home? **Use the Multiplication Rule for Independent Processes for comparison. P(A and B) = .042. P(A * B) = `r 0.146 * 0.207`. The product differs, so the events are not independent.**
+
+## p. 93, ex. 3.9
+Disjoint vs. independent. In parts~(a) and~(b), 
+identify whether the events are disjoint, independent, or neither (events cannot 
+be both disjoint and independent).
+
+- You and a randomly selected student from your class both earn A's in this 
+course. **Not disjoint, both students can have the same outcome. They are independent. ANSWER: the book brings up the scenario of grading on a curve.**
+- You and your class study partner both earn A's in this course. **Not disjoint or mutually exclusive. I expect dependence among study partners.**
+- If two events can occur at the same time, must they be dependent? **Yes. ANSWER: Wrong. See the first part when not graded on a curve. Generally, if two events are unrelated (independent), then one occurring does not preclude the other occurring.**
+
+## p. 93, ex. 3.10
+Guessing on an exam. In a multiple choice exam, 
+there are 5 questions and 4 choices for each question (a, b, c, d). Nancy has not 
+studied for the exam at all and decides to randomly guess the answers. What is 
+the probability that:
+
+- the first question she gets right is the $5^{th}$ question? **She has to get four wrong answers and then a right one. `r (0.75)^4 * 0.25`**
+- she gets all of the questions right? **`r (0.25)^5`**
+- she gets at least one question right? **How about the complement of getting all wrong? `r 1 - (0.75)^5`**
+
+## p. 94, ex. 3.11
+Educational attainment of couples. The table 
+below shows the distribution of education level attained by US residents by 
+gender based on data collected in the 2010 American Community Survey.
+
+\begin{center}
+\begin{tabular}{l p{7cm} c c }
+&                                       & \multicolumn{2}{c}{\textit{Gender}} \\
+\cline{3-4}
+&                                                   & Male  & Female \\
+\cline{2-4}
+& Less than 9th grade                               & 0.07  & 0.13 \\
+& 9th to 12th grade, no diploma                     & 0.10  & 0.09 \\
+\textit{Highest}    & HS graduate (or equivalent)   & 0.30  & 0.20 \\
+\textit{education}  & Some college, no degree       & 0.22  & 0.24 \\ 
+\textit{attained}   & Associate's degree            & 0.06  & 0.08 \\
+& Bachelor's degree                                 & 0.16  & 0.17 \\
+& Graduate or professional degree                   & 0.09  & 0.09 \\
+\cline{2-4} 
+& Total                                             & 1.00  & 1.00
+\end{tabular}
+\end{center}
+
+- What is the probability that a randomly chosen man has at least a 
+Bachelor's degree? **`r 0.16 + 0.09`**
+- What is the probability that a randomly chosen woman has at least a 
+Bachelor's degree? **`r 0.17 + 0.09`**
+- What is the probability that a man and a woman getting married both have at 
+least a Bachelor's degree? Note any assumptions you must make to answer this 
+question. **`r (0.16 + 0.09) * (0.17 + 0.09)`**
+- If you made an assumption in part~(c), do you think it was reasonable? If 
+you didn't make an assumption, double check your earlier answer and then return 
+to this part. **ANSWER: I didn't think of an assumption, but the book makes sense. You have to assume the education level of each spouse is independent. However, I do expect couples' education levels to be related. For example, couples who meet in college.**
+
+## p. 94, ex. 3.12
+School absences. Data collected at elementary 
+schools in DeKalb County, GA suggest that each year roughly 25% of students miss 
+exactly one day of school, 15% miss 2 days, and 28% miss 3 or more days due to 
+sickness.
+
+- What is the probability that a student chosen at random doesn't miss any 
+days of school due to sickness this year? **`r 1 - (0.25 + 0.15 + 0.28)`**
+- What is the probability that a student chosen at random misses no more than 
+one day? **`r 1 - (0.25 + 0.15 + 0.28) + .25`**
+- What is the probability that a student chosen at random misses at least one 
+day? **`r 0.25 + 0.15 + 0.28`**
+- If a parent has two kids at a DeKalb County elementary school, what is the 
+probability that neither kid will miss any school? Note any assumption you must 
+make to answer this question. **I got the assumption this time. This answer assumes that sickness of two kids from the same family is independent. `r (1 - (0.25 + 0.15 + 0.28))^2`**
+- If a parent has two kids at a DeKalb County elementary school, what is the 
+probability that both kids will miss some school, i.e. at least one day? Note any 
+assumption you make. **Assuming their sickness is independent. `r (0.25 + 0.15 + 0.28)^2`**
+- If you made an assumption in part~(d) or~(e), do you think it was 
+reasonable? If you didn't make any assumptions, double check your earlier answers. **I don't think the assumption is reasonable. Kids transmit colds to each other and the contact of siblings raises the probability of getting sick.**
+
+## p. 109, ex. 3.13
+Joint and conditional probabilities. P(A) = 0.3, 
+P(B) = 0.7
+
+- Can you compute P(A and B) if you only know P(A) and P(B)? **Yes, if they're independent.**
+- Assuming that events A and B arise from independent random processes,
+  - what is P(A and B)? **0.21**
+  - what is P(A or B)? **Need General Rule of Addition. `r 0.3 + 0.7 - 0.21`**
+  - what is P(A$|$B)? **0.3**
+- If we are given that P(A and B) = 0.1, are the random variables giving rise 
+to events A and B independent? **No. That value is less an P(A) $\times$ P(B).**
+- If we are given that P(A and B) = 0.1, what is P(A$|$B)? $P(A|B) / P(B)$ = .1 / .7 = 0.1428571.
+
+## p. 109, ex. 3.14
+PB \& J. Suppose 80\% of people like peanut butter, 89\% 
+like jelly, and 78\% like both. Given that a randomly sampled person likes peanut 
+butter, what's the probability that he also likes jelly?
+
+P(J and PM) = P(J|PB) P(PB)
+
+.78 = P(J|PM) * .80
+
+.78 / .80 = P(J|PB) = `r .78 / .80`
+
+## p. 109, ex. 3.15
+Global warming. A Pew Research poll asked 
+1,306 Americans "From what you've read and heard, is there solid evidence that 
+the average temperature on earth has been getting warmer over the past few 
+decades, or not?". The table below shows the distribution of responses by party 
+and ideology, where the counts have been replaced with relative frequencies.
+
+\begin{center}
+\begin{tabular}{ll  ccc c} 
+                    &                           & \multicolumn{3}{c}{\textit{Response}} \\
+\cline{3-5}
+                    &                           & Earth is  & Not       & Don't Know    &   \\
+                    &                           & warming   & warming   & Refuse        & Total\\
+\cline{2-6}
+                    & Conservative Republican   & 0.11      & 0.20      & 0.02      & 0.33  \\
+\textit{Party and}  & Mod/Lib Republican        & 0.06      & 0.06      & 0.01      & 0.13 \\
+\textit{Ideology}   & Mod/Cons Democrat         & 0.25      & 0.07      & 0.02      & 0.34 \\
+                    & Liberal Democrat          & 0.18      & 0.01      & 0.01      & 0.20\\
+\cline{2-6}
+                    &Total                      & 0.60      & 0.34      & 0.06      & 1.00
+\end{tabular}
+\end{center}
+
+- Are believing that the earth is warming and being a liberal Democrat mutually 
+exclusive? **No.**
+- What is the probability that a randomly chosen respondent believes the 
+earth is warming or is a liberal Democrat? **General Rule of Addition. Remember to subtract P(warming and liberal Democrat). `r 0.60 + 0.20 - 0.18`**
+- What is the probability that a randomly chosen respondent believes the 
+earth is warming given that he is a liberal Democrat? **`r 0.18 / 0.20`**
+- What is the probability that a randomly chosen respondent believes the 
+earth is warming given that he is a conservative Republican? **`r 0.11 / 0.33`**
+- Does it appear that whether or not a respondent believes the earth is 
+warming is independent of their party and ideology? Explain your reasoning. **No. They are dependent. Conditioning on party reveals different probabilities of believing in warming.**
+- What is the probability that a randomly chosen respondent is a 
+moderate/liberal Republican given that he does not believe that the earth is 
+warming? **`r 0.06 / 0.34`**
+
+## p. 110, ex. 3.16
+Health coverage, relative frequencies. 
+The Behavioral Risk Factor Surveillance System (BRFSS) is an annual telephone 
+survey designed to identify risk factors in the adult population and report 
+emerging health trends. The following table displays the distribution of health 
+status of respondents to this survey (excellent, very good, good, fair, poor) 
+and whether or not they have health insurance.
+\begin{center}
+\begin{tabular}{rrrrrrrr}
+& &  \multicolumn{5}{c}{\textit{Health Status}} &  \\ 
+\cline{3-7}
+                    &       & Excellent & Very good & Good      & Fair      & Poor      & Total \\ 
+\cline{2-8}
+\textit{Health}     & No    & 0.0230    & 0.0364    & 0.0427    & 0.0192    & 0.0050    & 0.1262 \\ 
+\textit{Coverage}   & Yes   & 0.2099    & 0.3123    & 0.2410    & 0.0817    & 0.0289    & 0.8738 \\ 
+\cline{2-8}
+                    & Total & 0.2329    & 0.3486    & 0.2838    & 0.1009    & 0.0338    & 1.0000
+\end{tabular}
+\end{center}
+
+- Are being in excellent health and having health coverage mutually 
+exclusive? **No, their joint probability is 0.21.**
+- What is the probability that a randomly chosen individual has excellent 
+health? **0.2329**
+- What is the probability that a randomly chosen individual has excellent 
+health given that he has health coverage? **`r 0.2329 / 0.8738`**
+- What is the probability that a randomly chosen individual has excellent 
+health given that he doesn't have health coverage? **`r .0230 / 0.1262`**
+- Do having excellent health and having health coverage appear to be 
+independent? **They might be independent. The probability of excellent health differs when conditioned on coverage. However, it remains to be determined if that difference is significant.**
+
+## p. 110, ex. 3.17
+Burger preferences. A 2010 SurveyUSA poll 
+asked 500 Los Angeles residents, "What is the best hamburger place in Southern 
+California? Five Guys Burgers? In-N-Out Burger? Fat Burger? Tommy's Hamburgers? 
+Umami Burger? Or somewhere else?" The distribution of responses by gender is 
+shown below.
+\begin{center}
+\begin{tabular}{l p{4cm} r r r }
+                    &                       & \multicolumn{2}{c}{\textit{Gender}} \\
+\cline{3-4}
+                    &                       & Male  & Female    & Total \\
+\cline{2-5}
+                    & Five Guys Burgers     & 5     & 6         & 11 \\
+                    & In-N-Out Burger       & 162   & 181       & 343 \\
+\textit{Best}       & Fat Burger            & 10    & 12        & 22 \\
+\textit{hamburger}  & Tommy's Hamburgers    & 27    & 27        & 54 \\ 
+\textit{place}      & Umami Burger          & 5     & 1         & 6 \\
+                    & Other                 & 26    & 20        & 46 \\
+                    & Not Sure              & 13    & 5         & 18 \\
+\cline{2-5}  
+                    & Total                 & 248   & 252       & 500
+\end{tabular}
+\end{center}
+
+- Are being female and liking Five Guys Burgers mutually exclusive? **No, 6 respondents are both female and like Five Guys.**
+- What is the probability that a randomly chosen male likes In-N-Out the best? **`r 162 / 248`**
+- What is the probability that a randomly chosen female likes In-N-Out the 
+best? **`r 181 / 252`**
+- What is the probability that a man and a woman who are dating both like 
+In-N-Out the best? Note any assumption you make and evaluate whether you think 
+that assumption is reasonable. **`r (162 / 248) * (181 / 252)`. This assumes that they go to burger places independently. I accept it as reasonable they formed their opionions before dating.**
+- What is the probability that a randomly chosen person likes Umami best or 
+that person is female? **`r (6 / 500) + (252 / 500) - (1 / 500)`**
+
+## p. 111, ex. 3.18
+Assortative mating. Assortative mating is a 
+nonrandom mating pattern where individuals with similar genotypes and/or 
+phenotypes mate with one another more frequently than what would be expected 
+under a random mating pattern. Researchers studying this topic collected data on 
+eye colors of 204 Scandinavian men and their female partners. The table below 
+summarizes the results. For simplicity, we only include heterosexual 
+relationships in this exercise.
+
+- What is the probability that a randomly chosen male respondent or his 
+partner has blue eyes? **`r (114 / 204) + (108 / 204) - (78 / 204)`**
+- What is the probability that a randomly chosen male respondent with blue 
+eyes has a partner with blue eyes? **`r 78 / 204`**
+- What is the probability that a randomly chosen male respondent with brown 
+eyes has a partner with blue eyes? **`r 19 / 204`** What about the probability of a randomly 
+chosen male respondent with green eyes having a partner with blue eyes? **`r 11 / 204`**
+- Does it appear that the eye colors of male respondents and their partners 
+are independent? Explain your reasoning. **No, it appears they are dependent. Conditioning on a partner's blue eyes results in a male respondent having a different probability for each color himself.**
+
+## p. 111, ex. 3.19
+Drawing box plots. After an introductory 
+statistics course, 80\% of students can successfully construct box plots. Of 
+those who can construct box plots, 86\% passed, while only 65\% of those students 
+who could not construct box plots passed.
+
+- Construct a tree diagram of this scenario.
+- Calculate the probability that a student is able to construct a box plot 
+if it is known that he passed. **`r .688 / (.688 + .13)`**
+
+## p. 111, ex. 3.20
+Predisposition for thrombosis. A genetic test is 
+used to determine if people have a predisposition for \textit{thrombosis}, which 
+is the formation of a blood clot inside a blood vessel that obstructs the flow of 
+blood through the circulatory system. It is believed that 3\% of people actually 
+have this predisposition. The genetic test is 99\% accurate if a person actually 
+has the predisposition, meaning that the probability of a positive test result 
+when a person actually has the predisposition is 0.99. The test is 98\% accurate 
+if a person does not have the predisposition. What is the probability that a 
+randomly selected person who tests positive for the predisposition by the test 
+actually has the predisposition? **I'm getting two different answers. Will have to come back to to this. My natural frequency answer is `r 2970 / 22910`. My tree answer and Bayes answer are `r .0297 / (.0297 + .0194)`**
+
+## p. 111, ex. 3.21
+It's never lupus. Lupus is a medical phenomenon where 
+antibodies that are supposed to attack foreign cells to prevent infections 
+instead see plasma proteins as foreign bodies, leading to a high risk of blood 
+clotting. It is believed that 2\% of the population suffer from this disease. The 
+test is 98\% accurate if a person actually has the disease. The test is 74\% 
+accurate if a person does not have the disease. There is a line from the Fox 
+television show \emph{House} that is often used after a patient tests positive 
+for lupus: "It's never lupus." Do you think there is truth to this statement? 
+Use appropriate probabilities to support your answer.
+
+## p. 111, ex. 3.22
+Exit poll. Edison Research gathered exit poll 
+results from several sources for the Wisconsin recall election of Scott Walker. 
+They found that 53\% of the respondents voted in favor of Scott Walker. 
+Additionally, they estimated that of those who did vote in favor for Scott 
+Walker, 37\% had a college degree, while 44\% of those who voted against Scott 
+Walker had a college degree. Suppose we randomly sampled a person who 
+participated in the exit poll and found that he had a college degree. What is the 
+probability that he voted in favor of Scott Walker? **`r .1961 / (.1961 + .2632)`**
+
+## p. 114, ex. 3.23
+Marbles in an urn. Imagine you have an urn 
+containing 5 red, 3 blue, and 2 orange marbles in it.
+
+- What is the probability that the first marble you draw is blue? **0.3**
+- Suppose you drew a blue marble in the first draw. If drawing with 
+replacement, what is the probability of drawing a blue marble in the second draw? **0.3**
+- Suppose you instead drew an orange marble in the first draw. If drawing 
+with replacement, what is the probability of drawing a blue marble in the second 
+draw? **0.3**
+- If drawing with replacement, what is the probability of drawing two blue 
+marbles in a row? **0.09**
+- When drawing with replacement, are the draws independent? Explain. **Yes. It's the same population each time.**
+
+## p. 114, ex. 3.24
+Socks in a drawer. In your sock drawer you have 
+4 blue, 5 gray, and 3 black socks. Half asleep one morning you grab 2 socks at 
+random and put them on. Find the probability you end up wearing
+
+- 2 blue socks **`r (4 / 12) * (3 / 11)` or calculate like this: `r choose(4, 2) / choose(12, 2)`**
+- no gray socks **`r ((7 / 12) * (6 / 11))`**
+- at least 1 black sock **`r 1 - ((9 / 12) * (8 / 11))`**
+- a green sock **0.0**
+- matching socks **`r (4 / 12) * (3 / 11) + (5 / 12) * (4 / 11) + (3 / 12) * (2 / 11)`**
+
+## p. 114, ex. 3.25
+Chips in a bag. Imagine you have a bag 
+containing 5 red, 3 blue, and 2 orange chips.
+
+- Suppose you draw a chip and it is blue. If drawing without replacement, 
+what is the probability the next is also blue? **`r 2 / 9`**
+- Suppose you draw a chip and it is orange, and then you draw a second chip 
+without replacement. What is the probability this second chip is blue? **`r 3 / 9`**
+- If drawing without replacement, what is the probability of drawing two blue 
+chips in a row? **`r (3 / 10) * (2 / 9) `**
+- When drawing without replacement, are the draws independent? Explain. **No, each draw changes the probability of what will be drawn next. The first sample is 10% of the population.**
+
+## p. 114, ex. 3.26
+Books on a bookshelf. The table below shows the 
+distribution of books on a bookcase based on whether they are nonfiction or 
+fiction and hardcover or paperback.
+
+- Find the probability of drawing a hardcover book first then a paperback 
+fiction book second when drawing without replacement. **`r (28 / 95) * (59 / 94)`**
+- Determine the probability of drawing a fiction book first and then a 
+hardcover book second, when drawing without replacement. **`r (72 / 95) * (28 / 94)`**
+- Calculate the probability of the scenario in part~(b), except this time 
+complete the calculations under the scenario where the first book is placed back 
+on the bookcase before randomly drawing the second book. **`r (72 / 95) * (28 / 95)`**
+- The final answers to parts~(b) and~(c) are very similar. Explain why this 
+is the case. **We're sampling less than 10% of the population, so even without replacement the result is close to otherwise independent draws.**
+
+## p. 114, ex. 3.27
+Student outfits. In a classroom with 24 
+students, 7 students are wearing jeans, 4 are wearing shorts, 8 are wearing 
+skirts, and the rest are wearing leggings. If we randomly select 3 students 
+without replacement, what is the probability that one of the selected students is 
+wearing leggings and the other two are wearing jeans? Note that these are 
+mutually exclusive clothing options. **Answer: Leggings coming first = `r (5 / 24) * (7 / 23) * (6 / 22)`. The leggings could have also been selected second or third, so multiply that result by 3. `r (5 / 24) * (7 / 23) * (6 / 22) * 3`**
+
+## p. 114, ex. 3.28
+The birthday problem. Suppose we pick three 
+people at random. For each of the following questions, ignore the special case 
+where someone might be born on February 29th, and assume that births are evenly 
+distributed throughout the year.
+
+- What is the probability that the first two people share a birthday? **`r 1 - ((365 / 365) * (364 / 365))`**
+- What is the probability that at least two people share a birthday? **`r 1 - ((365 / 365) * (364 / 365) * (363 / 365))`**
+
+**I think I got that right. The article I like best about this is: [The Birthday Problem](https://medium.com/i-math/the-birthday-problem-307f31a9ac6f)
+
+## p. 124, ex. 3.29
+College smokers. At a university, 13\% of 
+students smoke.
+
+- Calculate the expected number of smokers in a random sample of 100 students 
+from this university. **13**
+- The university gym opens at 9 am on Saturday mornings. One Saturday morning 
+at 8:55 am there are 27 students outside the gym waiting for it to open. Should 
+you use the same approach from part (a) to calculate the expected number of 
+smokers among these 27 students? **No, this isn't a random sample. Not only are the students motivated to exercise, they are so motivated that they are at the gym on the weekend and before it even opens. This sample might be less inclined to smoke than the population of all students.**
+
+## p. 124, ex. 3.30
+Ace of clubs wins. Consider the following card game 
+with a well-shuffled deck of cards. If you draw a red card, you win nothing. If 
+you get a spade, you win \$5. For any club, you win \$10 plus an extra \$20 for 
+the ace of clubs.
+
+- Create a probability model for the amount you win at this game. Also, find 
+the expected winnings for a single game and the standard deviation of the 
+winnings. **cf. the tables on pp. 116, 118.**
+```{r}
+i <- c("R", "Spade", "Club_NotAce", "AceClub")
+xi <- c(0, 5, 10, 30)
+PX <- c(.5, .25, 12/52, 1/52)
+xi_PX <- xi * PX
+EX <- sum(xi_PX)
+xi_minus_EX <- xi - EX
+xi_minus_EX_sqr <- xi_minus_EX^2
+xi_minus_EX_sqr_time_PX <- xi_minus_EX_sqr * PX
+var_X <- sum(xi_minus_EX_sqr_time_PX)
+sd_X <- sqrt(var_X)
+
+# Probability model (plus extra lines for variance and standard deviation)
+rbind(i, xi, PX, xi_PX, xi_minus_EX, xi_minus_EX_sqr, xi_minus_EX_sqr_time_PX)
+
+# Expected winnings
+EX
+
+# Standard deviation
+sd_X
+```
+- What is the maximum amount you would be willing to pay to play this game? 
+Explain your reasoning. **\$50. Though the expected value is I win \$4.13, the standard deviation is greater, taking me into negative territory for a loss. The greater chance is that I win. I would rather play multiple times than just once.**
+
+## p. 124, ex. 3.31
+Hearts win. In a new card game, you start
+with a well-shuffled full deck and draw 3 cards without replacement.
+If you draw 3 hearts, 
+you win \$50. If you draw 3 black cards, you win \$25. For any other draws, you 
+win nothing.
+
+- Create a probability model for the amount you win at this game, and find 
+the expected winnings. Also compute the standard deviation of this distribution.
+- If the game costs \$5 to play, what would be the expected value and 
+standard deviation of the net profit (or loss)? \textit{(Hint: 
+profit = winnings $-$ cost; $X-5$)}
+
+```{r}
+x1 <- c(0, 25, 50)
+Pwin50 <- ((13 / 52) * (12 / 51) * (11 / 50))
+Pwin25 <- ((26 / 52) * (25 / 51) * (24 / 50))
+Pwin <- Pwin25 + Pwin50
+Ploss <- 1 - Pwin
+Px <- c(Ploss, Pwin25, Pwin50)
+
+# P(X = x)
+Px
+sum(Px)
+
+x1_Px <- x1 * Px
+Ex <- sum(x1_Px)
+# x1 * Px
+x1_Px
+# E(X)
+Ex
+
+x1_minus_Ex <- x1 - Ex
+# x1_minus_Ex
+x1_minus_Ex
+
+x1_minus_Ex_sqr_time_P <- x1_minus_Ex^2 * Px
+# x1_minus_Ex_sqr_time_P
+x1_minus_Ex_sqr_time_P
+
+var_x <- sum(x1_minus_Ex_sqr_time_P)
+# var_x
+var_x
+# sd_x
+sd_x <- sqrt(var_x)
+sd_x
+
+# If game costs $5.
+E_profit <- Ex - 5
+# Expected profit
+E_profit
+
+```
+- If the game costs \$5 to play, should you play this game? Explain. **No, I would expect to lose $1.41**
+
+## p. 124, ex. 3.32
+Is it worth it. Andy is always looking for ways to 
+make money fast. Lately, he has been trying to make money by gambling. Here is 
+the game he is considering playing: The game costs \$2 to play. He draws a card 
+from a deck. If he gets a number card (2-10), he wins nothing. For any face card (
+jack, queen or king), he wins \$3. For any ace, he wins \$5, and he wins an 
+\textit{extra} \$20 if he draws the ace of clubs.
+
+- Create a probability model and find Andy's expected profit per game.
+```{r}
+x1 <- c(0, 3, 5, 25)
+Pwin3 <- 12 / 52
+Pwin5 <- 3 / 52
+Pwin25 <- 1 / 52
+Pwin <- Pwin3 + Pwin5 + Pwin25
+Ploss <- 1 - Pwin
+Px <- c(Ploss, Pwin3, Pwin5, Pwin25)
+
+# P(X = x)
+Px
+sum(Px)
+
+x1_Px <- x1 * Px
+Ex <- sum(x1_Px)
+# x1 * Px
+x1_Px
+# E(X)
+Ex
+
+x1_minus_Ex <- x1 - Ex
+# x1_minus_Ex
+x1_minus_Ex
+
+x1_minus_Ex_sqr_time_P <- x1_minus_Ex^2 * Px
+# x1_minus_Ex_sqr_time_P
+x1_minus_Ex_sqr_time_P
+
+var_x <- sum(x1_minus_Ex_sqr_time_P)
+# var_x
+var_x
+# sd_x
+sd_x <- sqrt(var_x)
+sd_x
+
+# If game costs $2.
+E_profit <- Ex - 2
+# Expected profit
+E_profit
+```
+
+- Would you recommend this game to Andy as a good way to make money? Explain. **No, on average he'll lose $0.54.**
+
+## p. 124, ex. 3.33
+Portfolio return. A portfolio's value increases 
+by 18\% during a financial boom and by 9\% during normal times. It decreases by 
+12\% during a recession. What is the expected return on this portfolio if each 
+scenario is equally likely?
+
+```{r}
+i <- c("Recession", "Normal", "Boom")
+xi <- c(-0.12, 0.09, 0.18)
+PX <- c(1/3, 1/3, 1/3)
+xi_PX <- xi * PX
+EX <- sum(xi_PX)
+xi_minus_EX <- xi - EX
+xi_minus_EX_sqr <- xi_minus_EX^2
+xi_minus_EX_sqr_time_PX <- xi_minus_EX_sqr * PX
+var_X <- sum(xi_minus_EX_sqr_time_PX)
+sd_X <- sqrt(var_X)
+
+# Probability model (plus extra lines for variance and standard deviation)
+rbind(i, xi, PX, xi_PX, xi_minus_EX, xi_minus_EX_sqr, xi_minus_EX_sqr_time_PX)
+
+# Expected gains
+EX
+
+# Standard deviation
+sd_X
+```
+
+## p. 124, ex. 3.34
+Baggage fees. An airline charges the following 
+baggage fees: \$25 for the first bag and \$35 for the second. Suppose 54\% of 
+passengers have no checked luggage, 34\% have one piece of checked luggage and 
+12\% have two pieces. We suppose a negligible portion of people check more than 
+two bags.
+
+- Build a probability model, compute the average revenue per passenger, and 
+compute the corresponding standard deviation.
+```{r}
+i <- c("NoBag", "OneBag", "TwoBags")
+xi <- c(0.0, 25, 35)
+PX <- c(0.54, 0.34, 0.12)
+xi_PX <- xi * PX
+EX <- sum(xi_PX)
+xi_minus_EX <- xi - EX
+xi_minus_EX_sqr <- xi_minus_EX^2
+xi_minus_EX_sqr_time_PX <- xi_minus_EX_sqr * PX
+var_X <- sum(xi_minus_EX_sqr_time_PX)
+sd_X <- sqrt(var_X)
+
+# Probability model (plus extra lines for variance and standard deviation)
+rbind(i, xi, PX, xi_PX, xi_minus_EX, xi_minus_EX_sqr, xi_minus_EX_sqr_time_PX)
+
+# Expected gains
+EX
+
+# Standard deviation
+sd_X
+```
+
+- About how much revenue should the airline expect for a flight of 120 
+passengers? **`r 120 * 12.70`** With what standard deviation? **Do I multiple the SD by 120? That would be: `r 120 * 14.08`.** Note any assumptions you make and if 
+you think they are justified. **Assumes no passengers share a bag. It's going to be a little off, but I accept it as reasonable.**
+
+## p. 124, ex. 3.35
+American roulette. The game of American 
+roulette involves spinning a wheel with 38 slots: 18 red, 18 black, and 2 green. 
+A ball is spun onto the wheel and will eventually land in a slot, where each slot 
+has an equal chance of capturing the ball. Gamblers can place bets on red or 
+black. If the ball lands on their color, they double their money. If it lands on 
+another color, they lose their money. Suppose you bet \$1 on red. What's the 
+expected value and standard deviation of your winnings?
+```{r}
+i <- c("Red", "Black", "Green")
+xi <- c(2, 0, 0)
+PX <- c(18/(18 + 18 + 2), 18/(18 + 18 + 2), 2/(18 + 18 + 2))
+xi_PX <- xi * PX
+EX <- sum(xi_PX)
+xi_minus_EX <- xi - EX
+xi_minus_EX_sqr <- xi_minus_EX^2
+xi_minus_EX_sqr_time_PX <- xi_minus_EX_sqr * PX
+var_X <- sum(xi_minus_EX_sqr_time_PX)
+sd_X <- sqrt(var_X)
+
+# Probability model (plus extra lines for variance and standard deviation)
+rbind(i, xi, PX, xi_PX, xi_minus_EX, xi_minus_EX_sqr, xi_minus_EX_sqr_time_PX)
+
+# Expected gains
+EX
+
+# Standard deviation
+sd_X
+
+# If game costs $1.
+E_profit <- EX - 1
+# Expected profit
+E_profit
+```
+
+**I got it!**
+
+## p. 124, ex. 3.36
+European roulette. The game of European 
+roulette involves spinning a wheel with 37 slots: 18 red, 18 black, and 1 green. 
+A ball is spun onto the wheel and will eventually land in a slot, where each slot 
+has an equal chance of capturing the ball. Gamblers can place bets on red or 
+black. If the ball lands on their color, they double their money. If it lands on 
+another color, they lose their money.
+
+- Suppose you play roulette and bet \$3 on a single round. What is the 
+expected value and standard deviation of your total winnings?
+
+```{r}
+i <- c("Red", "Black", "Green")
+xi <- c(2, 0, 0)
+PX <- c(18/(18 + 18 + 1), 18/(18 + 18 + 1), 1/(18 + 18 + 1))
+xi_PX <- xi * PX
+EX <- sum(xi_PX)
+xi_minus_EX <- xi - EX
+xi_minus_EX_sqr <- xi_minus_EX^2
+xi_minus_EX_sqr_time_PX <- xi_minus_EX_sqr * PX
+var_X <- sum(xi_minus_EX_sqr_time_PX)
+sd_X <- sqrt(var_X)
+
+# Probability model (plus extra lines for variance and standard deviation)
+rbind(i, xi, PX, xi_PX, xi_minus_EX, xi_minus_EX_sqr, xi_minus_EX_sqr_time_PX)
+
+# Expected gains
+EX
+
+# Standard deviation
+sd_X
+
+# If game costs $3.
+E_profit <- EX - 3
+# Expected profit
+E_profit
+```
+
+- Suppose you bet \$1 in three different rounds. What is the expected value 
+and standard deviation of your total winnings?
+
+```{r}
+i <- c("Red", "Black", "Green")
+xi <- c(2, 0, 0)
+PX <- c(18/(18 + 18 + 1), 18/(18 + 18 + 1), 1/(18 + 18 + 1))
+xi_PX <- xi * PX
+EX <- sum(xi_PX)
+xi_minus_EX <- xi - EX
+xi_minus_EX_sqr <- xi_minus_EX^2
+xi_minus_EX_sqr_time_PX <- xi_minus_EX_sqr * PX
+var_X <- sum(xi_minus_EX_sqr_time_PX)
+sd_X <- sqrt(var_X)
+
+# Probability model (plus extra lines for variance and standard deviation)
+rbind(i, xi, PX, xi_PX, xi_minus_EX, xi_minus_EX_sqr, xi_minus_EX_sqr_time_PX)
+
+# Expected gains
+EX
+
+# Standard deviation
+sd_X
+
+# If game costs $1.
+E_profit <- EX - 1
+# Expected profit
+E_profit
+
+# Expected profit, three times
+3 * E_profit
+```
+
+- How do your answers to parts (a) and (b) compare? **I stand to lose more in (a).** What does this say about 
+the riskiness of the two games? **I risk more with higher stakes.**
+
+## p. 128, ex. 3.37
+Cat weights. The histogram shown below represents 
+the weights (in kg) of 47 female and 97 male cats.
+
+- What fraction of these cats weigh less than 2.5 kg? **`r (30 + 32) / (47 + 97)` Answer: some of my estimates are off by one. I didn't interpret the scale correctly `r (29 + 32) / (47 + 97)`**
+- What fraction of these cats weigh between 2.5 and 2.75 kg? **`r 20 / (47 + 97)` Answer: `r 21 / (47 + 97)`**
+- What fraction of these cats weigh between 2.75 and 3.5 kg? **`r (25 + 13 + 15) / (47 + 97)` Answer: `r (26 + 12 + 15) / (47 + 97)`**
+
+## p. 128, ex. 3.38
+Income and gender. The relative frequency table 
+below displays the distribution of annual total personal income (in 2009 
+inflation-adjusted dollars) for a representative sample of 96,420,486 Americans. 
+These data come from the American Community Survey for 2005-2009. This sample is 
+comprised of 59\% males and 41\% females.
+
+- Describe the distribution of total personal income. **Unimodal, skewed to the left.**
+- What is the probability that a randomly chosen US resident makes less than 
+\$50,000 per year? **`r (2.2 + 4.7 + 15.8 + 18.3 + 21.2) / 100`**
+- What is the probability that a randomly chosen US resident makes less than 
+\$50,000 per year and is female? Note any assumptions you make. **`r ((2.2 + 4.7 + 15.8 + 18.3 + 21.2)  / 100) * 0.41`. This assumes that male and female incomes are equal.**
+- The same data source indicates that 71.8\% of females make less than 
+\$50,000 per year. Use this value to determine whether or not the assumption you 
+made in part (c) is valid. **The assumption is invalid.**
+
+## p. 129, ex. 3.39
+Grade distributions. Each row in the table below is 
+a proposed grade distribution for a class. Identify each as a valid or invalid 
+probability distribution, and explain your reasoning.
+\begin{center}
+\begin{tabular}{l  ccccc} 
+    & \multicolumn{5}{c}{\textit{Grades}} \\
+\cline{2-6}
+    & A     & B     & C     & D     & F  \\
+\cline{2-6}
+(a) & 0.3   & 0.3   & 0.3   & 0.2   & 0.1\\
+(b) & 0     & 0     & 1     & 0     & 0 \\
+(c) & 0.3   & 0.3   & 0.3   & 0     & 0 \\
+(d) & 0.3   & 0.5   & 0.2   & 0.1   & -0.1 \\
+(e) & 0.2   & 0.4   & 0.2   & 0.1   & 0.1 \\
+(f) & 0     & -0.1  & 1.1   & 0     & 0 \\
+\end{tabular}
+\end{center}
+
+a. **No, the total of the distribution is not equal to 1.**
+a. **Yes, totals 1.**
+a. **No, doesn't total 1.**
+a. **No, there is an invalid negative probability.**
+a. **Yes, totals 1.**
+a. **No, there is an invalid negative probability.**
+
+## p. 129, ex. 3.40
+Health coverage, frequencies. The 
+Behavioral Risk Factor Surveillance System (BRFSS) is an annual telephone survey 
+designed to identify risk factors in the adult population and report emerging 
+health trends. The following table summarizes two variables for the respondents: 
+health status and health coverage, which describes whether each respondent had 
+health insurance.
+\begin{center}
+\begin{tabular}{rrrrrrrr}
+                    &       & \multicolumn{5}{c}{\textit{Health Status}} &  \\ 
+\cline{3-7}
+                    &       & Excellent & Very good & Good  & Fair  & Poor  & Total\\ 
+\cline{2-8}
+\textit{Health}     & No    & 459       & 727       & 854   & 385   & 99    & 2,524 \\ 
+\textit{Coverage}   & Yes   & 4,198     & 6,245     & 4,821 & 1,634 & 578   & 17,476 \\ 
+\cline{2-8}
+                    & Total & 4,657     & 6,972     & 5,675 & 2,019 & 677   & 20,000
+\end{tabular}
+\end{center}
+
+- If we draw one individual at random, what is the probability that the 
+respondent has excellent health and doesn't have health coverage? **`r 459 / 20000`**
+- If we draw one individual at random, what is the probability that the 
+respondent has excellent health or doesn't have health coverage? **`r (4657 / 20000) + (2524 / 20000) - (459 / 20000)`**
+
+## p. 129, ex. 3.41
+HIV in Swaziland. Swaziland has the highest 
+HIV prevalence in the world: 25.9\% of this country's population is infected with 
+HIV. The ELISA test is one of the first and 
+most accurate tests for HIV. For those who carry HIV, the ELISA test is 99.7\% 
+accurate. For those who do not carry HIV, the test is 92.6\% accurate. If an 
+individual from Swaziland has tested positive, what is the probability that he 
+carries HIV? **`r (.997 * .259) / ((1 - .926) * (1 - .259) + .997 * .259)`**
+
+## p. 129, ex. 3.42
+Twins. About 30\% of human twins are identical, and 
+the rest are fraternal. Identical twins are necessarily the same sex -- half are 
+males and the other half are females. One-quarter of fraternal twins are both 
+male, one-quarter both female, and one-half are mixes: one male, one female. You 
+have just become a parent of twins and are told they are both girls. Given this 
+information, what is the probability that they are identical? **`r (.5 * .3) / (.25 * .7 + .5 * .3)`**
+
+## p. 129, ex. 3.43
+Cost of breakfast. Sally gets a cup of coffee 
+and a muffin every day for breakfast from one of the many coffee shops in her 
+neighborhood. She picks a coffee shop each morning at random and independently of 
+previous days. The average price of a cup of coffee is \$1.40 with a standard 
+deviation of 30\textcent{} (\$0.30), the average price of a muffin is \$2.50 with a 
+standard deviation of 15\textcent{}, and the two prices are independent of each 
+other.
+
+- What is the mean and standard deviation of the amount she spends on 
+breakfast daily? **You can add the expected values and you can add the variances. $\mu$ = `r 1.40 + 2.50` $s$ = `r sqrt(.15^2 + .30^2)`**
+- What is the mean and standard deviation of the amount she spends on 
+breakfast weekly (7~days)? **Multipled by 7. $\mu$ = `r 7 * (1.40 + 2.50)`. Watch out, you don't just multiply the standard deviation by 7, you multiply the variance by 7 and take root of that. $s$ = `r sqrt(7 * (.15^2 + .30^2))`**
+
+## p. 130, ex. 3.44
+Scooping ice cream. Ice cream usually comes in 1.5 
+quart boxes (48 fluid ounces), and ice cream scoops hold about 2 ounces. 
+However, there is some variability in the amount of ice cream in a box as well as 
+the amount of ice cream scooped out. We represent the amount of ice cream in the 
+box as $X$ and the amount scooped out as $Y$. Suppose these random variables have 
+the following means, standard deviations, and variances:
+\begin{center}
+\begin{tabular}{l ccc}
+\hline
+    & mean & SD & variance \\
+\hline
+$X$ & 48       & 1      & 1     \\
+$Y$ & 2    & 0.25   & 0.0625    \\
+\hline
+\end{tabular}
+\end{center}
+
+- An entire box of ice cream, plus 3 scoops from a second box is served at a 
+party. How much ice cream do you expect to have been served at this party? What 
+is the standard deviation of the amount of ice cream served? **Expected: `r 48 + 3 * 2` ozs. SD: `r sqrt(1 + 3 * 0.0625)`**
+- How much ice cream would you expect to be left in the box after scooping 
+out one scoop of ice cream? That is, find the expected value of $X-Y$. **`r 48 - 2`**. What is 
+the standard deviation of the amount left in the box? **`r sqrt(1 + 0.0625)`**
+- Using the context of this exercise, explain why we add variances when we 
+subtract one random variable from another. **This is an application for the formula $Var(aX+bY)=a^2 \times Var(X)+b^s ×Var(Y)$. Here $a = 1$ and $b = -1$. Squaring by makes it positive.**
+
+## p. 130, ex. 3.45
+Variance of a mean, Part I.
+Suppose we have independent observations $X_1$ and $X_2$ from
+a distribution with mean $\mu$ and standard deviation $\sigma$.
+What is the variance of the mean of the two values:
+$\frac{X_1 + X_2}{2}$?
+
+**I had to look in the back of the book to get what they even meant.**
+
+$Var(\frac{x_1 + x_2}{2}) = Var(\frac{x_1}{2}) + Var(\frac{x_2}{2})$
+
+$= \frac{1}{2^2} Var(x_1) + \frac{1}{2^2} Var(x_2)$
+
+$= \frac{\sigma^2}{4} + \frac{\sigma^2}{4} = \frac{\sigma^2}{2}$
+
+## p. 130, ex. 3.46
+Variance of a mean, Part II.
+Suppose we have 3 independent observations
+$X_1$, $X_2$, $X_3$ from
+a distribution with mean $\mu$ and standard deviation $\sigma$.
+What is the variance of the mean of these 3 values:
+$\frac{X_1 + X_2 + X_3}{3}$?
+
+$Var(\frac{x_1 + x_2 + x_3}{3}) = Var(\frac{x_1}{3}) + Var(\frac{x_2}{3}) + Var(\frac{x_3}{3})$
+
+$= \frac{1}{3^2} Var(x_1) + \frac{1}{3^2} Var(x_2) + \frac{1}{3^2} Var(x_3)$
+
+$= \frac{\sigma^2}{9} + \frac{\sigma^2}{9} + \frac{\sigma^2}{9} = \frac{\sigma^2}{3}$**
+
+## p. 130, ex. 3.47
+Variance of a mean, Part III.
+Suppose we have $n$ independent observations
+$X_1$, $X_2$, ..., $X_n$ from
+a distribution with mean $\mu$ and standard deviation $\sigma$.
+What is the variance of the mean of these $n$ values:
+$\frac{X_1 + X_2 + \dots + X_n}{n}$?
+
+$\frac{\sigma^2}{n}$

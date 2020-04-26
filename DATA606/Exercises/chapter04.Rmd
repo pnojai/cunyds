@@ -1,0 +1,1311 @@
+---
+title: "OpenIntro Statistics"
+subtitle: "Chapter 4 Exercises"
+author: "Jai Jeffryes"
+date: 4/11/2020 - "
+output:
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# https://stackoverflow.com/questions/5352099/how-to-disable-scientific-notation
+# https://stackoverflow.com/questions/25946047/how-to-prevent-scientific-notation-in-r
+options(scipen = 999)
+```
+
+## Notes
+Make a table of mean and SD formulas for the distributions.
+
+| Tables   |      Are      |  Cool |
+|----------|:-------------:|------:|
+| col 1 is |  left-aligned | $1600 |
+| col 2 is |    centered   |   $12 |
+| col 3 is | right-aligned |    $1 |
+
+## Supplemental exercises
+### Binary distribution
+- The clearest illustration I've found for comparing the binary distribution and normal approximation of it is [CUNY CSI MATH 113 - Lab 5](https://www.math.csi.cuny.edu/abhijit/113/rlabs/lab5.pdf).
+- Had a lot of help from this [video](https://www.youtube.com/watch?v=CCqWkJ_pqNU) and
+- This [Binomial Probability Calculator](https://www.stattrek.com/online-calculator/binomial.aspx) and
+- [Cillian McNeill's notes](https://minisham.redbrick.dcu.ie/CA/Notes/CA266/11_Binomial_Distribution.pdf)
+- [A Guide to dbinom, pbinom, qbinom, and rbinom in R](https://www.statology.org/a-guide-to-dbinom-pbinom-qbinom-and-rbinom-in-r/)
+
+#### Summary function
+I wrote this function to plot the distribution and compute all the intervals, both exact and approximation to the normal, related to a given number of trials and successes.
+
+- Plots the distribution.
+- Computes each interval.
+- If $n$ and $p$ satisfy conditions, it computes approximations with and without continuity correction.
+- Validated with [Binomial Probability Calculator](https://www.stattrek.com/online-calculator/binomial.aspx) and [video](https://www.youtube.com/watch?v=CCqWkJ_pqNU) 
+
+```{r}
+binom_summary <- function(successes, trials, prob,
+                          main = NULL, xlab = "Successes", ylab = "P(X = x)") {
+  # Annotate plot.
+  param_str <- paste0(", n=", trials, ", p=", prob)
+  main <- ifelse(is.null(main), paste0("Binomial distribution", param_str),
+                 paste0(main, param_str))
+
+  plot(0:trials, dbinom(0:trials, trials, prob = prob),
+     xlab = xlab,
+     ylab = ylab,
+     type = "h",
+     main = main)
+  
+  mu <- trials * prob
+  sigma <- sqrt(trials * prob * (1 - prob))
+  is_normal_approx <- trials * prob >= 10 & trials * (1 - prob) >= 10
+
+  print(paste0("mu: ", mu))
+  print(paste0("sigma: ", sigma))
+  
+  print(paste0("Trials: ", trials))
+  print(paste0("Successes: ", successes))
+
+  prob.exact <- dbinom(successes, trials, prob)
+  
+  prob.cumulative.lt <- pbinom(successes - 1, trials, prob)
+  # Normal approximation
+  prob.cumulative.lt.approx <- pnorm(successes, mu, sigma)
+  # Normal approximation with continuity correction.
+  prob.cumulative.lt.approx.corr <- pnorm(successes - 0.5, mu, sigma)
+  
+  prob.cumulative.le <- pbinom(successes, trials, prob)
+  # Normal approximation
+  prob.cumulative.le.approx <- pnorm(successes, mu, sigma)
+  # Normal approximation with continuity correction.
+  prob.cumulative.le.approx.corr <- pnorm(successes + 0.5, mu, sigma)
+  
+  prob.cumulative.gt <- pbinom(successes, trials, prob, lower.tail = F)
+  # Normal approximation
+  prob.cumulative.gt.approx <- pnorm(successes, mu, sigma, lower.tail = F)
+  # Normal approximation with continuity correction.
+  prob.cumulative.gt.approx.corr <- pnorm(successes + 0.5, mu, sigma, lower.tail = F)
+
+  prob.cumulative.ge <- pbinom(successes - 1, trials, prob, lower.tail = F)
+  # Normal approximation
+  prob.cumulative.ge.approx <- pnorm(successes, mu, sigma, lower.tail = F)
+  # Normal approximation with continuity correction.
+  prob.cumulative.ge.approx.corr <- pnorm(successes - 0.5, mu, sigma, lower.tail = F)
+
+  print(paste0("Binomial probability. P(X=x): ", round(prob.exact, 4)))
+
+  print(paste0("Cumulative probability. P(X<x): ", round(prob.cumulative.lt, 4)))
+  if (is_normal_approx) {
+    print(paste0("    Normal approximation. P(X<x): ",
+                 round(prob.cumulative.lt.approx, 4)))
+    print(paste0("    Normal approximation w/ continuity correction. P(<x): ",
+                 round(prob.cumulative.lt.approx.corr, 4)))
+  }
+  
+  print(paste0("Cumulative probability. P(X<=x): ", round(prob.cumulative.le, 4)))
+  if (is_normal_approx) {
+    print(paste0("    Normal approximation. P(X<=x): ",
+                 round(prob.cumulative.le.approx, 4)))
+    print(paste0("    Normal approximation w/ continuity correction. P(<=x): ",
+                 round(prob.cumulative.le.approx.corr, 4)))
+  }
+  
+  print(paste0("Cumulative probability. P(X>x): ", round(prob.cumulative.gt, 4)))
+  if (is_normal_approx) {
+    print(paste0("    Normal approximation. P(X>x): ",
+                 round(prob.cumulative.gt.approx, 4)))
+    print(paste0("    Normal approximation w/ continuity correction. P(X>x): ",
+                 round(prob.cumulative.gt.approx.corr, 4)))
+  }
+
+    print(paste0("Cumulative probability. P(X>=x): ", round(prob.cumulative.ge, 4)))
+  if (is_normal_approx) {
+    print(paste0("    Normal approximation. P(X>=x): ",
+                 round(prob.cumulative.ge.approx, 4)))
+    print(paste0("    Normal approximation w/ continuity correction. P(X>=x): ",
+                 round(prob.cumulative.ge.approx.corr, 4)))
+  }
+}
+
+binom_summary(52, 75, 0.60)
+```
+
+#### Cillian McNeill's notes
+##### Example 1
+Five terminals on an on-line computer system are at- tached to a communication line to the central computer system. The probability that any terminal is ready to transmit is 0.95.
+
+Let $X$ denote the number of ready terminals.
+
+##### Example 2
+A coin is tossed 10 times; success and failure are “heads” and “tails” respectively, each with probability, .5.
+
+Let $X$ be the number of heads (successes) obtained.
+
+##### Example 3
+It is known that 20\% of integrated circuit chips on a production line are defective. To maintain and monitor the quality of the chips, a sample of twenty chips is selected at regular intervals for inspection.
+
+Let $X$ denote the number of defectives found in the sample.
+
+##### Example 4
+It is known that 1\% of bits transmitted through a digital transmission are received in error. One hundred bits are transmitted each day.
+
+Let $X$ denote the number of bits found in error each day.
+
+#### Calculating PDFS with `R`
+##### Example 1
+The probability of getting exactly 3 ready terminals in 5.
+
+```{r}
+dbinom(x = 3, size =5, prob = .95)
+```
+
+For all the probabilities.
+
+```{r}
+x <- 0:5
+dbinom(x, size= 5, prob =.95)
+```
+
+##### Example 2
+Tossing a coin 10 times
+
+```{r}
+x <- 0:10
+round(dbinom(x, 10, .5), 4)
+```
+
+Interesting that the probability of getting 0 successes in 10 tosses is 1 in a thousand.
+
+##### Example 3
+```{r}
+options(scipen = 4)
+x <- 0:20
+dbinom(x, 20, 0.20)
+```
+
+##### Example 4
+```{r}
+x <- 0:100
+dbinom(x, 100, 0.01)
+```
+
+##### Plotting binomial PDFs
+```{r}
+par(mfrow = c(2,2)) # multiframe
+
+x<-0:5 #Example 11.1
+plot(x, dbinom(x, size = 5, prob = .95),
+xlab = "Number of Ready Terminals",
+ylab = "P(X = x)", type = "h",
+main = "Ready Terminals, n = 5, p = .95")
+
+x<-0:10 #Example 11.2
+plot(x, dbinom(x, size = 10, prob = .5),
+xlab = "Number of Heads",
+ylab = "P(X = x)", type = "h", main = "Heads, n = 10, p = .5")
+
+x<-0:20 #Example 11.3
+plot(x, dbinom(x, size = 20, prob = .2),
+xlab = "Number of Defectives",
+ylab = "P(X = x)", type = "h",
+main = "Defectives, n = 20, p = .2")
+
+x<-0:20 #Example 11.4. No need for full range here
+plot(x, dbinom(x, size = 100, prob = .01),
+               xlab = "Number of Bits in Error",
+               ylab = "P(X = x)", type = "h",
+               main = "Bits in Error, n = 100, p = .01")
+```
+
+#### Cumulative distribution function
+##### Example 1
+$P(less\ than\ or\ equal\ to\ 3\ terminals\ will\ be\ ready)$
+
+= $P(X = 0) + P(X = 1) + P(X = 2) + P(X = 3)$
+
+= $(.05)^5 + {5 \choose 1} (.95)^1 (.05)^44 + {5 \choose 2}(.95)^2(.05)^3 + {5 \choose 3} (.95)^3 (.05)^1$
+
+= $.0000003 + .00003 + .00113 + .02143$
+
+$\approx .0226$
+
+Also
+
+= $P(4\ or\ more\ terminals\ will\ be\ ready)$
+
+= $P(X \ge 4)$
+
+= $1 - P(X \le 3)$
+
+$\approx 1 - .0226$
+
+= $.9774$
+
+#### Calculating CDFS with `R`
+##### Example 1
+$n = 5$, $p = .95$
+
+$P(X \le 3)$
+
+```{r}
+pbinom(3, 5, .95)
+```
+
+##### Example 2
+$P(X > 3)$
+```{r}
+1 - pbinom(3, 5, .95)
+pbinom(3, 5, .95, lower.tail = F)
+```
+
+##### Example 3
+$n = 20$, $p = .2$
+
+$P(X \le 4)$
+```{r}
+pbinom (4, size = 20, prob =.2)
+```
+
+##### Example 4
+$P(X > 4) = 1 - P(X \le 4)$
+
+```{r}
+1 - pbinom(4, size = 20, prob = .2)
+pbinom(4, size = 20, prob = .2, lower.tail = F)
+```
+
+##### Example 5
+For all cumulative probabilities
+
+```{r}
+x <- 0:20
+prob <- pbinom(x, size = 20, prob= .2)
+
+# Round to 4 decimal places.
+round(prob, 4)
+```
+
+#### Plotting Binomial CDFs
+```{r}
+par(mfrow = c(2,2)) #multiframe
+x = 0:5
+plot(x, pbinom(x, size = 5, prob = .95),
+     xlab = "Number of Ready Terminals",
+     ylab = "P(X <= x)", ylim = c(0, 1),
+     type = "s", main = "n = 5, p = .95")
+
+x = 0:10
+plot(x, pbinom(x, size = 10, prob = .5),
+     xlab = "Number of Heads",
+     ylab = "P(X <= x)", ylim = c(0, 1),
+     type = "s", main = "n = 10, p = .5")
+
+x = 0:20
+plot(x, pbinom(x, size = 20, prob = .2),
+     xlab = "Number of Defectives",
+     ylab = "P(X <= x)", ylim = c(0, 1),
+     type = "s", main = "n = 20, p = .2")
+
+x = 0:100
+plot(x, pbinom(x, size = 100, prob = .01),
+     xlab = "Number of Ready Terminals",
+     ylab = "P(X <= x)", ylim = c(0, 1),
+     type = "s", main = "n = 5, p = .01")
+```
+
+#### Quantile function
+To be completed.
+
+### Binomial distribution
+## p. 142, ex. 4.1
+What percent of a 
+standard normal distribution $N(\mu=0, \sigma=1)$ is found in each region? 
+Be sure to draw a graph.
+
+I flailed unnecessarilyt at this. I computed a Z-score and wondered why it didn't match my `pnorm()` result. No, no. Z-score is not area. It's a standardized distance from the mean. Z-score in hand, input **that** into `pnorm()` to get the area bounded by the Z-score. However, here we're given a Standard Normal Distribution. We don't need to standardize the distribution, it's already standard.
+
+a. `r pnorm(-1.35) * 100`%
+a. `r pnorm(1.48, lower.tail = F) * 100`%
+a. `r (pnorm(1.5) - pnorm(-0.4)) * 100`%
+a. `r 2 * pnorm(-2) * 100`%
+
+## p. 142, ex. 4.2
+What percent of 
+a standard normal distribution $N(\mu=0, \sigma=1)$ is found in each region? 
+Be sure to draw a graph.
+
+a. `r pnorm(-1.13, lower.tail = F)*100`%
+a. `r pnorm(0.18, lower.tail = T)*100`%
+a. `r pnorm(8, lower.tail = F)*100`%
+a. `r 1 - (2 * pnorm(-0.5, lower.tail = T))*100`%
+
+## p. 142, ex. 4.3
+Sophia who took the Graduate Record 
+Examination (GRE) scored 160 on the Verbal Reasoning section and 157 on the 
+Quantitative Reasoning section. The mean score for Verbal Reasoning section 
+for all test takers was 151 with a standard deviation of 7, and the mean 
+score for the Quantitative Reasoning was 153 with a standard deviation of 
+7.67. Suppose that both distributions are nearly normal. 
+
+- Write down the short-hand for these two normal distributions.
+  - **Verbal reasoning: $\mathcal{N}(\mu = 151, \sigma = 7)$**
+  - **Quantitative reasoning: $\mathcal{N}(\mu = 153, \sigma = 7.67$**
+- What is  Sophia's Z-score on the Verbal Reasoning section? On the 
+Quantitative Reasoning section? Draw a standard normal distribution curve and 
+mark these two Z-scores.
+  - **Verbal reasoning: $Z_{VR}$ = `r (160 - 151) / 7`**
+  - **Quantitative reasoning: $Z_{QR}$ = `r (157 - 153) / 7.67`**
+- What do these Z-scores tell you? **The distance of her performance from the mean measured in standard deviation.**
+- Relative to others, which section did she do better on? **Verbal reasoning.**
+- Find her percentile scores for the two exams. **I want the lower tail area under the probability distribution bounded by her scores.**
+  - **Verbal reasoning: $Perc_{VR}$ = `r pnorm((160 - 151) / 7)`**
+  - **Quantitative reasoning: $Perc_{QR}$ = `r pnorm((157 - 153) / 7.67)`**
+- What percent of the test takers did better than her on the Verbal 
+Reasoning section? On the Quantitative Reasoning section?
+  - **Verbal reasoning: `r pnorm((160 - 151) / 7, lower.tail = F) * 100`%**
+  - **Quantitative reasoning: `r pnorm((157 - 153) / 7.67, lower.tail = F) * 100`%**
+- Explain why simply comparing raw scores from the two sections could lead 
+to an incorrect conclusion as to which section a student did better on. **The two distributions differ in their mean and standard deviation.**
+- If the distributions of the scores on these exams are not nearly 
+normal, would your answers to parts (b) - (f) change? Explain your reasoning. **Yes, I would lack a way to standardize the distance from the mean.**
+
+## p. 142, ex. 4.4
+In triathlons, it 
+is common for racers to be placed into age and gender groups. Friends Leo and 
+Mary both completed the Hermosa Beach Triathlon, where Leo competed in the 
+\textit{Men, Ages 30 - 34} group while Mary competed in the \textit{Women, 
+Ages 25 - 29} group. Leo completed the race in 1:22:28 (4948 seconds), while 
+Mary completed the race in 1:31:53 (5513 seconds). Obviously Leo finished 
+faster, but they are curious about how they did within their respective 
+groups. Can you help them? Here is some information on the performance of 
+their groups:
+
+- The finishing times of the \textit{Men, Ages 30 - 34} group has a mean 
+of 4313 seconds with a standard deviation of 583 seconds.
+- The finishing times of the \textit{Women, Ages 25 - 29} group has a 
+mean of 5261 seconds with a standard deviation of 807 seconds.
+- The distributions of finishing times for both groups are approximately 
+Normal.
+
+Remember: a better performance corresponds to a faster finish.
+
+- Write down the short-hand for these two normal distributions.
+  - **$\mathcal{N}(\mu = 4313, \sigma = 583)$**
+  - **$\mathcal{N}(\mu = 5261, \sigma = 807)$**
+- What are the Z-scores for Leo's and Mary's finishing times? What do 
+these Z-scores tell you?
+  - **$Z_{Leo}$ = `r (4948 - 4313) / 583`**
+  - **$Z_{Mary}$ = `r (5513 - 5261) / 807`**
+  - **The distance of their performance from the mean measured in standard deviations.**
+- Did Leo or Mary rank better in their respective groups? Explain your 
+reasoning. **Mary did better than Leo. Her Z-score was lower. This Z-score measures duration of race. A lower Z-score corresponds to a better performance because it is a faster finish.**
+- What percent of the triathletes did Leo finish faster than in his group?
+  - **`r pnorm((4948 - 4313) / 583, lower.tail = F) * 100`%**
+- What percent of the triathletes did Mary finish faster than in her 
+group?
+  - **`r pnorm((5513 - 5261) / 807, lower.tail = F) * 100`%**
+- If the distributions of finishing times are not nearly normal, would 
+your answers to parts (b)~-~(e) change? Explain your reasoning. **Yes, I would lack a way to standardize the distance from the mean.**
+
+## p. 142, ex. 4.5
+In Exercise 4.3 we 
+saw two distributions for GRE scores: $N(\mu=151, \sigma=7)$ for the verbal 
+part of the exam and $N(\mu=153, \sigma=7.67)$ for the quantitative part. Use 
+this information to compute each of the following:
+
+**Note: 1. get the Z-score with `qnorm()`. 2. Use population parameters and solve for x.**
+
+- The score of a student who scored in the $80^{th}$ percentile on the 
+Quantitative Reasoning section.
+  - **Z = `r qnorm(0.80)`**
+  - **$x = Z\sigma + \mu$**
+  - **Score = `r qnorm(0.80) * 7.67 + 153`**
+- The score of a student who scored worse than 70\% of the test takers in 
+the Verbal Reasoning section.
+  - **Score = `r qnorm(0.30) * 7.67 + 153`**
+  
+## p. 143, ex. 4.6
+In 
+Exercise 4.4 we saw two distributions for triathlon 
+times: N($\mu$=4313, $\sigma$=583) for *Men, Ages 30 - 34* and 
+N($\mu$ = 5261, $\sigma$=807) for the *Women, Ages 25 - 29* group. Times are 
+listed in seconds. Use this information to compute each of the following:
+
+- The cutoff time for the fastest 5\% of athletes in the men's group, i.e. those 
+who took the shortest 5% of time to finish.
+  - **`r round(qnorm(0.05) * 583 + 4313, 0)` seconds** 
+- The cutoff time for the slowest 10\% of athletes in the women's group.
+  - **`r round(qnorm(0.05, lower.tail = F) * 807 + 5261, 0)` seconds** 
+
+## p. 143, ex. 4.7
+The average daily high 
+temperature in June in LA is 77 degrees F with a standard deviation of 
+5 degrees F. Suppose that the temperatures in June closely follow a normal 
+distribution. 
+
+- What is the probability of observing an 83 degrees F temperature or 
+higher in LA during a randomly chosen day in June? **`r pnorm((83 - 77) / 5, lower.tail = F)`**
+- How cool are the coldest 10\% of the days (days with lowest average 
+high temperature) during June in LA? **`r round(qnorm(0.10) * 5 + 77, 0)` degrees F.**
+
+## p. 143, ex. 4.8
+The Capital Asset Pricing Model (CAPM) is a financial 
+model that assumes returns on a portfolio are normally distributed. Suppose a 
+portfolio has an average annual return of 14.7\% (i.e. an average gain of 
+14.7\%) with a standard deviation of 33\%. A return of 0\% means the value of 
+the portfolio doesn't change, a negative return means that the portfolio 
+loses money, and a positive return means that the portfolio gains money.
+
+**"Less than," "highest range," these require a cumulative distribution function, i.e. `pnorm()` and `qnorm()`.**
+
+- What percent of years does this portfolio lose money, i.e. have a 
+return less than 0\%? **`r round(pnorm((0 - 0.147) / 0.33) * 100, 2)`%**
+- What is the cutoff for the highest 15\% of annual returns with this 
+portfolio? **Z-score times $\sigma$ + $\mu$. Gains of `r round((qnorm(0.15, lower.tail = F) * 0.33 + 0.147) * 100, 0)`%.**
+
+## p. 143, ex. 4.9
+Exercise 4.7 states that average daily high temperature in 
+June in LA is 77 degrees F with a standard deviation of 5 degrees F, and it can 
+be assumed that they to follow a normal distribution. We use the following 
+equation to convert degrees F (Fahrenheit) to degrees C (Celsius):
+\[ C = (F - 32) \times \frac{5}{9}. \]
+
+- Write the probability model for the distribution of temperature in 
+degrees C in June in LA.
+```{r}
+celsius <- function(fahrenheit) {
+  c <- (fahrenheit - 32) * (5 / 9)
+  return(c)
+}
+mu.f <-77
+sigma.f <- 5
+
+mu.c <- celsius(mu.f)
+## Nuh-uh.
+## sigma.c <- celsius(sigma.f)
+sigma.c <- 5 * (5 / 9)
+```
+  - $\mathcal{N}$($\mu$ = `r mu.c`, $\sigma$ = `r sigma.c`)
+- What is the probability of observing a 28 degrees C (which roughly 
+corresponds to 83degrees F) temperature or higher in June in LA? Calculate 
+using the degrees C model from part (a). **`r pnorm((28 - mu.c) / sigma.c, lower.tail = F)`**
+- Did you get the same answer or different answers in part (b) of this 
+question and part (a) of Exercise 4.7? Are you surprised? Explain. **At first, my answers differed greatly. My error was in the conversion of standard deviation from Fahrenheit to Celsius. I converted the number as if it were a temperature of 5 degrees, instead of a measure of interval. I fixed that and got a lot closer, but they still differ somewhat which surprises me because I thought I had all the units converted correctly and expected the cumulative distribution to be the same. Answer: I matched the book precisely. The answer key revealed that 28 degrees Celsius is not exactly 83 degrees Fahrenheit, it's 82.4. That's why I'm off. The problem set up lied!**
+- Estimate the IQR of the temperatures (in degrees C) in June in LA.
+```{r}
+temp.25percent <- qnorm(0.25) * sigma.c + mu.c
+temp.75percent <- qnorm(0.75) * sigma.c + mu.c
+iqr.temp <- round(temp.75percent - temp.25percent, 2)
+```
+  - **`r iqr.temp` degrees Celsius.**
+
+## p. 143, ex. 4.10
+Cholesterol levels for women aged 20 to 34 follow an
+approximately normal distribution with mean 185 milligrams
+per deciliter (mg/dl).
+Women with cholesterol levels above 220 mg/dl are considered
+to have high cholesterol and about 18.5\% of women fall into
+this category.
+What is the standard deviation of the 
+distribution of cholesterol levels for women aged 20 to~34? **$\frac{x - \mu}{Z} = \sigma$ = `r (220 - 185) / qnorm(0.185, lower.tail = F)`**
+
+## p. 148, ex. 4.11
+Determine if each trial can be 
+considered an independent Bernoulli trial for the following situations.
+
+- Cards dealt in a hand of poker. **No.**
+- Outcome of each roll of a die. **No.**
+
+**Requirements:**
+
+- **Random**
+- **Independent (I neglected to include this one)**
+- **Two outcomes**
+
+**Answer: My answers are correct, but the book included a few more points about why, which I failed to notice.**
+
+- **Card dealing is not independent because it is sampling without replacement.**
+- **Rolling dice could be Bernoulli if the events were simplified, for example {6, not 6}, but that would have to be specified.**
+
+## p. , ex. 4.12
+In the 
+following situations assume that half of the specified population is male and 
+the other half is female.
+
+- Suppose you're sampling from a room with 10 people. What is the 
+probability of sampling two females in a row when sampling with replacement? 
+What is the probability when sampling without replacement? **$\frac{5}{10} \cdot \frac{4}{9}$ = `r (5/10) * (4/9)`**
+- Now suppose you're sampling from a stadium with 10,000 people. What is 
+the probability of sampling two females in a row when sampling with 
+replacement? **$\frac{5000}{10000} \cdot \frac{5000}{10000}$ = `r (5000/10000) * (5000/10000)`** What is the probability when sampling without replacement? **$\frac{5000}{10000} \cdot \frac{4999}{9999}$ = `r (5000/10000) * (4999/9999)`**
+- We often treat individuals who are sampled from a large population as 
+independent. Using your findings from parts (a) and (b), explain whether or 
+not this assumption is reasonable. **It is reasonable because the error is very low and presumably is within the precision required for the application. Here the error amouts to `r ((5000/10000) * (5000/10000)) - ((5000/10000) * (4999/9999))`.**
+
+## p. , ex. 4.13
+A husband and wife both 
+have brown eyes but carry genes that make it possible for their children to 
+have brown eyes (probability 0.75), blue eyes (0.125), or green eyes (0.125).
+
+- What is the probability the first blue-eyed child they have is their 
+third child? Assume that the eye colors of the children are independent of 
+each other. **Geometric distribution: `r (1 - 0.125)^(3 -1) * 0.125`**
+- On average, how many children would such a pair of parents have before 
+having a blue-eyed child? **$\mu = \frac{1}{p}$ = `r 1 / 0.125`** What is the standard deviation of the number of 
+children they would expect to have until the first blue-eyed child? **$\sigma = \sqrt{\frac{1 - p}{p^2}}$ = `r sqrt((1 - 0.125) / 0.125^2)`**
+
+
+## p. , ex. 4.14
+A machine that produces a special 
+type of transistor (a component of computers) has a 2\% defective rate. The 
+production is considered a random process where each transistor is 
+independent of the others.
+
+- What is the probability that the $10^{th}$ transistor produced is the 
+first with a defect? **`r pgeom(10, 0.02)`**
+- What is the probability that the machine produces no defective 
+transistors in a batch of 100? **`r (1 - 0.02)^100`**
+- On average, how many transistors would you expect to be produced before 
+the first with a defect? **`r 1 / 0.02`** What is the standard deviation? **`r sqrt((1 - 0.02) / 0.02^2)`**
+- Another machine that also produces transistors has a 5\% defective rate 
+where each transistor is produced independent of the others. On average how 
+many transistors would you expect to be produced with this machine before the 
+first with a defect? **`r 1 / 0.05`** What is the standard deviation? **`r sqrt((1 - 0.05) / 0.05^2)`**
+- Based on your answers to parts (c) and (d), how does increasing the 
+probability of an event affect the mean and standard deviation of the wait 
+time until success? **It reduces both the mean and the standard deviation.**
+
+## p. , ex. 4.15
+Use the probability rules from
+Section 3.4
+to derive the mean of a Bernoulli random variable,
+i.e. a random variable $X$ that takes value 1
+with probability $p$ and value 0 with probability $1 - p$.
+That is, compute the expected value of a generic
+Bernoulli random variable.
+
+$\mu = E(X) = \sum_1^k x_i P(X = x_i)$
+
+Here, $n = 2$, so
+
+$x_1 P(X = x_1) + x_2 P(X = x_2) = 0 \cdot (1 - p) + 1 \cdot p = p$
+
+## p. , ex. 4.16
+Use the probability rules from
+Section 3.4
+to derive the standard deviation of a Bernoulli random variable,
+i.e. a random variable $X$ that takes value 1
+with probability $p$ and value 0 with probability $1 - p$.
+That is, compute the square root of the variance of a generic
+Bernoulli random variable.
+
+$\sigma^2 = \sum_{i = 1}^k (x_1 - \mu)^2 P(X = x_i)$
+
+$(x_1 - \mu)^2 P(X = x_1) + (x_2 - \mu)^2 P(X = x_2)$
+
+$(0 - p)^2 \cdot (1 - p) + (1 - p)^2 \cdot p$
+
+= $p^2 (1-p) + p(1 -2p + p^2)$
+
+= $-p^3 + p^2 + p - 2p^2 + p^3$
+
+= $p(p + 1 - 2p)$
+
+= $p(1 - p)$
+
+$s = \sqrt{p(1-p)}$
+
+## p. , ex. 4.17
+Data collected by the Substance Abuse and Mental Health
+Services Administration (SAMSHA) suggests that 69.7\% of
+18-20 year olds consumed alcoholic beverages in any given
+year.
+
+- Suppose a random sample of ten 18-20 year olds is taken. Is the use 
+of the binomial distribution appropriate for calculating the probability that 
+exactly six consumed alcoholic beverages? Explain. **Yes. 1. The trials are independent. 2. Number of trials is fixed at 6. 3. Each trial can be classified as a success or a failure, consumed or did not consume alcohol. 4. The probability of success is the same for each trial, 69.7\%.**
+- Calculate the probability that exactly 6 out of 10 randomly sampled 18-
+20 year olds consumed an alcoholic drink.
+```{r}
+binom_summary(successes = 6, trials = 10, prob = 0.697,
+              main = "18-20 year olds who consume alcohol",
+              xlab = "Number of people")
+```
+  - **`r choose(10, 6) * 0.697^6 * (1 - 0.697)^(10 - 6)`**
+  - **Don't do this, using `pbinom()`. `r pbinom(q = 6, size = 10, prob = 0.697, lower.tail = T)`. You don't want cumulative density, you want the probability density. cf. [A Guide to dbinom, pbinom, qbinom, and rbinom in R](https://www.statology.org/a-guide-to-dbinom-pbinom-qbinom-and-rbinom-in-r/)**
+  - **Probability density with `dbinom`. `r dbinom(x = 6, size = 10, prob = 0.697)`**
+- What is the probability that exactly four out of ten 18-20 year 
+olds have \textit{not} consumed an alcoholic beverage?
+```{r}
+binom_summary(successes = 4, trials = 10, prob = 1 - 0.697,
+              main = "18-20 year olds who do not consume alcohol",
+              xlab = "Number of people")
+```
+  - **I think I can reverse the probabilities of success and failure, in effect defining failure as Bernoulli success. ${10 \choose 4} (1 - 0.697)^4 0.697^{10 - 4}$**
+  - **`r dbinom(4, 10, 1 - 0.697)`**
+- What is the probability that at most 2 out of 5 randomly sampled 18-20 
+year olds have consumed alcoholic beverages?
+```{r}
+binom_summary(successes = 2, trials = 10, prob = 0.697,
+              main = "18-20 year olds who consume alcohol",
+              xlab = "Number of people")
+```
+**Now it's time for CDF. `r pbinom(2, 5, 0.697)`**
+- What is the probability that at least 1 out of 5 randomly sampled 18-20 
+year olds have consumed alcoholic beverages?
+```{r}
+binom_summary(successes = 1, trials = 10, prob = 0.697,
+              main = "18-20 year olds who do not consume alcohol",
+              xlab = "Number of people")
+```
+  - **You can go for a complement here. `r 1 - dbinom(4, 5, 0.697)`. Well, I missed that. Try again. There are two mistakes here. First, you already forgot to distinguish between PDF and CDF. Second, you  were looking at 4 choose 5. That's not it.**
+  - **We do want a complement. Compute the probability of getting, not exactly, 1 out of 5, but less than 1 out of 5. this includes observing 0 out of 5. Once you know that, then take its complement of that. You need to read the problems better. `r 1 - pbinom(1 - 1, 5, 0.697)`. ANSWER: 0.997. I didn't get it right at first, but found other tutorials and similar practice problems**
+  - **Humility. No, it isn't the book. I found some supplemental binomial distribution exercises and understand my error about the complements. It all works better if I just write out the inequality. "At least 1" means $x \ge 1$. Thats the complement of $x < 1$ or $x \le 1 - 1$. I know how to compute the probability of 0 successes. Therefore, `r 1 - dbinom(0, 5, 0.697)`. That's it!**
+
+## p. , ex. 4.18
+The National Vaccine 
+Information Center estimates that 90\% of Americans have had chickenpox by 
+the time they reach adulthood.
+
+```{r}
+plot(0:100, dbinom(x, 100, 0.90),
+     xlab = "Number who had chicken pox",
+     ylab = "P(X = x)",
+     type = "h",
+     main = "Adult Americans who had chicken pox, n=100, p=0.90")
+```
+- Suppose we take a random sample of 100 American adults. Is the use of 
+the binomial distribution appropriate for calculating the probability that exactly 97 
+out of 100 randomly sampled American adults had chickenpox during childhood? Explain. **Yes. 1. Independent trials, 2. Fixed number of trials. 3. Success/Failure, 4. Same probability each trial.**
+- Calculate the probability that exactly 97 out of 100 randomly sampled 
+American adults had chickenpox during childhood.
+```{r}
+binom_summary(successes = 97, trials = 100, prob = 0.90,
+              main = "Adults who had chickenpox",
+              xlab = "Number of people")
+```
+**`r dbinom(97, 100, 0.90)`**
+
+- What is the probability that exactly 3 out of a new sample of 100 
+American adults have \textit{not} had chickenpox in their childhood?
+```{r}
+binom_summary(successes = 3, trials = 100, prob = 1 - 0.90,
+              main = "Adults who have not had chickenpox",
+              xlab = "Number of people")
+```
+  - **My original instinct is correct. cf. 4.17. `r dbinom(3, 100, (1 - 0.90))`**
+  - **And no, you can't do a complement. This isn't a cumulative distribution function. `r 1 - dbinom(97, 100, 0.90)`**
+- What is the probability that at least 1 out of 10 randomly sampled 
+American adults have had chickenpox?
+```{r}
+binom_summary(successes = 1, trials = 10, prob = 0.90,
+              main = "Adults who had chickenpox",
+              xlab = "Number of people")
+```
+  - What?? **I didn't understand this result at first, but it's obvious if you plot the distribution. P(X = 0) is so low, it rounds to 0. `r 1 - pbinom(0, 10, 0.90)`.** *Note: you got the right boundary for `pbinom()` in the complement here, but you regressed and wrote off-by-one errors later.*
+  - **`r pbinom(1, 10, 0.90, lower.tail = F)` this is right.**
+- What is the probability that at most 3 out of 10 randomly sampled 
+American adults have \textit{not} had chickenpox?
+  - First plot.
+```{r}
+x <- 0:10
+plot(x, dbinom(x, 10, 1 - 0.90),
+     xlab = "Number who haven't had chicken pox",
+     ylab = "P(X = x)",
+     type = "h",
+     main = "Adult Americans who haven't had chicken pox, n=10, p=0.10")
+```
+  - Binary distribution summary.
+```{r}
+binom_summary(successes = 3, trials = 10, prob = 1 - 0.90,
+              main = "Adults who haven't had chickenpox",
+              xlab = "Number of people")
+```
+**`r pbinom(3, 10, (1 - 0.90))`**
+
+## p. , ex. 4.19
+We learned in Exercise 4.17 that about 70\% of 18-20 year olds consumed alcoholic
+beverages in any given year. We now consider a random 
+sample of fifty 18-20 year olds.
+
+- First plot.
+```{r}
+x <- 0:50
+plot(x, dbinom(x, 50, 0.70),
+     xlab = "Number of people",
+     ylab = "P(X = x)",
+     type = "h",
+     main = "18-20 year olds who consumed alcoholic beverages, n=50, p=0.70")
+```
+- How many people would you expect to have consumed alcoholic beverages? 
+And with what standard deviation?
+```{r}
+binom_summary(successes = 35, trials = 50, prob = 0.70,
+              main = "18-20 year olds who consumed alcohol",
+              xlab = "Number of people")
+```
+  - **$np$ = `r 50 * 0.70`. ANSWER: the book comes up with 34.85. I don't know why.**
+  - **$\sigma = \sqrt{np(1 - p)} = \sqrt{npq}$ = `r sqrt(50 * 0.70 * (1 - 0.70))`. ** 
+- Would you be surprised if there were 45 or more people who have 
+consumed alcoholic beverages?
+  - **Yes, it's very unlikely.**
+  - **I based my answer on my plot. I should also know the book's approach  using standard deviation. Thats what $\sigma$ is for! $Z$ = `r (45 - 35) / sqrt(50 * 0.70 * (1 - 0.70))`. The book came up with 3.12 because of its differing mean. 45 people lies more than 3 standard deviations from the mean, so it is unlikely.**
+- What is the probability that 45 or more people in this sample have 
+consumed alcoholic beverages? How does this probability relate to your answer 
+to part (b)?
+```{r}
+binom_summary(successes = 45, trials = 50, prob = 0.70,
+              main = "18-20 year olds who consumed alcohol",
+              xlab = "Number of people")
+```
+  - **Correct. Calculate with sums of probabilities (`pbinom()`). `r pbinom(45 - 1, 50, 0.70, lower.tail = F)`. This low probability is the reason for my answer. I could see it in my plot. ANSWER: the book comes up with 0.0009. I'm trying to figure out if I have an off-by-1 error. I need to start from 45 - 1. **
+  - **Try the normal approximation. `r 1 - pnorm(45, mean = 50 * 0.70, sd = sqrt(50 * 0.70 * (1 - 0.70)))`**
+  - **Try it with continuity correction. `r 1 - pnorm(45 - 0.5, mean = 50 * 0.70, sd = sqrt(50 * 0.70 * (1 - 0.70)))`**
+  - My sums don't match my normal approximation very well, and everything is way off from the book's answers. Moving on, I'll get more opportunities to practice this in this chapter, Grinstead, and my workbooks coming in the mail. This website says my `pbinom()` calc is right: [Binomial Probability Calculator](https://www.stattrek.com/online-calculator/binomial.aspx).
+
+## p. , ex. 4.20
+We learned in 
+Exercise 4.18 that about 90\% of American adults had 
+chickenpox before adulthood. We now consider a random sample of 120 American 
+adults.
+
+- How many people in this sample would you expect to have had chickenpox 
+in their childhood? **$np$ = `r 120 * 0.90`.** And with what standard deviation? **$\sqrt{npq}$ = `r sqrt(120 * 0.90 * 0.10)`.**
+- Would you be surprised if there were 105 people who have had chickenpox 
+in their childhood? **$Z$ = `r (120 * 0.90) / sqrt(120 * 0.90 * 0.10)`. No, the distance of 105 from the mean of 108 is well within the standard deviation of 33.**
+- What is the probability that 105 or fewer people in this sample have 
+had chickenpox in their childhood? How does this probability relate to your 
+answer to part (b)?
+```{r}
+binom_summary(successes = 105, trials = 120, prob = 0.90,
+              main = "Adults who had chickenpox",
+              xlab = "Number of people")
+```
+  - **`pbinom()`. `r pbinom(105, 120, 0.90)`. Correct.**
+  - **Normal approximation. `r pnorm(105, 120 * 0.90, sqrt(120 * 0.90 * 0.10))`**
+  - **Normal approximation with continuity correction. `r pnorm(105.5, 120 * 0.90, sqrt(120 * 0.90 * 0.10))`**
+
+## p. , ex. 4.21
+A dreidel is a four-sided spinning top 
+with the Hebrew letters \textit{nun}, \textit{gimel}, \textit{hei}, and 
+\textit{shin}, one on each side. Each side is equally likely to come up in a 
+single spin of the dreidel. Suppose you spin a dreidel three times. Calculate 
+the probability of getting
+
+- at least one \textit{nun}?
+```{r}
+binom_summary(successes = 1, trials = 3, prob = 0.25,
+              main = "Adults who had chickenpox",
+              xlab = "Number of people")
+```
+  - **`r pbinom(1 - 1, 3, 0.25, lower.tail = F)`. Correct**
+  - **Normal approximation. Fails conditions. $np < 10 > n(1 - p).**
+- exactly 2 \textit{nun}s?
+```{r}
+binom_summary(successes = 2, trials = 3, prob = 0.25,
+              main = "Adults who had chickenpox",
+              xlab = "Number of people")
+```
+ **`r dbinom(2, 3, 0.25)`**
+ 
+- exactly 1 \textit{hei}? **`r dbinom(1, 3, 0.25)`**
+- at most 2 \textit{gimel}s? **`r pbinom(2, 3, 0.25)`**
+
+## p. , ex. 4.22
+A Gallup Poll found that 7\% of teenagers (ages 13 to 17)
+suffer from arachnophobia and are extremely afraid of spiders.
+At a summer camp there are 10 teenagers sleeping in each tent.
+Assume that these 10 teenagers are independent of each other.
+
+- Calculate the probability that at least one of them suffers from 
+arachnophobia. **`r 1 - dbinom(0, 10, 0.07)`**
+```{r}
+binom_summary(successes = 1, trials = 10, prob = 0.07,
+              main = "Teens with arachnophobia",
+              xlab = "Number of people")
+```
+- Calculate the probability that exactly 2 of them suffer from 
+arachnophobia. **`r dbinom(2, 10, 0.07)`**
+```{r}
+binom_summary(successes = 2, trials = 10, prob = 0.07,
+              main = "Teens with arachnophobia",
+              xlab = "Number of people")
+```
+- Calculate the probability that at most 1 of them suffers from 
+arachnophobia. **`r pbinom(1, 10, 0.07)`**
+- If the camp counselor wants to make sure no more than 1 teenager in 
+each tent is afraid of spiders, does it seem reasonable for him to randomly 
+assign teenagers to tents? **I'd be okay with probability of 0.84.**
+
+## p. , ex. 4.23
+Exercise 4.13 introduces a husband and wife with brown 
+eyes who have 0.75 probability of having children with brown eyes, 0.125 
+probability of having children with blue eyes, and 0.125 probability of 
+having children with green eyes.
+
+- What is the probability that their first child will have green eyes and 
+the second will not? **`r 0.125 * (1 - 0.125)`**
+- What is the probability that exactly one of their two children will 
+have green eyes? **`r dbinom(1, 2, 0.125)`**
+```{r}
+binom_summary(successes = 1, trials = 2, prob = 0.125,
+              main = "Probability of having green eyes",
+              xlab = "Number of children")
+```
+- If they have six children, what is the probability that exactly two 
+will have green eyes? **`r dbinom(2, 6, 0.125)`**
+```{r}
+binom_summary(successes = 2, trials = 6, prob = 0.125,
+              main = "Probability of having green eyes",
+              xlab = "Number of children")
+```
+- If they have six children, what is the probability that at least one 
+will have green eyes?
+  - **`r pbinom(1 - 1, 6, 0.125, lower.tail = F)`**
+  - **Easier calculation : 1  - probability that no child has green eyes `r 1 - 0.875^6`**
+```{r}
+binom_summary(successes = 1, trials = 6, prob = 0.125,
+              main = "Probability of having green eyes",
+              xlab = "Number of children")
+```
+- What is the probability that the first green eyed child will be the 
+$4^{th}$ child?
+  - **Binomial: `r pbinom(4, 6, 0.125) - pbinom(3, 6, 0.125)`**
+  - **Geometric: `r (1 - 0.125)^(4 - 1) * 0.125`. This is correct. Why doesn't my binomial trick work?**
+```{r}
+binom_summary(successes = 4, trials = 6, prob = 0.125,
+              main = "Probability of having green eyes",
+              xlab = "Number of children")
+```
+- Would it be considered unusual if only 2 out of their 6 children had 
+brown eyes? **$Z_2$ = `r (2 - (6 * 0.75)) / sqrt(6 * 0.75 * (1 - 0.75))`. Yes, this lies more than 2 standard deviations from the mean.**
+
+## p. , ex. 4.24
+Sickle cell anemia is a 
+genetic blood disorder where red blood cells lose their flexibility and 
+assume an abnormal, rigid, ``sickle" shape, which results in a risk of 
+various complications. If both parents are carriers of the disease, then a 
+child has a 25\% chance of having the disease, 50\% chance of being a 
+carrier, and 25\% chance of neither having the disease nor being a carrier. 
+If two parents who are carriers of the disease have 3 children, what is the 
+probability that 
+
+- two will have the disease? **`r dbinom(2, 3, 0.25)`**
+```{r}
+binom_summary(2, 3, 0.25)
+```
+- none will have the disease? **`r dbinom(0, 3, 0.25)`**
+```{r}
+binom_summary(0, 3, 0.25)
+```
+- at least one will neither have the disease nor be a carrier? **`r 1 - dbinom(0, 3, 0.25)`**
+```{r}
+binom_summary(1, 3, 0.25)
+```
+- the first child with the disease will be the $3^{rd}$ child?
+  - **Geometric by hand: `r (1 - 0.25)^2 * 0.25`**
+  - **`dgeom()`. Careful now, the first parameter of the function is the number of *failures*. : `r dgeom(2, 0.25)`**
+
+## p. , ex. 4.25
+The formula for the 
+number of ways to arrange $n$ objects is $n! = n\times(n-1)\times \cdots 
+\times 2 \times 1$. This exercise walks you through the derivation of this 
+formula for a couple of special cases.
+
+\indent A small company has five employees: Anna, Ben, Carl, Damian, and 
+Eddy. There are five parking spots in a row at the company, none of which are 
+assigned, and each day the employees pull into a random parking spot. That 
+is, all possible orderings of the cars in the row of spots are equally likely.
+
+- On a given day, what is the probability that the employees park in 
+alphabetical order? **This process is sampling without replacement. Therefore the probability is: $\frac{1}{5} \cdot \frac{1}{4} \cdot \frac{1}{3} \cdot \frac{1}{2} \cdot \frac{1}{1}$ = `r 1/factorial(5)`**
+- If the alphabetical order has an equal chance of occurring relative to 
+all other possible orderings, how many ways must there be to arrange the five 
+cars? **A probability distribution must sum to 1. Since this ordering is equiprobable, the number of possible orderings must equal the inverse of the probability of a single ordering. $\frac{1}{\frac{1}{5!}}$ = $5!$ = `r factorial(5)`**
+- Now consider a sample of 8 employees instead. How many possible ways 
+are there to order these 8 employees' cars? **$8!$ = `r factorial(8)`**
+
+## p. , ex. 4.26
+While it is often assumed that the 
+probabilities of having a boy or a girl are the same, the actual probability 
+of having a boy is slightly higher at 0.51. Suppose a couple plans to have 3 
+kids. 
+
+- Use the binomial model to calculate the probability that two of them 
+will be boys. **`r dbinom(2, 3, 0.51)`**
+```{r}
+binom_summary(2, 3, 0.51)
+```
+- Write out all possible orderings of 3 children, 2 of whom are boys. Use 
+these scenarios to calculate the same probability from part (a) but using the 
+addition rule for disjoint outcomes. Confirm that your answers from parts (a) 
+and (b) match.
+  - **$\Omega$ = {BBG, BGB, GBB}**
+  - **$P(\omega_1) + P(\omega_2) + P(\omega_3)$ = $0.51 \times 0.49 \times 0.51 + 0.51 \times 0.49 \times 0.51 + 0.49 \times 0.51 \times 0.51$ = $3 \times 0.51^2 \times 0.49$ = `r 3 * 0.51^2 * 0.49`**
+- If we wanted to calculate the probability that a couple who plans to 
+have 8 kids will have 3 boys, briefly describe why the approach from part (b) 
+would be more tedious than the approach from part (a). **Well, it is and it isn't. It would be more tedious if you calculate 8 terms. On the other hand, I simplified it algebraically and it isn't harder in that case. $8 \times 0.51^3 \times 0.49^{8 - 3}$ = `r 8 * 0.51^3 * 0.49^(8 - 3)` and `dbinom(3, 8, 0.51)` = `r dbinom(3, 8, 0.51)`. This isn't correct. Work Out the factorial division. This is an n choose k problem.**
+
+## p. , ex. 4.27
+Calculate the 
+following probabilities and indicate which probability distribution model is 
+appropriate in each case. You roll a fair die 5 times. What is the 
+probability of rolling
+
+- the first 6 on the fifth roll? **Negative binomial.**
+  - **Hand rolled: `r choose(5 - 1, 5 - 1) * (1 / 6 )^5 * (1 - (1 / 6))^(5 - 5)`**
+  - **Hand rolled 2: `r (factorial(4) / (factorial(4) * factorial(0))) * (1 / 6 )^5 * (1 - (1 / 6))^(5 - 5)`**
+  - **`dnbinom()`: `r dnbinom(4, 5, 1 / 6)`**
+  - **Something is wrong.**
+  - **I'll say. You want the geometric distribution.**
+  - **Hand rolled: `r (1 - (1/6))^4 * (1 / 6)`r**
+  - **`dgeom()`: `r dgeom(4, 1 / 6)`**
+- exactly three 6s? **Binomial: `r dbinom(3, 5, 1 / 6)`**
+- the third 6 on the fifth roll? **Negative binomial.**
+  - **[Michael Foley's beautiful demo](https://rpubs.com/mpfoley73/458738). Do I know him from class? This: R function dnbinom(x, size, prob) is the probability of x failures prior to the rth success (note the difference) when the probability of success is prob. **
+  - **`r dnbinom(2, 3, 1 / 6)`**
+  - **`r choose(5 - 1, 3 - 1) * (1 - (1 / 6))^(5 - 3) * (1 / 6 )^3`**
+
+## p. , ex. 4.28
+Calculate the following probabilities 
+and indicate which probability distribution model is appropriate in each 
+case. A very good darts player can hit the bull's eye (red circle in the 
+center of the dart board) 65\% of the time. What is the probability that he
+
+- hits the bullseye for the $10^{th}$ time on the $15^{th}$ try? **Negative binomial.**
+  - **Hand-rolled. `r choose(15 - 1 , 10 - 1) * (1 - 0.65)^(15 - 10) * 0.65^10`**
+  - **`dnbinom()`. `r dnbinom(15 - 10, 10, 0.65)`**
+- hits the bullseye 10 times in 15 tries? **Binomial. `r dbinom(10, 15, 0.65)`**
+- hits the first bullseye on the third try? **Geometric. `r dgeom(2, 0.65)`**
+
+## p. , ex. 4.29
+For a sociology class 
+project you are asked to conduct a survey on 20 students at your school. You 
+decide to stand outside of your dorm's cafeteria and conduct the survey on a 
+random sample of 20 students leaving the cafeteria after dinner one evening. 
+Your dorm is comprised of 45\% males and 55\% females.
+
+- Which probability model is most appropriate for calculating the 
+probability that the $4^{th}$ person you survey is the $2^{nd}$ female? 
+Explain. **Negative binomial, because it describes the probability of observing the $k^{th}$ success on the $n^{th}$ trial.**
+- Compute the probability from part (a). **`r dnbinom(2, 4, 0.55)`** 
+- The three possible scenarios that lead to $4^{th}$ person you survey 
+being the $2^{nd}$ female are
+\[ \{M, M, F, F\}, \{M, F, M, F\}, \{F, M, M, F\} \]
+One common feature among these scenarios is that the last trial is always 
+female. In the first three trials there are 2 males and 1 female. Use the 
+binomial coefficient to confirm that there are 3 ways of ordering 2 males and 
+1 female.
+  - **`r factorial(4 - 1) / (factorial(3 - 1) * factorial(1))`**
+  - **`r choose(4 - 1, 3 - 1)`**
+- Use the findings presented in part (c) to explain why the formula for 
+the coefficient for the negative binomial is ${n-1 \choose k-1}$ while the 
+formula for the binomial coefficient is ${n \choose k}$. **The final trial isn't part of the permutation. Its success is defined as a requirement.**
+
+## p. , ex. 4.30
+A not-so-skilled 
+volleyball player has a 15\% chance of making the serve, which involves 
+hitting the ball so it passes over the net on a trajectory such that it will 
+land in the opposing team's court. Suppose that her serves are independent of 
+each other.
+
+- What is the probability that on the $10^{th}$ try she will make her 
+$3^{rd}$ successful serve?
+  - **Hand rolled: `r choose(10 - 1, 3 - 1) * (1 - 0.15)^(10 - 3) * 0.15^3`**
+  - **Hand rolled 2: `r factorial(9) / (factorial(2) * factorial(10 - 3)) * (1 - 0.15)^(10 - 3) * 0.15^3`**
+  - **`dnbinom()`: `r dnbinom(10 - 3, 3, 0.15)`**
+- Suppose she has made two successful serves in nine attempts. What is 
+the probability that her $10^{th}$ serve will be successful? **0.15**
+- Even though parts (a) and (b) discuss the same scenario, the 
+probabilities you calculated should be different. Can you explain the reason 
+for this discrepancy? **Luck doesn't get stored. Believing otherwise is known as The Gambler's Fallacy.**
+
+## p. , ex. 4.31
+A coffee shop 
+serves an average of 75 customers per hour during the morning rush.
+
+- Which distribution have we studied that is most appropriate
+  for calculating the probability of a given number of customers
+  arriving within one hour 
+  during this time of day? **Poisson**
+- What are the mean and the standard deviation of the number of customers 
+this coffee shop serves in one hour during this time of day? **$\mu = \lambda = 75$. $\sigma = \sqrt{\lambda} = \sqrt{75}$ = `r sqrt(75)`** 
+- Would it be considered unusually low if only 60 customers showed up to 
+this coffee shop in one hour during this time of day? **$Z = \frac{60 - \mu}{\sigma}$ =`r (60 - 75) / sqrt(75)`. No, the event falls within 2 standard deviations.**
+- Calculate the probability that this coffee shop serves 70 customers in 
+one hour during this time of day.
+  - **$P_{coffee}(70) = \frac{\lambda^k e^{-\lambda}}{k!} = \frac{\lambda^{70} e^{-70}}{75!}$ = `r (75^70 * exp(-75)) / factorial(70)`**
+  - **`r dpois(70, 75)`**
+
+## p. , ex. 4.32
+A very skilled 
+court stenographer makes one typographical error (typo) per hour on average.
+
+```{r}
+x <- 0:10
+plot(x, dpois(x, 1))
+```
+- What probability distribution is most appropriate for calculating the 
+probability of a given number of typos this stenographer makes in an hour? **Poisson.**
+- What are the mean and the standard deviation of the number of typos 
+this stenographer makes? **$\mu = 1$ $\sigma = 1$**
+- Would it be considered unusual if this stenographer made 4 typos in a 
+given hour? $Z = \frac{4 - 1}{1} = 3$ Yes, 3 standard deviations from the mean is unusual.
+- Calculate the probability that this stenographer makes at most 2 typos 
+in a given hour.
+
+  - **Hand rolled...**
+```{r}
+prob <- (1^0 * exp(-1)) / factorial(0) + (1^1 * exp(-1)) / factorial(1) + (1^2 * exp(-1)) / factorial(2) 
+```
+  - **`r prob`**
+  - **`ppois()`: `r ppois(2, 1)`**
+
+## p. , ex. 4.33
+For Monday through Thursday when there isn't a holiday,
+the average number of vehicles that visit a particular
+retailer between 2pm and 3pm each afternoon is 6.5,
+and the number of cars that show up on any given day
+follows a Poisson distribution.
+
+- What is the probability that exactly 5 cars will show up next Monday?
+  - **1 hour: `r dpois(5, 6.5)`**
+  - **Are they asking for 8 hours? **`r ppois(5 / 8, 6.5)`**
+-  What is the probability that 0, 1, or 2 cars will show up next Monday between 2pm and 3pm? **`r ppois(2, 6.5)`**
+- There is an average of 11.7 people who visit during those same hours from vehicles. Is it likely that the number of people visiting by car during this hour is also Poisson? Explain. **Yes, the average equals $\lambda$. --WRONG**
+  - **ANSWER: The book gives this answer. This lesson is important. I must think about the assumptions for each distribution. Every. Time.**
+  
+  > The number of people per car is 11.7/6.5 = 1.8, meaning people are coming in small clusters. That is, if one person arrives, there’s a chance that they brought one or more other people in their vehicle. This means individuals (the people) are not independent, even if the car arrivals are independent, and this breaks a core assumption for the Poisson distribution. That is, the number of people visiting between 2pm and 3pm would not follow a Poisson distribution.
+
+## p. , ex. 4.34
+Occasionally an airline will lose a bag.
+Suppose a small airline has found it can reasonably
+model the number of bags lost each weekday using a
+Poisson model with a mean of 2.2 bags.
+
+- What is the probability that the airline will lose no bags next Monday? **`r dpois(0, 2.2)`**
+- What is the probability that the airline will lose 0, 1, or 2 bags on next Monday? **`r ppois(2, 2.2)`**
+- Suppose the airline expands over the course of the next 3 years, doubling the number of flights it makes, and the CEO asks you if it's reasonable for them to continue using the Poisson model with a mean of 2.2. What is an appropriate recommendation? Explain. **The answer is no and there are two reasons.**
+  1. The rate of bag losses ($\lambda$) is losses per weekday. If the flights are doubled, the best guess would be that the losses double. Therefore, the mean would be 4.4.
+  1. Even an assumption of 4.4 is weak. What changes were made to infrastructure, personnel, and operations in order to scale to twice the number of flights? It would be better to measure bag losses for long enough to adopt a new mean.
+
+## p. , ex. 4.35
+In the game of roulette, a 
+wheel is spun and you place bets on where it will stop. One popular bet is 
+that it will stop on a red slot; such a bet has an 18/38 chance of winning. 
+If it stops on red, you double the money you bet. If not, you lose the money 
+you bet. Suppose you play 3 times, each time with a \$1 bet. Let Y represent 
+the total amount won or lost. Write a probability model for Y.
+
+- **$Y = 2^k (\frac{18}{38})^k$. `r 2^3 * (18 / 38)^3`. Wrong: I didn't account for losses, which are calculated differently from wins.**
+- **The book considers the sum of probabilities for: 0 wins + 1 win + 2 wins + 3 wins.**
+  - 0 wins. `r 3 * -1 + 0 * 2`. `r (1 - (18/38))^3`
+  - 1 win.  `r 2 * -1 + 1 * 2`. `r 3 * (1 - (18/38))^2 * (18/38)`
+  - 2 wins. `r 1 * -1 + 2 * 2`. `r 3 * (1 - (18/38))^1 * (18/38)^2`
+  - 3 wins. `r 0 * -1 + 3 * 2`. `r (1 - (18/38))^0 * (18/38)^3`
+  - The reason your probabilities were wrong the first time. You calculated the probability of each scenario okay, but you didn't multiply each by the number of ways that scenario could happen.
+
+## p. , ex. 4.36
+The distribution of 
+passenger vehicle speeds traveling on the Interstate 5 Freeway (I-5) in 
+California is nearly normal with a mean of 72.6 miles/hour and a standard 
+deviation of 4.78 miles/hour.
+
+- What percent of passenger vehicles travel slower than 80 miles/hour? `r round(pnorm(80, 72.6, 4.78) * 100, 2)`%
+- What percent of passenger vehicles travel between 60 and 80 miles/hour? `r round(pnorm(80, 72.6, 4.78) - pnorm(60, 72.6, 4.78) * 100, 2)`%
+- How fast do the fastest 5\% of passenger vehicles travel? `r qnorm(0.95, mean = 72.6, sd = 4.78)` mph
+- The speed limit on this stretch of the I-5 is 70 miles/hour. 
+Approximate what percentage of the passenger vehicles travel above the speed 
+limit on this stretch of the I-5. `r round(pnorm(70, 72.6, 4.78) * 100, 2)`%
+
+## p. , ex. 4.37
+Suppose a university 
+announced that it admitted 2,500 students for the following year's freshman 
+class. However, the university has dorm room spots for only 1,786 freshman 
+students. If there is a 70\% chance that an admitted student will decide to 
+accept the offer and attend this university, what is the approximate 
+probability that the university will not have enough dormitory room spots for 
+the freshman class?
+
+- **I failed to discern this is a normal approximation of a binomial.*
+- **The book failed to discern that the interval is open on the bottom, at least in the description of the solution. The problem asked for the probability of insufficient insufficient rooms. With 1786 rooms, they run out on the 1787th student, not the 1786th. However, they got it when they computed a Z-score.**
+
+- $\mu = np = 2500 \cdot 0.70$ = `r 2500 * 0.70`
+- $\sigma = \sqrt{npq} = \sqrt{2500 \cdot 0.70 \cdot 0.30}$ = `r sqrt(2500 * 0.70 * 0.30)`
+- Probability = `r pnorm(1786, 2500 * 0.70, sqrt(2500 * 0.70 * 0.30), lower.tail = F)`
+- Probability (Z-score approach)
+
+```{r}
+mu <- 2500 * 0.70
+sigma <- sqrt(mu * 0.30)
+Z <- (1787 - mu - 0.5) / sigma
+
+mu
+sigma
+Z
+
+p <- 1 - pnorm(Z)
+p
+```
+
+```{r}
+binom_summary(1786, 2500, 0.70)
+```
+
+**N.B.**: I'm leaving the binomial for now and its normal approximation. There are too many questions about what to do at the boundaries of intervals. I think the Z-score approach is presented inconsistently in the text. I think my summary function was useful, but it has not paid off yet because of the inconsistency. I'll return to this with a fresh take on it when I go through my next workbook.
+
+## p. , ex. 4.38
+Exercise 4.36 states that the distribution of speeds of 
+cars traveling on the Interstate 5 Freeway (I-5) in California is nearly 
+normal with a mean of 72.6 miles/hour and a standard deviation of 4.78 
+miles/hour. The speed limit on this stretch of the I-5 is 70 miles/hour.
+
+- A highway patrol officer is hidden on the side of the freeway. What is 
+the probability that 5~cars pass and none are speeding? Assume that the 
+speeds of the cars are independent of each other.
+- On average, how many cars would the highway patrol officer expect to 
+watch until the first car that is speeding? What is the standard deviation of 
+the number of cars he would expect to watch?
+
+## p. , ex. 4.39
+Suppose a 
+newspaper article states that the distribution of auto insurance premiums for 
+residents of California is approximately normal with a mean of \$1,650. The 
+article also states that 25\% of California residents pay more than \$1,800. 
+
+- What is the Z-score that corresponds to the top 25\% (or the $75^{th}$ 
+percentile) of the standard normal distribution?
+- What is the mean insurance cost? What is the cutoff for the 75th 
+percentile?
+- Identify the standard deviation of insurance premiums in California.
+
+## p. , ex. 4.40
+SAT scores (out of 1600) are distributed 
+normally with a mean of 1100 and a standard deviation of 200.
+Suppose a school council awards a certificate of excellence
+to all students who score at least 1350 on the SAT,
+and suppose we pick one of the recognized students at random.
+What is the probability this student's score will be
+at least 1500?
+(The material covered in
+Section 3.2
+on conditional probability
+would be useful for this question.)
+
+## p. , ex. 4.41
+Pew Research reported 
+that the typical response rate to their surveys is only 9\%. If for a 
+particular survey 15,000 households are contacted, what is the probability 
+that at least 1,500 will agree to respond? 
+
+## p. , ex. 4.43
+Suppose weights of the 
+checked baggage of airline passengers follow a nearly normal distribution 
+with mean 45 pounds and standard deviation 3.2 pounds. Most airlines charge a 
+fee for baggage that weigh in excess of 50 pounds. Determine what percent of 
+airline passengers incur this fee.
+
+## p. , ex. 4.44
+Heights of 10 year olds, regardless of gender, closely follow
+a normal distribution with mean 55 inches and standard deviation
+6~inches.
+
+- 
+    What is the probability that a randomly chosen 10 year old
+    is shorter than 48 inches?
+- 
+    What is the probability that a randomly chosen 10 year old
+    is between 60 and 65 inches?
+- 
+    If the tallest 10\% of the class is considered
+    ``very tall'',
+    what is the height cutoff for "very tall"?
+
+## p. , ex. 4.45
+Suppose you're considering buying your expensive chemistry
+textbook on Ebay.
+Looking at past auctions suggests that the 
+prices of this textbook follow an approximately normal
+distribution with mean \$89 and standard deviation \$15.
+
+- What is the probability that a randomly selected auction for this book 
+closes at more than \$100?
+
+- Ebay allows you to set your maximum bid price so that if someone 
+outbids you on an auction you can automatically outbid them, up to the 
+maximum bid price you set. If you are only bidding on one auction, what are 
+the advantages and disadvantages of setting a bid price too high or too low? 
+What if you are bidding on multiple auctions?
+
+- If you watched 10 auctions, roughly what percentile might you use for a 
+maximum bid cutoff to be somewhat sure that you will win one of these ten 
+auctions? Is it possible to find a cutoff point that will ensure that you win 
+an auction?
+
+- If you are willing to track up to ten auctions closely, about what 
+price might you use as your maximum bid price if you want to be somewhat sure 
+that you will buy one of these ten books?
+
+## p. , ex. 4.46
+Heights of 10 year olds, regardless of gender, closely follow
+a normal distribution with mean 55 inches and standard deviation
+6~inches.
+
+- 
+    The height requirement for \textit{Batman the Ride} at
+    Six Flags Magic Mountain is 54 inches.
+    What percent of 10 year olds cannot go on this ride?
+- 
+    Suppose there are four 10 year olds.
+    What is the chance that at least two of them
+    will be able to ride \emph{Batman the Ride}?
+- 
+    Suppose you work at the park to help them better
+    understand their customers' demographics, and
+    you are counting people as they enter
+    the park.
+    What is the chance that the first 10 year old
+    you see who can ride \emph{Batman the Ride} is
+    the 3rd 10 year old who enters the park?
+- 
+    What is the chance that the fifth 10 year old
+    you see who can ride \emph{Batman the Ride} is
+    the 12th 10 year old who enters the park?
+
+## p. , ex. 4.47
+Heights of 10 year olds, regardless of gender, closely follow
+a normal distribution with mean 55 inches and standard deviation
+6~inches.
+
+- 
+    What fraction of 10 year olds are taller than
+    76 inches?
+-  If there are 2,000 10 year olds entering
+    Six Flags Magic Mountain in a single day,
+    then compute the expected number of
+    10 year olds who are at least 76 inches tall.
+    (You may assume the heights of the 10-year olds
+    are independent.)
+- 
+    Using the binomial distribution,
+    compute the probability that 0 of the 2,000
+    10 year olds will be at least 76 inches tall.
+- 
+    The number of 10 year olds who enter
+    Six Flags Magic Mountain and are
+    at least 76 inches tall in a given day
+    follows a Poisson distribution with
+    mean equal to the value found in
+    part (b).
+    Use the Poisson distribution to identify
+    the probability no 10 year old will enter
+    the park who is 76 inches or taller.
+
+## p. , ex. 4.48
+In a multiple choice quiz there are 
+5 questions and 4 choices for each question (a, b, c, d). Robin has not 
+studied for the quiz at all, and decides to randomly guess the answers. What 
+is the probability that
+
+- the first question she gets right is the $3^{rd}$ question?
+- she gets exactly 3 or exactly 4 questions right?
+- she gets the majority of the questions right?
+
+

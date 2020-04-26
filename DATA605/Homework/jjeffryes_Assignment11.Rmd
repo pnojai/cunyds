@@ -1,0 +1,204 @@
+---
+title: "Data 605 - Assignment 11"
+author: "Jai Jeffryes"
+date: "4/19/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+## Assignment
+Using the `cars` dataset in `R`, build a linear model for stopping distance as a function of speed and replicate the analysis of your textbook chapter 3 (visualization, quality evaluation of the model, and residual analysis.)
+
+## Why linear regression
+Linear regression is particularly useful for inferential questions because it is easy to interpret. You can just read off the coefficients to make meaningful observations about data generation.
+
+## Data
+The `cars` dataset contains data about the speed of cars and the distances taken to stop. Note that the data were recorded in the 1920s.
+
+### Load data
+```{r}
+data(cars)
+# Use a generic name to support code reuse.
+dataset <- cars
+rm(cars)
+gc()
+```
+
+# Fit a regression model
+```{r}
+set.seed(42)
+lm.fit <- lm(dist ~ speed, data = dataset)
+plot(dataset$speed, dataset$dist,
+     main = "Linear model of dataset cars",
+     xlab = "Speed (mph)",
+     ylab = "Stopping distance (ft)")
+abline(lm.fit, col = "blue")
+```
+
+## Analysis
+## Is there a relationship between predictor and a response
+- Test the null hypothesis. $H_0$: Each predictor = 0. Evaluate the p-value of the $F$ statistic.
+
+```{r}
+lm.summary <- summary(lm.fit)
+lm.summary
+```
+
+- $F$ statistic: `r lm.summary$fstatistic[1]`.
+- P-value: `r pf(lm.summary$fstatistic[1], lm.summary$fstatistic[2], lm.summary$fstatistic[3], lower.tail=FALSE)`.
+
+### Conclusion for null hypothesis
+The $F$-statistic is far from 1 and its p-value is close to 0. We reject the null hypothesis and accept the alternative hypothesis, concluding there is a relationship of statistical significance between the predictor and the response.
+
+## How strong is the relationship
+There are two accuracy measures.
+
+1. Residual standard error (RSE) measures the standard deviation of the response from the population regression line. Comparing RSE to the mean response yields percentage error.
+1. $R^2$ gives you the ratio of variability in the response explained by the predictors.
+   
+```{r}
+# RSE
+# lm.summary$sigma
+
+# Mean response
+response_mean <- mean(cars$dist)
+
+# Percentage error
+error_percent <- (lm.summary$sigma / response_mean) * 100
+
+# R squared
+# lm.summary$r.squared
+```
+
+- RSE: `r lm.summary$sigma`.
+- Mean response: `r response_mean`.
+- Mean percentage error of prediction: `r round(error_percent, 2)`%.
+- $R^2$: `r lm.summary$r.squared`.
+
+### Conclusion for strength of relationship
+Our predictions differ, on average, from the true value by `r round(lm.summary$sigma, 2)` ft. on an average stopping distance of `r response_mean` ft., indicating an error rate of `r round(error_percent, 2)`%. Speed explains `r round(lm.summary$r.squared, 2) * 100`% of the variance in stopping distance. The relationship between speed and stopping distance is strong and positively correlated.
+
+## What is the standard error of the coefficients
+We would like the ratio of a coefficient to its standard error to be at least in the range of 5 to 10.
+
+- The ratio of coefficient `speed` to its standard error is: `r round(3.9324 / 0.4155, 2)`.
+- For the intercept: `r round(abs(-17.5791) / 6.7584, 2)`.
+
+### Conclusion for coefficients' standard error.
+The variability of `speed` is reasonably low. However, the variability of the intercept is high.
+
+## How large is the effect of each predictor on the response
+*Note: there is only one predictor to examine in this dataset.*
+
+- Examine confidence intervals. Are they narrow and far from zero, or do they include zero, making them statistically insignificant.
+
+```{r}
+confint(lm.fit)
+```
+
+### Conclusion for effects
+- The confidence interval for speed is narrow and it is moderately far from 0, providing evidence that it is related to stopping distance.
+
+## How accurately can we predict future responses
+- Predict the average response. For a certain percentage of datasets, the confidence interval contains the true average of the response. In other words, the value on the regression line.
+- Predict an individual response. For a certain percentage of datasets, the prediction interval contains the true value of the response. It accounts for not only the reducible error, but also the uncertainty surrounding the response for a particular case. In other words, the interval includes the result of the estimated average plus residual or $\epsilon$.
+
+```{r}
+# Produce confidence intervals and prediction intervals for the prediction of dist for a given value of speed.
+input.predict <- data.frame(speed = c(10, 15, 20))
+
+# Test data.
+input.predict
+
+# Confidence intervals.
+predict(lm.fit, input.predict, interval = "confidence")
+
+# Prediction intervals.
+predict(lm.fit, input.predict, interval = "prediction")
+```
+
+## Residual analysis
+We begin by reviewing the output of `summary()` again. For a good fit, we would like the residual statistics to fit a normal distribution around a mean of zero.
+
+That is:
+
+- Median of 0.
+- 1st and 3rd quartiles about the same magnitude.
+- The minimum and maximum values about the same magnitude.
+
+```{r}
+summary(lm.fit)
+```
+
+The median is negative, but not too far from 0. The 1st and 3rd quartiles are almost identical in magnitude. The maximum value has much higher magnitude than the minimum value. There may be non-linearity in the upper region of `speed`.
+
+We examine a plot of the residuals and draw a line at $y = 0$ for reference. We look for patterns again, whose presence may indicate non-linearity in the relationship.
+
+```{r}
+plot(lm.fit$residuals,
+     main = "Residuals of the linear model for cars dataset",
+     xlab = "Index",
+     ylab = "Residual (ft)")
+abline(h = 0, col = "blue")
+```
+
+No obvious pattern is evident, which supports linearity of the data. However, the variance is inconsistent. If we wish to pursue the question of non-linearity further, we could try transformations of the predictors.
+
+We can view several diagnostic plots together, the first of which is another version of a residual plot.
+
+- Residuals vs. fitted values. In simple regression this is residuals to predictor. Again, we wish to see no pattern.
+- Normal Q-Q.
+- Scale-location.
+- Residuals vs. leverage.
+
+```{r}
+par.old <- par(no.readonly = TRUE)
+par(mfrow = c(2,2))
+plot(lm.fit)
+par(par.old)
+
+# plot(predict(lm.fit), residuals(lm.fit))
+# plot(predict(lm.fit), rstudent(lm.fit))
+```
+
+### Residuals vs Fitted
+This form of the residual plot helps to identify patterns. The red line is a smooth fit to the residuals. There is a bit of a dip and an ascent in the upper range. The slopes are very small, and the pattern is not strong.
+
+### Normal Q-Q
+As evidenced by alignment to the identity line, the residuals are mostly distributed normally. There is divergence in the upper range of the plot. This may indicate non-linearity in this region. The divergence begins at 1.5 standard deviations.
+
+### Scale-Location and Residuals vs. Leverage
+For a good model, we want to see consistent variance throughout the range of the data (a quality described by a word that I have only read so I don't know how to pronounce it, homoscedasticity.) Although my visual evaluation of other plots led me to conclude there was inconsistent variance in this data, the reasonably flat red line here indicates the data varies consistently throughout its range.
+
+### Residuals vs Leverage
+This plot helps us identify outliers that upset and displace the regression line of our model. Here, in the lower range a linear cluster of observations fall right on the edge of Cook's Distance, as well as observation 39 which lies beyond Cook's Distance. These observations exert some leverage on the regression line, a reasonable explanation for the high standard error of the intercept. The pressure isn't large and doesn't suggest treatment of these observations as obvious outliers.
+
+### Leverage statistics
+I have a plot for "hat values," but I haven't learned what that is yet.
+
+```{r}
+# Compute leverage statistics.
+plot(hatvalues (lm.fit))
+which.max(hatvalues (lm.fit))
+```
+
+# Conclusions
+The linear model of stopping distance as a function of speed for the `cars` dataset reveals a strong, positively correlated relationship. The accuracy of the model is reasonable with a low standard error of the coefficent for speed. The predictor, speed, explains about 65% of the variability seen in stopping distance.
+
+The linear fit is good through most of the range of the data. However, there is some evidence, worth exploring, of non-linearity in at the high end.
+
+# Retrospective
+## Improvements
+Try transformations of predictors to to accommodate potential non-linear relationships. For example, $log X$, $\sqrt{X}$, $X^2$, or higher polynomials using `poly()`.
+
+## Further study
+- I would benefit from examining more diagnostic plots to practice their interpretation. In particular, I would benefit from understanding heteroscedacity and leverage statistics better. These links appear promising.
+  - [Understanding Diagnostic Plots for Linear Regression Analysis](https://data.library.virginia.edu/diagnostic-plots/).
+  - [Understanding Q-Q Plots](https://data.library.virginia.edu/understanding-q-q-plots/).
+  - [R Tutorial : How to use Diagnostic Plots for Regression Models](https://analyticspro.org/2016/03/07/r-tutorial-how-to-use-diagnostic-plots-for-regression-models/).
+- Learn what hat values are in the analysis of leverage.
+- Learn what the `rstudent()` function does.
