@@ -10,7 +10,17 @@ knitr::opts_chunk$set(echo = TRUE)
 options(scipen = 999)
 ```
 
+## Extra study
+- [L12.2 The Sum of Independent Discrete Random Variables](https://www.youtube.com/watch?v=zbu8KQx9bqM). This is the clearest video I found explaining convolution.
+- [Convolution Theorem: Application & Examples](https://study.com/academy/lesson/convolution-theorem-application-examples.html). And this is the clearest article.
+
 # Ex. 1, p. 289
+#### Ex. 7.1, p. 289
+A die is rolled three times. Find the probability that the sum of the outcomes is
+
+(a) greater than 9.
+(b) an odd number.
+
 ```{r}
 P <- function(x) {
 	if (x %in% c(1:6)) {
@@ -64,6 +74,97 @@ for (i in 0:((3 * 6) - 1)) {
 1 - total
 ```
 
+#### Ex. 7.1, p. 289
+A die is rolled three times. Find the probability that the sum of the outcomes is
+
+(a) greater than 9.
+(b) an odd number.
+
+I'll use a solution that counts the probabilities that I found on the internet and adapted in `R`. This helped me understand the summation when I added traces.
+
+```{r}
+# PMF
+P <- function(x) {
+	if (x %in% c(1:6)) {
+		return(1 / 6)
+	} else {
+		return(0)
+	}
+}
+
+# S(2). Include some traces.
+S2 <- function(x, verbose = F) {
+	total <- 0
+	
+	if (verbose) {
+		print(paste0("x=", x))
+	}
+	for (k in 0:x) {
+		total <- total + (P(k) * P(x - k))
+
+		if (verbose) {
+			print(paste0("k=", k, ", x-k=", x-k))
+			print(paste0("    P(k)=", P(k), ", P(x-k)=", P(x-k)))
+			print(paste0("    P(k)P(x-k)=", P(k) * P(x - k)))
+			print(paste0("    total=", total))
+		}
+	}
+	return(total)
+}
+    
+S3 <- function(x, verbose = F) {
+	total <- 0
+	for (k in 0:x) {
+		prob <- S2(k, verbose) * P(x - k)
+		total <- total + prob
+	}
+	return(total)
+}
+```
+
+Check out the PMF
+```{r}
+P(0)
+P(3)
+P(7)
+```
+
+Check out $P(S_2 = 2)$ and compare with p. 286.
+
+```{r}
+S2(2, verbose = T)
+S2(3, verbose = T)
+```
+Check out $P(S_2 = 2)$ and compare with p. 287.
+
+```{r}
+S3(3, verbose = T)
+```
+
+##### Answer
+- Part a
+```{r}
+total <- 0
+for (i in 1:9) {
+	total <- total + S3(i)
+}
+
+1 - total
+```
+
+- Part b
+```{r}
+total <- 0
+for (i in 0:((3 * 6) - 1)) {
+	if (i %% 2 == 1) {
+		total <- total + S3(i)
+	}
+}
+
+1 - total
+```
+
+
 [StackOverflow](https://stackoverflow.com/questions/23569133/adding-two-random-variables-via-convolution-in-r)
 ```{r}
 f.X <- function(x) dnorm(x,1,0.5)        # normal (mu=1.5, sigma=0.5)
@@ -80,5 +181,34 @@ Z <- X + Y
 hist(Z,freq=F,breaks=50, xlim=c(0,30))
 z <- seq(0,50,0.01)
 lines(z,f.Z(z),lty=2,col="red")
+```
+
+#### Ex. 7.2, p. 289
+The price of a stock on a given trading day changes according to the distribution
+
+$p_X= (\frac{-1}{1/4} \frac{0}{1/2} \frac{1}{1/8} \frac{2}{1/8})$
+
+Find the distribution for the change in stock price after two (independent) trading days.
+
+The PMF represents the change after one day. Two days of changes is the convolution of the PMF with itself.
+
+$p_X(x = 1) \cdot p_X(x = 1$
+
+```{r}
+# PMF
+P <- function(x) {
+	# if (x %in% c(1:6)) {
+	# 	return(1 / 6)
+	# } else {
+	# 	return(0)
+	# }
+	dist <- c(01/4, 1/2, 1/8, 1/8)
+	if (x %in% c(-1:2)) {
+		return(dist[x + 1])
+	} else {
+		return(0)
+	}
+}
+
 ```
 

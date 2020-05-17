@@ -1,0 +1,35 @@
+---
+title: "Chapter02"
+author: "Jai Jeffryes"
+date: "5/7/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen = 999)
+```
+
+## Notes
+
+## Exercises
+### Ex. 2.2.23
+Write a program that picks a random number between 0 and 1 and computes the negative of its logarithm. Repeat this process a large number of times and plot a bar graph to give the number of times that the outcome falls in each interval of length 0.1 in [0, 10]. On this bar graph plot a graph of the density f(x) = $e^{−x}$. How well does this density fit your graph?
+
+```{r}
+trials <- 10000
+x <- runif(trials)
+x.neg_log <- -log(x)
+plot(x, x.neg_log)
+bins <- seq(from = 0, to = 10, by = 0.1)
+
+xtable <- rep(NULL, length(bins))
+
+for (i in 1:(length(bins) - 1)) {
+	xtable[i] <- sum(x >= bins[i] & x < bins[i + 1])
+}
+
+plot(x, exp(-x))
+```
+
+

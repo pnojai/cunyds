@@ -1,0 +1,133 @@
+---
+title: "Chapter 8"
+author: "Jai Jeffryes"
+date: "5/2/2020"
+output:
+  pdf_document: default
+  html_document: default
+subtitle: Grinstead
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(scipen = 999)
+```
+
+## Ex. 8.1.1
+A fair coin is tossed 100 times. The expected number of heads is 50, and the standard deviation for the number of heads is (100 · 1/2 · 1/2)1/2 = 5. What does Chebyshev’s Inequality tell you about the probability that the number of heads that turn up deviates from the expected number 50 by three or more standard deviations (i.e., by at least 15)?
+
+*Note*:
+
+- What's given about standard deviation? We know the number of trials is 100 and the probability of the outcome heads. The formula for calculating standard deviation for the binomial distribution is $\sigma = \sqrt{npq}$.
+- The question asks for *at least* 3 standard deviations. Use the tail form of the theorem.
+
+$P(|X - \mu| \ge k \sigma) \ge \frac{1}{k^2}$
+
+So, $P(|X - 50| \ge 3 \cdot 5) >= \frac{1}{9}$ = `r 1/9`.
+
+The probability that the number of heads is at least 15 is, at most, `r 1/9`.
+
+## Ex. 8.1.2
+Write a program that uses the function binomial(n, p, x) to compute the exact probability that you estimated in Exercise 1. Compare the two results.
+
+I wrote this function to visualize and calculate all the binomial intervals when I reviewed the binomial distribution section for DATA606. *Note:* there still might be some work to do on some of the boundaries.
+
+```{r}
+binom_summary <- function(successes, trials, prob,
+                          main = NULL, xlab = "Successes", ylab = "P(X = x)") {
+  # Annotate plot.
+  param_str <- paste0(", n=", trials, ", p=", prob)
+  main <- ifelse(is.null(main), paste0("Binomial distribution", param_str),
+                 paste0(main, param_str))
+
+  plot(0:trials, dbinom(0:trials, trials, prob = prob),
+     xlab = xlab,
+     ylab = ylab,
+     type = "h",
+     main = main)
+  abline(v = successes, col = "red")
+  
+  mu <- trials * prob
+  sigma <- sqrt(trials * prob * (1 - prob))
+  is_normal_approx <- trials * prob >= 10 & trials * (1 - prob) >= 10
+
+  print(paste0("mu: ", mu))
+  print(paste0("sigma: ", sigma))
+  
+  print(paste0("Trials: ", trials))
+  print(paste0("Successes: ", successes))
+
+  prob.exact <- dbinom(successes, trials, prob)
+  
+  prob.cumulative.lt <- pbinom(successes - 1, trials, prob)
+  # Normal approximation
+  prob.cumulative.lt.approx <- pnorm(successes, mu, sigma)
+  # Normal approximation with continuity correction.
+  prob.cumulative.lt.approx.corr <- pnorm(successes - 0.5, mu, sigma)
+  
+  prob.cumulative.le <- pbinom(successes, trials, prob)
+  # Normal approximation
+  prob.cumulative.le.approx <- pnorm(successes, mu, sigma)
+  # Normal approximation with continuity correction.
+  prob.cumulative.le.approx.corr <- pnorm(successes + 0.5, mu, sigma)
+  
+  prob.cumulative.gt <- pbinom(successes, trials, prob, lower.tail = F)
+  # Normal approximation
+  prob.cumulative.gt.approx <- pnorm(successes, mu, sigma, lower.tail = F)
+  # Normal approximation with continuity correction.
+  prob.cumulative.gt.approx.corr <- pnorm(successes + 0.5, mu, sigma, lower.tail = F)
+
+  prob.cumulative.ge <- pbinom(successes - 1, trials, prob, lower.tail = F)
+  # Normal approximation
+  prob.cumulative.ge.approx <- pnorm(successes, mu, sigma, lower.tail = F)
+  # Normal approximation with continuity correction.
+  prob.cumulative.ge.approx.corr <- pnorm(successes - 0.5, mu, sigma, lower.tail = F)
+
+  print(paste0("Binomial probability. P(X=x): ", round(prob.exact, 4)))
+
+  print(paste0("Cumulative probability. P(X<x): ", round(prob.cumulative.lt, 4)))
+  if (is_normal_approx) {
+    print(paste0("    Normal approximation. P(X<x): ",
+                 round(prob.cumulative.lt.approx, 4)))
+    print(paste0("    Normal approximation w/ continuity correction. P(<x): ",
+                 round(prob.cumulative.lt.approx.corr, 4)))
+  }
+  
+  print(paste0("Cumulative probability. P(X<=x): ", round(prob.cumulative.le, 4)))
+  if (is_normal_approx) {
+    print(paste0("    Normal approximation. P(X<=x): ",
+                 round(prob.cumulative.le.approx, 4)))
+    print(paste0("    Normal approximation w/ continuity correction. P(<=x): ",
+                 round(prob.cumulative.le.approx.corr, 4)))
+  }
+  
+  print(paste0("Cumulative probability. P(X>x): ", round(prob.cumulative.gt, 4)))
+  if (is_normal_approx) {
+    print(paste0("    Normal approximation. P(X>x): ",
+                 round(prob.cumulative.gt.approx, 4)))
+    print(paste0("    Normal approximation w/ continuity correction. P(X>x): ",
+                 round(prob.cumulative.gt.approx.corr, 4)))
+  }
+
+    print(paste0("Cumulative probability. P(X>=x): ", round(prob.cumulative.ge, 4)))
+  if (is_normal_approx) {
+    print(paste0("    Normal approximation. P(X>=x): ",
+                 round(prob.cumulative.ge.approx, 4)))
+    print(paste0("    Normal approximation w/ continuity correction. P(X>=x): ",
+                 round(prob.cumulative.ge.approx.corr, 4)))
+  }
+}
+```
+
+I ran it for this problem (incorrectly).
+
+```{r}
+binom_summary(15, 100, 0.5)
+```
+
+How great are pictures?! The successes I input, 15, is plotted with the red line. Instantly, I see my mistake. The successes I'm supposed to check don't amount to 15, they are the mean PLUS 3 standard deviations, and MINUS, too. Let's try again.
+
+```{r}
+binom_summary(50 + 15, 100, 0.5)
+```
+We want both tails, so twice that tail probability is `r 2 * 0.0018`,  rounded to 4 places. I'll calculate that again without rounding. The answer, `r 2 * pbinom(50 - 15, 100, 0.5)`. That is consistent with my answer for the previous problem which said that the probability *at most* is `r 1/9`. There can be a big margin around the results we calculate using Chebyshev's Inequality.

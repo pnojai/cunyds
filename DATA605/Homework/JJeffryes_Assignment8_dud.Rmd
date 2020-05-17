@@ -2,10 +2,7 @@
 title: "DATA605 - Assignment 8"
 author: "Jai Jeffryes"
 date: "4/13/2020"
-output:
-  pdf_document:
-    toc: yes
-    toc_depth: 5
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
@@ -25,87 +22,56 @@ We know:
 5. $E(M) = \frac{\mu}{n}$ (Given in problem 10)
 6. $E(M) = \frac{1000}{100} = 10$ (1, 2, 5)
 
-*Note*: This question was all about the answers hiding in plain sight. It will be worth returning to the section to learn more about exponential distributions.
+Answer: **The expective time for the first bulb to burn out is 10 hours.**
 
-### Answer
-The expected time for the first bulb to burn out is 10 hours.
+Note: This question was all about the answers hiding in plain sight. It will be worth returning to the section to learn more about exponential distributions.
 
 ## p. 303, ex. 14
 Assume that $X1$ and $X2$ are independent random variables, each having an exponential density with parameter $\lambda$. Show that $Z = X_1 - X_2$ has density
 
 $f_Z(z) = (1/2) \lambda e^{-\lambda|z|}$
 
-### Derivation
-I base my approach on the example shown in [Grinstead], p.292. However, since I want to get to an anti-derivative with respect to $x$, I tailor the formula by reversing the variable names.
+### Visualization
+This visualization is a dud because it's based on two values for $\lambda$. I don't know what the problem is really supposed to look like.
 
-First, suppose we wish to sum $Z = X + Y$. From the convolution formula, its density function would be,
-$$f_Z(z) = \int_{-\infty}^{+\infty}f_Y(z-x)f_X(x)dx$$
+```{r}
+lambda.1 <- 5
+lambda.2 <- 2
+x <- seq(from = 0, to = 2, by = 0.01)
+y.1 <- lambda.1 * exp(-lambda.1 * x)
+y.2 <- lambda.2 * exp(-lambda.2 * x)
+y.3 <- y.1 - y.2
+plot(x, y.1, type = "l", ylim = c(-4, 6),
+	 ylab = "y",
+	 main = "Exponential distributions: X1, X2, X1 - X2")
+lines(x, y.2, col = "red")
+lines(x, y.3, col = "blue")
+legend(1.25, -1, legend=c("X1 = Exp(Lambda = 5)", "X2 = Exp(Lambda = 2)", "X1 - X2"),
+       col=c("black", "red", "blue") , lty=c(1, 1, 1), cex=0.8)
+```
 
-Here's the trick. Substitute $(-y)$ for $y$, since we will want to evaluate $X_1 - X_2$.
-$$f_Z(z) = \int_{-\infty}^{+\infty}f_{-Y}(z-x)f(x)dx$$
+If I plot the difference superimposed on the formula we're proving, the curves should be congruent. Let's try this experiment. Make one red, the other blue. The expected result is one line that is purple.
 
-Observe this equivalence.
-$$f_{-Y}(z-x) = f_Y(x - z)$$
+```{r}
+lambda.1 <- 5
+lambda.2 <- 2
+x <- seq(from = 0, to = 2, by = 0.01)
+y.1 <- lambda.1 * exp(-lambda.1 * x)
+y.2 <- lambda.2 * exp(-lambda.2 * x)
+y.3 <- y.1 - y.2
+y.4 <- 
+plot(x, y.1, type = "l", ylim = c(-4, 6),
+	 ylab = "y",
+	 main = "Exponential distributions: X1, X2, X1 - X2")
+lines(x, y.2, col = "red")
+lines(x, y.3, col = "blue")
+legend(1.25, -1, legend=c("X1 = Exp(Lambda = 5)", "X2 = Exp(Lambda = 2)", "X1 - X2"),
+       col=c("black", "red", "blue") , lty=c(1, 1, 1), cex=0.8)
+```
 
-So,
-$$f_Z(z) = \int_{-\infty}^{+\infty} f_Y(x - z) f_X(x)dx$$
 
-This integral expresses the density function for the difference between two random variables. Now, substitute the exponential function requested in this problem.
-
-The exponential density function is,
-
-- $f(t) = \lambda e^{-\lambda t}$, $t \ge 0$
-- $0$, otherwise.
-
-Substitute the exponential distribution into the definite integral. Note that the exponential distribution equals 0 for the range below 0. Since the integral evaluates to 0 in that range, we change the lower boundary of the integral.
-$$\int_0^{\infty} \lambda e^{-\lambda(x - z)} \lambda e^{-\lambda x} dx$$
-
-Simplify the exponents
-$$= \int_{0}^{\infty} \lambda e^{-\lambda x + \lambda z} \lambda e^{-\lambda x} dx$$
-$$= \int_{0}^{\infty} \lambda e^{\lambda z} \lambda e^{-2 \lambda x} dx$$
-
-The first term is a constant. Pull it out.
-$$= \lambda e^{\lambda z} \int_{0}^{\infty} \lambda e^{-2 \lambda x} dx$$
-
-To find the anti-derivative, apply $u$ substitution.
-
-Let $u = -2 \lambda x$. So, $du = -2 \lambda dx$. The integral has $\lambda dx$, but not -2, so in order to substitute $du$ into the integral we must divide by -2 to cancel it out. The boundaries of the integral are the same, even though we're rescaling them to $u$.
-$$= \lambda e^{\lambda z} (\frac{-1}{2})\int_{0}^{\infty} e^u du$$
-$$= \lambda e^{\lambda z} (\frac{-1}{2}) e^u \bigg\rvert_{u = 0}^\infty$$
-
-Substitute for $u$.
-$$= \lambda e^{\lambda z} (\frac{-1}{2}) e^{-2\lambda x} \bigg\rvert_{x = 0}^\infty$$
-
-The limit as $x$ approaches infinity of $e^x$ is 0. So the integral computes to,
-$$= 0 - (\frac{-1}{2} \lambda e^{\lambda z} \cdot 1)$$
-$$= \frac{1}{2} \lambda e^{\lambda z}$$
-
-The rest of this relies on a proof I viewed on YouTube [*here*](https://www.youtube.com/watch?v=f8Nli1AfygM). The instructor said that the place I got up to only considers the range of the function $f_Z(z) < 0$. You can infer the other side, since $f_Z(z$ is symmetric around $z = 0$, $f_Z(z) thus,
-
-- $= \frac{1}{2} \lambda e^{\lambda z}$, $z < 0$
-- $= \frac{1}{2} \lambda e^{-\lambda z}$, $z \ge 0$
-
-Therefore,
-$$f_Z(z) = \frac{\lambda}{2} e^{-\lambda |z|}$$
-
-Since I don't really get why I need to partition the range of $Z$, or how I would know I need to do that beforehand, the wrap up of my answer feels like a bit of hand-waving.
-
-### Answer
-$$f_Z(z) = \frac{\lambda}{2} e^{-\lambda |z|}$$
-
-## p. 320, ex. 1
-Let $X$ be a continuous random variable with mean $\mu$ = 10 and variance $\sigma^2$ = 100/3. Using Chebyshev’s Inequality, find an upper bound for the following probabilities.
-
-*Note*: *REA's Problem Solvers: Statistics* saved the day. I just didn't even understand what Chebyshev's Inequality was trying to do. The REA book was a GREAT suggestion. I pored over that and, once I saw it I cried, "Is THAT all it is?!"
-
-### Answer
-(a) $P(|X-10| \ge 2) <= \frac{V(X)}{k^2} = \frac{100}{3} \cdot \frac{1}{2^2} = \frac{25}{3}$ = `r 25 / 3`. The most a probability can be is 1, so the answer is 1.
-(b) $P(|X-10| \ge 5) <= \frac{V(X)}{k^2} = \frac{100}{3} \cdot \frac{1}{5^2} = \frac{4}{3}$ = `r 4 / 3`. The most a probability can be is 1, so the answer is 1.
-(c) $P(|X-10| \ge 9) <= \frac{V(X)}{k^2} = \frac{100}{3} \cdot \frac{1}{9^2} = \frac{100}{243}$ = `r 100 / 243`
-(d) $P(|X-10| \ge 20) <= \frac{V(X)}{k^2} = \frac{100}{3} \cdot \frac{1}{20^2} = \frac{1}{12}$ = `r 1 / 12`
 
 ## Extra study
-### References
 - [L12.2 The Sum of Independent Discrete Random Variables](https://www.youtube.com/watch?v=zbu8KQx9bqM). This is the clearest video I found explaining convolution.
 - [Convolution Theorem: Application & Examples](https://study.com/academy/lesson/convolution-theorem-application-examples.html). And this is the clearest article.
 
@@ -200,7 +166,36 @@ for (i in 0:((3 * 6) - 1)) {
 1 - total
 ```
 
-#### Ex. 8.1.1
+#### Ex. 7.2, p. 289
+The price of a stock on a given trading day changes according to the distribution
+
+$p_X= (\frac{-1}{1/4} \frac{0}{1/2} \frac{1}{1/8} \frac{2}{1/8})$
+
+Find the distribution for the change in stock price after two (independent) trading days.
+
+The PMF represents the change after one day. Two days of changes is the convolution of the PMF with itself.
+
+$p_X(x = 1) \cdot p_X(x = 1$
+
+```{r}
+# PMF
+P <- function(x) {
+	# if (x %in% c(1:6)) {
+	# 	return(1 / 6)
+	# } else {
+	# 	return(0)
+	# }
+	dist <- c(01/4, 1/2, 1/8, 1/8)
+	if (x %in% c(-1:2)) {
+		return(dist[x + 1])
+	} else {
+		return(0)
+	}
+}
+
+```
+
+### Ex. 8.1.1
 A fair coin is tossed 100 times. The expected number of heads is 50, and the standard deviation for the number of heads is (100 · 1/2 · 1/2)1/2 = 5. What does Chebyshev’s Inequality tell you about the probability that the number of heads that turn up deviates from the expected number 50 by three or more standard deviations (i.e., by at least 15)?
 
 *Note*:
@@ -212,10 +207,9 @@ $P(|X - \mu| \ge k \sigma) \ge \frac{1}{k^2}$
 
 So, $P(|X - 50| \ge 3 \cdot 5) >= \frac{1}{9}$ = `r 1/9`.
 
-##### Answer
 The probability that the number of heads is at least 15 is, at most, `r 1/9`.
 
-#### Ex. 8.1.2
+### Ex. 8.1.2
 Write a program that uses the function binomial(n, p, x) to compute the exact probability that you estimated in Exercise 1. Compare the two results.
 
 I wrote this function to visualize and calculate all the binomial intervals when I reviewed the binomial distribution section for DATA606. *Note:* there still might be some work to do on some of the boundaries.
@@ -318,6 +312,4 @@ How great are pictures?! The successes I input, 15, is plotted with the red line
 ```{r}
 binom_summary(50 + 15, 100, 0.5)
 ```
-
-##### Answer
-We want both tails, so twice the tail probability is `r 2 * 0.0018`,  rounded to 4 places. I'll calculate that again without rounding. The answer, `r 2 * pbinom(50 - 15, 100, 0.5)`. That is consistent with my answer for the previous problem which said that the probability *at most* is `r 1/9`. There can be a big margin around the results we calculate using Chebyshev's Inequality.
+We want both tails, so twice that tail probability is `r 2 * 0.0018`,  rounded to 4 places. I'll calculate that again without rounding. The answer, `r 2 * pbinom(50 - 15, 100, 0.5)`. That is consistent with my answer for the previous problem which said that the probability *at most* is `r 1/9`. There can be a big margin around the results we calculate using Chebyshev's Inequality.

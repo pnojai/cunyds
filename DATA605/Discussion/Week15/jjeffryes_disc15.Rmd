@@ -1,0 +1,52 @@
+---
+title: "DATA 605 - Discussion 15"
+author: "Jai Jeffryes"
+date: "5/6/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Assignment
+Pick any exercise in 8.8 of the calculus textbook.  Solve and post your solution. 
+
+## P. 496
+In Exercises 17 - 20, use the Taylor series given in Key Idea 8.8.1 to verify the given identity.
+
+## Problem 17
+$cos(-x) = cos(x)$
+
+The Taylor series given in 8.8.1 for cosine is,
+$$cos(x) = \sum_{n=0}^{\infty} (-1)^n \frac{x^{2^n}}{(2n)!}$$
+Substitute $-x$,
+$$cos(-x) = \sum_{n=0}^{\infty} (-1)^n \frac{(-x)^{2^n}}{(2n)!}$$
+What I really want to do is simply pull out the terms that are different. Is there a way, somehow, to make that legal, formally?
+
+I want to compare the numerators.
+$$x^{2^n},\ (-x)^{2^n}$$
+Expand the summation for the second of those terms.
+$$\sum_{n=0}^{\infty} (-x)^{2^n} = (-x)^{2^0} + (-x)^{2^1} + (-x)^{2^2} + \dots + (-x)^{2^n}$$
+$$= 1 + (x)^{2} + (x)^{4} + \dots + (x)^{2n}$$
+Since each term in the sum is positive,
+$$cos(-x) = \sum_{n=0}^{\infty} (-1)^n \frac{(-x)^{2^n}}{(2n)!} = \sum_{n=0}^{\infty} (-1)^n \frac{x^{2^n}}{(2n)!} = cos(x)$$$
+
+## Problem 18
+$sin(-x) = -sin(x)$
+
+From Key Idea 8.8.1,
+$$sin(x) = \sum_{n=0}^\infty (-1)^n \frac{x^{2n + 1}}{(2n + 1)!}$$
+$$sin(-x) = \sum_{n=0}^\infty (-1)^n \frac{(-x)^{2n + 1}}{(2n + 1)!}$$
+
+Compare the numerators,
+$$x^{2n + 1},\ (-x)^{2n + 1}$$
+The second numerator expanded in summation is,
+$$\sum_{n=0}^\infty (-x)^{2n + 1}= (-x)^1 + (-x)^3 + (-x)^5 + \dots + (-x)^n$$
+
+All of these terms are negative while expansion of the other term gives us,
+$$\sum_{n=0}^\infty (x)^{2n + 1}= x^1 + x^3 + x^5 + \dots + x^n$$
+
+For every pair of terms, the signs are opposite. Therefore $sin(-x) = -sin(x)$
+
+These aren't rigorous proofs, but I see the patterns.

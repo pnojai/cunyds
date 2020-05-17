@@ -10,6 +10,10 @@ knitr::opts_chunk$set(echo = TRUE)
 options(scipen = 999)
 ```
 
+## Notes
+- The real power of simulation comes from the ability to estimate probabilities when they are unknown ahead of time.
+- Simulation rule of thumb. At least 95% of the time, $error \le \frac{1}{\sqrt{n}}$
+
 ## Coin tosses
 
 ```{r}
@@ -61,7 +65,7 @@ demere1 <- function(games){
 		}
 	}
 	
-	print("The proportion of times that a six turned up")
+	print(paste0("For n = ", games, ", the proportion of times that a six turned up"))
 	print(paste0("in four rolls of a die was ", sixes/games))
 }
 
@@ -72,3 +76,81 @@ demere1(27000)
 ```
 
 The probability is: `r 1 - (5/6)^4`
+
+## Exercises
+### Ex. 1.1.1
+Modify the program CoinTosses to toss a coin $n$ times and print out after every 100 tosses the proportion of heads minus 1/2. Do these numbers appear to approach 0 as n increases? Modify the program again to print out, every 100 times, both of the following quantities: the proportion of heads minus 1/2, and the number of heads minus half the number of tosses. Do these numbers appear to approach 0 as n increases? **Yes.**
+
+```{r}
+coin_tosses_a <- function(n) {
+	outcome <- rep(NULL, n)
+	
+	for (i in 1:n) {
+		outcome[i] <- ifelse(runif(1) < 0.5, 1, 0)
+		
+		# Proportion of heads, minus 1/2.
+		value <- (sum(outcome) / n) - 0.5
+		if (i %% 100 == 0) {
+			print(paste0("i = ", i, ", Proportion of heads - 0.5 = ", value))
+		}
+	}
+	
+	return(outcome)
+}
+
+stub <- coin_tosses_a(10000)
+
+coin_tosses_b <- function(n) {
+	outcome <- rep(NULL, n)
+	
+	for (i in 1:n) {
+		outcome[i] <- ifelse(runif(1) < 0.5, 1, 0)
+		
+		# Proportion of heads, minus 1/2.
+		out1 <- (sum(outcome) / n) - 0.5
+		out2 <- sum(outcome) - (n / 2)
+		if (i %% 100 == 0) {
+			print(paste0("Iteration: ", i))
+			print(paste0("  Proportion of heads - 0.5 = ", out1))
+			print(paste0("  Number of heads - n/2 = ", out2))
+		}
+	}
+	
+	return(outcome)
+}
+
+stub <- coin_tosses_b(10000)
+```
+
+### Ex. 1.1.2
+Modify the program CoinTosses so that it tosses a coin $n$ times and records whether or not the proportion of heads is within .1 of .5 (i.e., between .4 and .6). Have your program repeat this experiment 100 times. About how large must n be so that approximately 95 out of 100 times the proportion of heads is between .4 and .6? **About 85.**
+
+```{r}
+coin_tosses_c <- function(n) {
+	outcome <- rep(NULL, n)
+	games <- 100
+	prop_game <- rep(NULL, games)
+	
+	for (j in 1:games) {
+		for (i in 1:n) {
+			outcome[i] <- ifelse(runif(1) < 0.5, 1, 0)
+		}
+	# Proportion of heads is between .4 and .6.
+		is_prop <- (sum(outcome) / n) >= 0.4 & (sum(outcome) / n) <= 0.6
+		prop_game[j] <- ifelse(is_prop, 1, 0)
+	}
+	
+	return(sum(prop_game) / games)
+}
+
+coin_tosses_c(10)
+coin_tosses_c(84)
+coin_tosses_c(100)
+
+```
+
+### 1.2.1
+Let $\Omega$ = {a,b,c} be a sample space. Let m(a) = 1/2, m(b) = 1/3, and m(c) = 1/6. Find the probabilities for all eight subsets of Ω.
+
+**I did problems 1-3, but my virtual machine lost the work.**
+

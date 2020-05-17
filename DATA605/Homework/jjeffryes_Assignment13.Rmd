@@ -1,0 +1,283 @@
+---
+title: "Data 605 - Assignment 13"
+author: "Jai Jeffryes"
+date: "5/3/2020"
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: 3
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#options(scipen = 999)
+```
+
+## Introduction
+There is a table of contents at the front of the document. For grading, if you do not need to see my reasoning you can jump right to the answers.
+
+## Problem 1
+Use integration by substitution to solve the integral below.
+
+$$\int 4e^{-7x}dx$$
+
+Let $u = -7x$, $u'(x) = -7$
+
+$$\frac{du}{dx} = -7 \iff \frac{-1}{7} du = dx$$
+$$\int 4e^{-7x}dx = 4 \int e^u \frac{-1}{7} du = \frac{-4}{7} \int e^u du$$
+
+$$= \frac{-4}{7}(e^u + C)$$
+
+### Answer
+$$\frac{-4}{7}e^{-7x} + C$$
+
+## Problem 2
+Biologists are treating a pond contaminated with bacteria. The level of contamination is changing at a rate of $\frac{dN}{dt} = -\frac{3150}{t^4} - 220$ bacteria per cubic centimeter per day, where $t$ is the number of days since treatment began. Find a function $N(t)$ to estimate the level of contamination if the level after 1 day was 6530 bacteria per cubic centimeter.
+
+### Approach
+We're given a rate of change. We're given a value from the domain of contamination levels. We're asked for a function that returns the level of contamination.
+
+- To do that, we'll integrate the provided derivative, producing the function for contamination.
+- Express the contamination at time $t = 1$ using the provided level.
+- Solve for the integration constant $C$.
+- Provide the general function for contamination level.
+
+We're given:
+
+$$\frac{dN}{dt} = -\frac{3150}{t^4} - 220$$
+
+So,
+$$N(t) = \int (\frac{-3150}{t^4} - 220)dt$$
+$$= -3150 \int t^{-4} - 220 \int dt$$
+$$= -3150(\frac{t^{-3}}{-3}) - 220t + C$$
+$$= \frac{1050}{t^3} - 220t + C$$
+
+We're given:
+$$N(1) = 6530$$
+
+Substituting $t = 1$ into our antiderivative:
+$$1050 - 220 + C = 6530$$
+$$\iff C = 6530 - 830 = 5700$$
+
+### Answer
+Therefore:
+$$N(t) = \frac{1050}{t^3} - 220t + 5700$$
+
+## Problem 3
+Find the total area of the red rectangles in the figure below, where the equation of the line is $f(x) = 2x - 9$.
+
+```{r}
+x <- c(5:8)
+y <- 2 * x - 9
+width <- 1
+
+ans <- sum(width * y)
+```
+
+### Answer
+`r ans`
+
+## Problem 4
+Find the area of the region bounded by the graphs of the given equations.
+
+$y=x^2 - 2x - 2$, $y=x+2$
+
+### Approach
+- Plot the curves. Shade the area to be computed.
+- Find the end points.
+- Compute the definite integral under each curve and calculate their difference.
+
+```{r}
+x <-  seq(from = -5, to = 7, by = 0.1)
+y.1 <-  x^2 - 2 * x - 2
+y.2 <-  x + 2
+shade <- x >= -1 & x <= 4
+
+plot(x, y.1, type = "l", col = "black",
+	 main = "Compute area between the curves",
+	 ylab = "y")
+lines(x, y.2, col = "red")
+polygon(c(x[shade], rev(x[shade])), c(y.2[shade], rev(y.1[shade])),col="skyblue")
+legend(4, 4, legend=c("x^2 - 2x - 2", "x + 2"),
+       col=c("black", "red") , lty=c(1, 1), cex=0.8)
+```
+
+**Find the end points for the area to compute**
+
+It's easy to discern in the plot, but let's make this honest. The end points are where the two functions are equal.
+
+$$x^2 - 2x - 2 = x + 2$$
+$$\iff x^2 - 3x - 4 = 0$$
+$$= (x + 1)(x - 4)$$
+$$\iff x = \{-1, 4\}$$
+
+Guessing these roots isn't hard, but it's really easy when you've drawn the picture first.
+
+**Integrate**
+$$\int_{-1}^4 (x + 2) dx - \int_{-1}^4 (x^2 - 2x -2) dx$$
+$$= \int_{-1}^4 [(x + 2) - (x^2 - 2x - 2)] dx$$
+$$= \int_{-1}^4 (-(x^2) + 3x + 4) dx$$
+$$= (\frac{-1}{3})x^3 + (\frac{3}{2})x^2 + 4x \bigg\rvert_{x = -1}^4$$
+$$= (\frac{-1}{3})4^3 + (\frac{3}{2})4^2 + 4\cdot 4 -\frac{1}{3} - \frac{3}{2} + 4$$
+```{r}
+ans <- (-1 / 3) * 4^3 + (3 / 2) * 4^2 + 4 * 4 - (1 / 3) - (3 / 2) + 4
+```
+
+### Answer
+`r round(ans, 2)`
+
+I guess you can integrate in `R`, too. Who knew? Let me try this to double check my work
+
+```{r}
+integrand <- function(x) {-(x^2) + 3 * x + 4}
+integrate(integrand, lower = -1, upper = 4)
+```
+That is pretty cool. Like magic.
+
+Reference:
+
+- [Shading between curves in `R`](http://www.alisonsinclair.ca/2011/03/shading-between-curves-in-r/)
+
+## Problem 5
+A beauty supply store expects to sell 110 flat irons during the next year. It costs \$3.75 to store one flat iron for one year. There is a fixed cost of \$8.25 for each order. Find the lot size and the number of orders per year that will minimize inventory costs.
+
+### Analysis
+First, I needed to figure out what "lot size" meant. I thought it had something to do with storage and I tried to figure out if enough was given about inventory costs. No, so I looked it up.
+
+> [Definition of 'Lot Size'](https://economictimes.indiatimes.com/definition/lot-size): Lot size refers to the quantity of an item ordered for delivery on a specific date or manufactured in a single production run... A simple example of lot size is: when we buy a pack of six chocolates, it refers to buying a single lot of chocolate.
+
+Now I remember the term "odd lots." Sellers don't want to break up a lot and sell piecemeal.
+
+### Calculation
+ - Let $x$ equal lot size. Expected sales are 110 irons, so the number of orders will be $110 / x$.
+ - $Inventory\ Cost = Order\ cost + Storage\ cost = f(x)$
+ - $Order\ cost = 8.25 \times \frac{110}{x}$
+ - We assume our inventory is $x$ upon receipt of order, it runs down at a constant rate, and we deplete our stock before receiving another order. Therefore, we estimate the average inventory balance as the quantity ordered divided by 2. $Storage\ cost = 3.75 \times \frac{x}{2}$
+ - $Inventory\ cost = 8.25 \times \frac{110}{x} + 3.75 \times \frac{x}{2}$
+ 
+Simplified,
+$$Inventory\ cost = f(x) = 907.50(x^{-1}) + 1.875(x)$$
+
+To optimize the function, we'll find the value of x where the cost function's first derivative = 0, indicating a local extremum, and the second derivative is positive, indicating the curve is concave up and the value of x under consideration is a local minimum.
+
+$$f'(x) = \frac{-907.50}{x^2} + 1.875$$
+$$f''(x) = \frac{-2 \cdot -907.50}{x^{3}} = \frac{1815.00}{x^3}$$
+
+Set the first derivative to 0.
+$$0 = \frac{-907.50}{x^2} + 1.875$$
+$$\iff -1.875 = \frac{-907.50}{x^2}$$
+$$\iff x^2 = \frac{-907.50}{-1.875}$$
+$$\iff x = \sqrt{\frac{907.50}{1.875}} = \pm22$$
+
+I don't really need to consider the negative value, since you can't order negative lot sizes, but for fun, consider the second derivative for evaluating concavity.
+$$f''(x) = \frac{1815.00}{x^3}$$
+
+This calculation is negative for a negative $x$ and positive for a positive $x$. As expected, $x = 22$ is a local minimum.
+
+I'd like to plot this and see that it behaves as expected.
+```{r}
+x <-  seq(from = 10, to = 50, by = 0.1)
+y <- 907.50 * x^(-1) + 1.875 * x
+
+plot(x, y, type = "l", col = "black",
+	 main = "907.50 * x^(-1) + 1.875 * x")
+abline(v = 22, col = "red")
+```
+
+**Reference:**
+
+This is an accounting calculation for inventory management called [Economic Order Quantity (EOQ)](https://xplaind.com/333007/economic-order-quantity)
+
+### Answer
+5 orders of 22 flat irons per order minimize inventory costs.
+
+## Problem 6
+Use integration by parts to solve the integral below.
+$$\int ln(9x) \cdot x^6 dx$$
+
+**Variable names**
+
+We're going to use two integration methods, both of which traditionally assign the variable name $u$ to a function. We'll call them $u_1$ and $u_2$.
+
+### Set up parts
+Integration by parts is given by:
+$$\int u\ dv = uv - \int v\ du$$
+
+Let $u_1 = ln(9x)$, $dv = x^6 dx$
+
+### Derive remaining terms
+Find the anti-derivative of $dv$
+$$v = \int x^6 dx = \frac{x^7}{7} + C$$
+
+Take the derivative of $u_1$. We apply the chain rule, designating the inner function $u_2$.
+$$\frac{d}{dx}(ln(9x))$$
+Let $u_2 = 9x$
+$$\frac{d}{dx}(ln(9x)) = \frac{d}{du_2}(ln(u_2)) \frac{du_2}{dx} = \frac{1}{u_2} \cdot\frac{du_2}{dx}$$
+Substitute for $u_2$.
+$$\frac{1}{9x} \cdot 9 = \frac{1}{x}$$
+
+Therefore,
+$$du_2 = \frac{1}{x} dx$$
+
+### Substitute into the formula for integration by parts and complete
+$$\int u\ dv = uf - \int v\ du = \frac{1}{7} ln(9x) x^7 - \int \frac{x^7}{7} \cdot \frac{1}{x} dx$$
+$$= \frac{1}{7} x^7 ln(9x) - \int \frac{x^6}{7} dx = \frac{1}{7} x^7 ln(9x) - \frac{x^7}{49} + C$$
+
+### Answer
+$$\frac{1}{7} x^7 ln(9x) - \frac{x^7}{49} + C$$
+
+## Problem 7
+Determine whether $f(x)$ is a probability density function on the interval [1, $e^6$]. If not, determine the value of the definite integral.
+$$f(x)= \frac{1}{6x}$$
+
+### Analysis
+A PDF must have an area under the curve for the specified interval equal to 1. Let's plot this first.
+
+```{r}
+x <-  seq(from = 0, to = exp(6) + 1, by = 0.1)
+y.1 <- 1 / (6 * x)
+y.2 <- 0 * x
+shade <- x >= 1 & x <= exp(6)
+
+par(mfrow = c(2,2))
+plot(x, y.1, type = "l", col = "black",
+	 main = "Area under 1 / 6x",
+	 ylab = "y")
+polygon(c(x[shade], rev(x[shade])), c(y.2[shade], rev(y.1[shade])),col="skyblue")
+
+x <-  seq(from = 0, to = 4, by = 0.1)
+y.1 <- 1 / (6 * x)
+y.2 <- 0 * x
+shade <- x >= 1 & x <= exp(6)
+
+plot(x, y.1, type = "l", col = "black",
+	 main = "Area under 1 / 6x - Zoom left",
+	 ylab = "y")
+polygon(c(x[shade], rev(x[shade])), c(y.2[shade], rev(y.1[shade])),col="skyblue")
+
+x <-  seq(from = exp(6) - 4, to = exp(6) + 1, by = 0.1)
+y.1 <- 1 / (6 * x)
+y.2 <- 0 * x
+shade <- x >= 1 & x <= exp(6)
+
+plot(x, y.1, type = "l", col = "black",
+	 main = "Area under 1 / 6x - Zoom right",
+	 ylab = "y")
+polygon(c(x[shade], rev(x[shade])), c(y.2[shade], rev(y.1[shade])),col="skyblue")
+```
+
+### Integrate
+$$\int_1^{e^6}\frac{1}{6x} dx$$
+$$= \frac{1}{6} \int_1^{e^6} \frac{1}{x} dx$$
+$$= \frac{1}{6} ln|x|  \bigg\rvert_{x = 1}^{e^6}$$
+$$= \frac{1}{6} ln|e^6| - \frac{1}{6} ln|1|$$
+$$= \frac{1}{6} \cdot 6| - \frac{1}{6} \cdot 0 = 1$$
+
+Simple, but I like double checking.
+
+```{r}
+(1 / 6) * log(abs(exp(6))) - (1 / 6) * log(abs(1))
+```
+
+### Answer
+Since the area under the function is equal to 1 on the interval [1, $e^6$], $f(x)$ is a probability density function.

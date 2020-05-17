@@ -2,7 +2,7 @@
 title: "OpenIntro Statistics"
 subtitle: "Chapter 4 Exercises"
 author: "Jai Jeffryes"
-date: 4/11/2020 - "
+date: 4/11/2020 - 4/28/2020"
 output:
   pdf_document: default
 ---
@@ -17,11 +17,85 @@ options(scipen = 999)
 ## Notes
 Make a table of mean and SD formulas for the distributions.
 
+| Distribution | Mean = $\mu$ | Standard Deviation = $\sigma$|
+|-------|:------:|:-----:|
+| Normal | $\mu$ | $\sigma$ |
+| Bernoulli random variable | $p$ | $\sqrt{p(1 - p)}$ |
+| Geometric | $\frac{1}{p}$ | $\sqrt{\frac{1 - p}{p^2}}$ |
+| Binomial | $np$ | $\sqrt{np(1 - p} = \sqrt{npq}$
+| Approximate normal | $np$ | $\sqrt{np(1 - p} = \sqrt{npq}$
+| Poisson | $\lambda$ | $\sqrt{\lambda}$
+
 | Tables   |      Are      |  Cool |
 |----------|:-------------:|------:|
 | col 1 is |  left-aligned | $1600 |
 | col 2 is |    centered   |   $12 |
 | col 3 is | right-aligned |    $1 |
+
+### Normal distribution
+- Z-score. Number of standard deviations away from the mean. $Z = \frac{x - \mu}{\sigma}$.
+- Finding tail areas.
+  - Draw a picture.
+  - Area under the curve corresponds to a cumulative distribution function. Same as a percentile. Use `pnorm()`.
+- 68 - 95 - 99.7 Rule.
+
+### Geometric distribution
+- Bernoulli random variable. Takes value 1 with probability $p$, value 0 with probability $1 - p$.
+- Geometric describes number of trials until a success.
+- Probability of observing 1st success on $n^{th}$ trial: $(1 - p)^{n-1} p$
+- `dgeom()`. 1st parameter is number of failures.
+- The geometric distribution is right-skewed and never can be approximated by the normal distribution.
+
+### Binomial distribution
+- Describes the number of successes in a fixed number of trials. Probability of having $k$ successes in $n$ independent Bernoulli trials with probability of success $p$.
+- One scenario: $p^k (1 - p)^{n - k}$
+- Number of ways to arrange the scenarios: ${n \choose k} = \frac {n!}{k! (n - k)!}$
+- ${n \choose k}p^k (1 - p)^{n - k} = \frac {n!}{k! (n - k)!} p^k (1 - p)^{n - k}$
+- Four conditions. Really check this 1st one.
+  1. The trials are independent.
+  1. The number of trials, $n$, is fixed.
+  1. Each trial outcome can be classified as a *success* or *failure*.
+  1. The probability of success, $p$, is the same in each trial.
+- Computing steps.
+  1. Check conditions.
+  1. Identify $n$, $p$, and $k$.
+  1. Use software or the formulas to determine the probability.
+  1. Interpret results.
+
+#### Normal approximation to the binomial distribution
+- Conditions:
+  1. $np > 10$
+  2. $n(1 - p) > 10$
+- Binomial is cumbersome when $n$ is large.
+- Why bother when you have `pbinom()` in `R`? From Dr. Fulton.
+
+>When N is super large, then the number of combinations available exceeds the ability of computers to process it.  This was more of an issue in the days of old. 
+ 
+>Try, for example, `=COMBIN(10000000,200)` In Excel.  That combination is too large to calculate.
+
+- The normal approximation may be used when computing the range of many possible successes.
+- I should use the approach of finding the Z-score first. That would help me get over the agony of the boundary point.
+- Continuity correction. Left side of interval reduce by 0.5. Right side, increase by 0.5. Apply *before* the Z-score conversion.
+
+### Negative binomial distribution
+- While the geometric distribution describes the probability of observing the first success on the $n^{th}$ trial, the negative binomial distribution is more general, describing the probability of observing the $k{th}$ success on the $n^{th}$ trial.
+- Four conditions. First 3 are common to the binomial.
+  1. The trials are independent.
+  1. Each trial outcome can be classified as a *success* or *failure*.
+  1. The probability of success, $p$, is the same in each trial.
+  1. The last trial must be a success.
+- Compute. First, break into pieces.
+  - Number of possible sequences times probability of a single sequence.
+  - $P(Single\ sequence = P(n - k) failures\ and\ k\ successes = (1 - p)^{n - k} p^k$
+  - Fix last trial as a success. What are the number of combinations for the other observations? ${n - 1 \choose k - 1} = \frac{(n - 1)!}{(k - 1)! (n - k)!}$
+  - All together: $P(the\ k^{th}\ success\ on\ the\ n^{th}\ trial) = {n - 1 \choose k - 1} (1 - p)^{n - k} p^k = \frac{(n - 1)!}{(k - 1)! (n - k)!} (1 - p)^{n - k} p^k$
+- Binomial: Fixed trials and consider number of successes. Negative binomial: Fix successes and consider how many trials to make last observation a success.
+
+### Poisson distribution
+- Estimates number of events in a population over time.
+- Rate = $\lambda$, the average number (expected number) of occurrences in a unit of time.
+- $P(observe\ k\ events) = \frac{\lambda^k e^{-k}}{k!}$
+- Modeling rates for a Poisson distribution against a second variable, like day of the week, falls under **general linear models**, discussed later.
 
 ## Supplemental exercises
 ### Binary distribution
@@ -52,6 +126,7 @@ binom_summary <- function(successes, trials, prob,
      ylab = ylab,
      type = "h",
      main = main)
+  abline(v = successes, col = "red")
   
   mu <- trials * prob
   sigma <- sqrt(trials * prob * (1 - prob))
@@ -1160,10 +1235,26 @@ miles/hour. The speed limit on this stretch of the I-5 is 70 miles/hour.
 - A highway patrol officer is hidden on the side of the freeway. What is 
 the probability that 5~cars pass and none are speeding? Assume that the 
 speeds of the cars are independent of each other.
+  - `r pnorm(70, 72.6, 4.78)^5`
 - On average, how many cars would the highway patrol officer expect to 
 watch until the first car that is speeding? What is the standard deviation of 
 the number of cars he would expect to watch?
+```{r}
+# Probability of speedig
+p <- pnorm(70, 72.6, 4.78, lower.tail = F)
+n <- 1:10
+barplot(dgeom(n, p))
 
+# Average is expectation is mean.
+mu <- 1 / p
+mu
+
+sd <- sqrt((1 - p)/ p^2)
+sd
+```
+  - Expected cars to watch: `r mu`.
+  - $\sigma$: `r sd`.
+  
 ## p. , ex. 4.39
 Suppose a 
 newspaper article states that the distribution of auto insurance premiums for 
@@ -1172,10 +1263,20 @@ article also states that 25\% of California residents pay more than \$1,800.
 
 - What is the Z-score that corresponds to the top 25\% (or the $75^{th}$ 
 percentile) of the standard normal distribution?
+```{r}
+Z <- qnorm(0.75)
+```
+  - `r Z`.
 - What is the mean insurance cost? What is the cutoff for the 75th 
 percentile?
+  - $1650.
+  - $1800.
 - Identify the standard deviation of insurance premiums in California.
-
+```{r}
+sd <- (1800 - 1650) / Z
+```
+  - `r sd`. **ANSWER: The book differs from mine a little because they rounded $Z$. I kept the precision.
+  
 ## p. , ex. 4.40
 SAT scores (out of 1600) are distributed 
 normally with a mean of 1100 and a standard deviation of 200.
@@ -1189,11 +1290,36 @@ Section 3.2
 on conditional probability
 would be useful for this question.)
 
+  - $P(A|B) = \frac{P(A\ and\ B)}{P(B)} = \frac{P(X \ge 1500)}{P(X \ge 1300)}$ Note that in this case the probability of $A$ and $B$ is the same as the probability of $B$ because of their given inequalities.
+  - `r pnorm(1500, 1100, 200, lower.tail = F) / pnorm(1350, 1100, 200, lower.tail = F)`
+
 ## p. , ex. 4.41
+Married women. The American Community Survey estimates that 47.1% of women ages 15 years and over are married.
+
+(a) We randomly select three women between these ages. What is the probability that the third woman selected is the only one who is married?
+  - `r dgeom(2, 0.471)`
+(b) What is the probability that all three randomly selected women are married?
+  - `r 0.471^3`
+(c) On average, how many women would you expect to sample before selecting a married woman? What is the standard deviation?
+  - $\mu = \frac{1}{p}$ = `r 1 / 0.471`.
+  - $\sigma = \sqrt{\frac{1 - p}{p^2}}$ = `r sqrt((1 - 0.471) / 0.471^2)`
+(d) If the proportion of married women was actually 30%, how many women would you expect to sample before selecting a married woman? What is the standard deviation?
+  - $\mu$ = `r 1 / 0.30`.
+  - $\sigma$ = `r sqrt((1 - 0.30) / 0.30^2)`
+(e) Based on your answers to parts (c) and (d), how does decreasing the probability of an event affect the mean and standard deviation of the wait time until success?
+  - Rarer events take a longer time before successes. Mean and standard deviation are higher.
+  - **I got all of these!**
+
+## p. , ex. 4.42
 Pew Research reported 
 that the typical response rate to their surveys is only 9\%. If for a 
 particular survey 15,000 households are contacted, what is the probability 
-that at least 1,500 will agree to respond? 
+that at least 1,500 will agree to respond?
+
+  - Binomial: `r pbinom(1500 - 1, 15000, 0.09, lower.tail = F)`
+```{r}
+binom_summary(successes = 1500, trials = 15000, prob = 0.09)
+```
 
 ## p. , ex. 4.43
 Suppose weights of the 
@@ -1202,21 +1328,19 @@ with mean 45 pounds and standard deviation 3.2 pounds. Most airlines charge a
 fee for baggage that weigh in excess of 50 pounds. Determine what percent of 
 airline passengers incur this fee.
 
+- `r pnorm(50, 45, 3.2, lower.tail = F)`
+
 ## p. , ex. 4.44
 Heights of 10 year olds, regardless of gender, closely follow
 a normal distribution with mean 55 inches and standard deviation
 6~inches.
 
-- 
-    What is the probability that a randomly chosen 10 year old
-    is shorter than 48 inches?
-- 
-    What is the probability that a randomly chosen 10 year old
-    is between 60 and 65 inches?
-- 
-    If the tallest 10\% of the class is considered
-    ``very tall'',
-    what is the height cutoff for "very tall"?
+- What is the probability that a randomly chosen 10 year old is shorter than 48 inches?
+  - `r pnorm(48, 55, 6)`
+- What is the probability that a randomly chosen 10 year old is between 60 and 65 inches?
+  - `r pnorm(65, 55, 6)`
+- If the tallest 10\% of the class is considered "very tall", what is the height cutoff for "very tall"?
+  - `r qnorm(0.90, 55, 6)`
 
 ## p. , ex. 4.45
 Suppose you're considering buying your expensive chemistry
@@ -1225,20 +1349,19 @@ Looking at past auctions suggests that the
 prices of this textbook follow an approximately normal
 distribution with mean \$89 and standard deviation \$15.
 
-- What is the probability that a randomly selected auction for this book 
-closes at more than \$100?
-
+- What is the probability that a randomly selected auction for this book closes at more than \$100?
+  - `r pnorm(100, 89, 15, lower.tail = F)`
 - Ebay allows you to set your maximum bid price so that if someone 
 outbids you on an auction you can automatically outbid them, up to the 
 maximum bid price you set. If you are only bidding on one auction, what are 
 the advantages and disadvantages of setting a bid price too high or too low? 
 What if you are bidding on multiple auctions?
-
+  - If you set it too high, you might go head to head with another bidder who did the same thing and you will both hit your maximum bid in an instant, rather than reevaluating your bid each time you see a response. If you set it too low, you lose the auction. If there are multiple auctions, those effects are multiplied.
 - If you watched 10 auctions, roughly what percentile might you use for a 
 maximum bid cutoff to be somewhat sure that you will win one of these ten 
 auctions? Is it possible to find a cutoff point that will ensure that you win 
 an auction?
-
+  - The book had some opinions about these next answers. They're only opinions, and I'm not really committed to completing these parts.
 - If you are willing to track up to ten auctions closely, about what 
 price might you use as your maximum bid price if you want to be somewhat sure 
 that you will buy one of these ten books?
@@ -1248,55 +1371,30 @@ Heights of 10 year olds, regardless of gender, closely follow
 a normal distribution with mean 55 inches and standard deviation
 6~inches.
 
-- 
-    The height requirement for \textit{Batman the Ride} at
-    Six Flags Magic Mountain is 54 inches.
-    What percent of 10 year olds cannot go on this ride?
-- 
-    Suppose there are four 10 year olds.
-    What is the chance that at least two of them
-    will be able to ride \emph{Batman the Ride}?
-- 
-    Suppose you work at the park to help them better
-    understand their customers' demographics, and
-    you are counting people as they enter
-    the park.
-    What is the chance that the first 10 year old
-    you see who can ride \emph{Batman the Ride} is
-    the 3rd 10 year old who enters the park?
-- 
-    What is the chance that the fifth 10 year old
-    you see who can ride \emph{Batman the Ride} is
-    the 12th 10 year old who enters the park?
+- The height requirement for \textit{Batman the Ride} at Six Flags Magic Mountain is 54 inches. What percent of 10 year olds cannot go on this ride?
+  - `r pnorm(54, 55, 6) * 100`%
+- Suppose there are four 10 year olds. What is the chance that at least two of them will be able to ride *Batman the Ride*?
+  - `r pnorm(2 - 0.5, 55, 6, lower.tail = F)`. **Doesn't look right.**
+```{r}
+binom_summary(2, 4, 1 - pnorm(54, 55, 6))
+```
+- Suppose you work at the park to help them better understand their customers' demographics, and you are counting people as they enter the park. What is the chance that the first 10 year old you see who can ride \emph{Batman the Ride} is the 3rd 10 year old who enters the park?
+  - `r dnbinom(2, 3, 1 - pnorm(54, 55, 6))`
+- What is the chance that the fifth 10 year old you see who can ride *Batman the Ride* is the 12th 10 year old who enters the park?
+  - `r dnbinom(12 - 5, 12, 1 - pnorm(54, 55, 6))`
 
 ## p. , ex. 4.47
 Heights of 10 year olds, regardless of gender, closely follow
 a normal distribution with mean 55 inches and standard deviation
 6~inches.
 
-- 
-    What fraction of 10 year olds are taller than
-    76 inches?
--  If there are 2,000 10 year olds entering
-    Six Flags Magic Mountain in a single day,
-    then compute the expected number of
-    10 year olds who are at least 76 inches tall.
-    (You may assume the heights of the 10-year olds
-    are independent.)
-- 
-    Using the binomial distribution,
-    compute the probability that 0 of the 2,000
-    10 year olds will be at least 76 inches tall.
-- 
-    The number of 10 year olds who enter
-    Six Flags Magic Mountain and are
-    at least 76 inches tall in a given day
-    follows a Poisson distribution with
-    mean equal to the value found in
-    part (b).
-    Use the Poisson distribution to identify
-    the probability no 10 year old will enter
-    the park who is 76 inches or taller.
+- What fraction of 10 year olds are taller than 76 inches?
+  - `r pnorm(76, 55, 6, lower.tail = F)` **Correct**
+- If there are 2,000 10 year olds entering Six Flags Magic Mountain in a single day, then compute the expected number of 10 year olds who are at least 76 inches tall. (You may assume the heights of the 10-year olds are independent.)
+  - `r 2000 * pnorm(76, 55, 6, lower.tail = F)` **Looks correct. The book rounded the probability.**
+- Using the binomial distribution, compute the probability that 0 of the 2,000 10 year olds will be at least 76 inches tall.
+  - `r pbinom(0, 2000, pnorm(76, 55, 6, lower.tail = F), lower.tail = F)` **Looks incorrect.**
+- The number of 10 year olds who enter Six Flags Magic Mountain and are at least 76 inches tall in a given day follows a Poisson distribution with mean equal to the value found in part (b). Use the Poisson distribution to identify the probability no 10 year old will enter the park who is 76 inches or taller.
 
 ## p. , ex. 4.48
 In a multiple choice quiz there are 
@@ -1308,4 +1406,4 @@ is the probability that
 - she gets exactly 3 or exactly 4 questions right?
 - she gets the majority of the questions right?
 
-
+**I've just had enough and I want to go to another chapter.**
