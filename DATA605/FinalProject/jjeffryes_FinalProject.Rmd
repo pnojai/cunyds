@@ -1,0 +1,450 @@
+---
+title: "Data 605 - Final project"
+author: "Jai Jeffryes"
+date: "5/22/2020"
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: 5
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#options(scipen = 999)
+```
+
+## Problem 1.
+*Using `R`, generate a random variable $X$ that has 10,000 random uniform numbers from 1 to $N$, where $N$ can be any number of your choosing greater than or equal to 6.  Then generate a random variable $Y$ that has 10,000 random normal numbers with a mean of $\mu = \sigma = \frac{N+1}{2}$.*
+
+
+*Probability.  Calculate as a minimum the below probabilities a through c.  Assume the small letter "x" is estimated as the median of the $X$ variable, and the small letter "y" is estimated as the 1st quartile of the $Y$ variable.  Interpret the meaning of all probabilities.*
+
+```{r}
+set.seed(2020)
+N <- 10
+X <- runif(10000, min = 1, max = N)
+Y <- rnorm(10000, mean = (N + 1) / 2, sd = (N + 1) / 2)
+
+par(mfrow = c(1,2))
+hist(X)
+hist(Y)
+
+x <- median(X)
+y <- quantile(Y, 0.25)
+```
+
+### 1.1: 5 points
+a. $P(X>x | X>y)$
+
+$P(X > x | X > y) = \frac{P(X > x \textrm{ and } X>y)}{P(X > y)}$
+```{r}
+ans_a <- (sum(X > x & X > y) / length(X)) / (sum(X > y) / length(X))
+```
+
+**Answer**: `r ans_a` is the probability that an observation $X$ is greater than its median given that it is greater than the first quartile of $Y$.
+
+b. $P(X>x, Y>y)$
+```{r}
+ans_b <- (sum(X > x) / length(X)) * (sum(Y > y) / length(Y))
+```
+
+**Answer**: `r ans_b` is the probability that an observation $X$ is greater than its median and an observation $Y$ is greater than its first quartile. That is, $P(X > x) \cap P(Y > y).$
+
+c. $P(X<x | X>y)$
+
+$P(X < x | X > y) = \frac{P(X < x \textrm{ and } X > y)}{P(X > y)}$
+```{r}
+ans_c <- (sum(X < x & X > y) / length(X)) / (sum(X > y) / length(X))
+```
+
+**Answer**: `r ans_c` is the probability that an observation $X$ is less than its median given that it is greater than the first quartile of $Y$.
+
+### 1.2: 5 points
+*Investigate whether $P(X>x \textrm{ and } Y>y) = P(X>x)P(Y>y)$ by building a table and evaluating the marginal and joint probabilities.*
+
+```{r}
+# contingency_tbl <- addmargins(prop.table(table(X > x, Y > y)))
+contingency_tbl <- table(X > x, Y > y)
+contingency_prop <- addmargins(prop.table(contingency_tbl))
+
+dimnames(contingency_prop) <- list(
+	c("!(X>x)", "X>x", "Total"),
+	c("!(Y>y)", "Y>y", "Total"))
+print(contingency_prop)
+```
+
+- Marginal:
+  - $\textrm{Total of } X>x = 0.5000$, and
+  - $\textrm{Total of } Y>y = 0.7500$.
+  - $0.5000 \cdot 0.7500 =$ `r 0.5000 * 0.7500`.
+- Joint:
+  - The joint probability is: `r contingency_prop[2, 2]`
+
+The joint probability reduces the marginal probability by `r round(((0.3739 - 0.375) / 0.3739) * 100, 2)`%
+
+### 1.3: 5 points
+*Check to see if independence holds by using Fisher’s Exact Test and the Chi Square Test.  What is the difference between the two? Which is more appropriate?*
+
+Notes:
+
+- [Fisher's Exact Test, Wikipedia](https://en.wikipedia.org/wiki/Fisher%27s_exact_test)
+- [Pearson's chi-squared test, Wikipedia](https://en.wikipedia.org/wiki/Pearson%27s_chi-squared_test)
+- [Chi-squared test, R Bloggers](https://www.r-bloggers.com/chi-squared-test/)
+
+```{r}
+fisher.test(contingency_tbl)
+chisq.test(contingency_tbl)
+```
+
+### Conclusion
+Both tests led to a p-value of 0.6277, so we reject the null hypothesis.
+
+When sample sizes are small, Fisher's Exact Test is more appropriate than Pearson's Chi-Squared Test. However, as the sample sizes here are 10,000, either test is effective.
+
+## Problem 2
+*You are to register for Kaggle.com (free) and compete in the House Prices: Advanced Regression Techniques competition.  [https://www.kaggle.com/c/house-prices-advanced-regression-techniques](https://www.kaggle.com/c/house-prices-advanced-regression-techniques). I want you to do the following.*
+
+**Reference**:
+
+- [par(mar, mgp, las)](http://rfunction.com/archives/1302). Orientation of barplot labels.
+
+### Load data and format it
+The project codebook, `data_description.txt`, documents numeric columns containing codes, which are qualitative variables representing categories, rather than quantitative variables. These are converted to factors.
+
+```{r}
+library(MASS)
+library(Rmisc)
+
+train <- read.csv("train.csv")
+test <- read.csv("test.csv")
+# Transform codes to factors.
+train$MSSubClass <- as.factor(train$MSSubClass)
+train$OverallQual <- as.factor(train$OverallQual)
+train$OverallCond <- as.factor(train$OverallCond)
+
+test$MSSubClass <- as.factor(test$MSSubClass)
+test$OverallQual <- as.factor(test$OverallQual)
+test$OverallCond <- as.factor(test$OverallCond)
+
+#train$YearBuilt <- as.factor(train$YearBuilt)
+#train$YearRemodAdd <- as.factor(train$YearRemodAdd)
+#train$GarageYrBlt <- as.factor(train$GarageYrBlt)
+#train$MoSold <- as.factor(train$MoSold)
+#train$YrSold <- as.factor(train$YrSold)
+```
+### 2.1: 5 points - Descriptive and Inferential Statistics
+#### Provide univariate descriptive statistics and appropriate plots for the training data set
+- We summarize counts of categorical variables. Refer to codebook, `data_description.txt`, for decoding.
+- We summarize centers, ranges, and IQRs of numerical variables.
+- Plots of of the distributions of all variables (except the primary key) follow the summaries. We plot bar charts for categorical variables and box plots for numeric variables.
+- Nice to have:
+  - Exploratory data analysis would be easier if the summary of each variable appeared next to its plot.
+  - It would be helpful to control the pagination, getting the summaries and plots together on a single page and to use up a page fully.
+  
+```{r}
+dim(train) # Dimensions of the dataset.
+sapply(train, class) # List types for each attribute.
+str(train) # Structure, including factor levels.
+summary(train[-1]) # Counts of factors, 5-number summaries of numeric variables.
+```
+
+##### Observations
+- Data related to garages report many NA values.
+- Means of room counts might not be meaningful. For example, number of bathrooms. These might be better understood as ordinal categorical variables.
+
+```{r}
+par.old <- par(no.readonly = T) #Save base plot parameters
+par(mfrow = c(2, 4))
+
+is_col_factor <- sapply(train, class) == "factor"
+for (i in 2:length(train)) {
+	if (is_col_factor[i]) {
+		plot(train[, i], main = names(train[i]), las = 2)
+	} else {
+		boxplot(train[, i], main = names(train[i]))
+	}
+}
+
+par(par.old) #Restore base plot parameters
+```
+
+#### Provide a scatterplot matrix for at least two of the independent variables and the dependent variable
+We're interested in potential predictors of a home's sale price. We examine some of the more obvious variables. In addition, upon review of the distribution plots, we examine some categorical variables with many levels and observations within them. The reasoning is that categories with few levels or a preponderance of observations on one level have less predictive influence.
+
+We made a list of columns of interest and looped through them, making pairs plots.
+
+```{r}
+# Columns to pair against SalePrice.
+pair_cols <- c("MSSubClass", "LotArea", "LotShape", "LotConfig",
+               "Neighborhood", "OverallQual", "OverallCond", "YearBuilt",
+               "YearRemodAdd", "MasVnrType", "Fireplaces", "HouseStyle",
+               "YrSold", "MoSold", "GarageCars", "FullBath",
+               "Exterior1st", "HalfBath", "BedroomAbvGr", "KitchenAbvGr",
+               "TotRmsAbvGrd", "BsmtFinType1", "BsmtFinSF1", "TotalBsmtSF",
+               "X1stFlrSF", "GrLivArea", "Exterior2nd", "Functional")
+
+# Pair 4 columns and SalePrice at a time.
+for(i in seq(from = 1, to = length(pair_cols), by = 4)) {
+  pairs(train[which(colnames(train) %in% c(pair_cols[i:(i + 3)], "SalePrice"))])
+}
+```
+
+##### Observations
+- The quantitative variables appear to correlate to SalePrice.
+- Of the categorical variables, we are unsure how to interpret the relation of nominal variables to SalePrice. Nevertheless, the nominal categories appear to differentiate on SalePrice. Perhaps that indicates they are predictive.
+- The quantitative variable LotArea appears to correlate to SalePrice. However, there are outliers that might merit elimination to reduce their influence on a regression line.
+
+#### Derive a correlation matrix for any three quantitative variables in the dataset
+```{r}
+cor_cols <- c("LotArea", "GrLivArea", "SalePrice")
+train_cor <- cor(train[which(colnames(train) %in% cor_cols)])
+train_cor
+```
+#### Test the hypotheses that the correlations between each pairwise set of variables is 0 and provide an 80% confidence interval
+For our three quantitative variables, LotArea, GrLivArea, and SalePrice there are ${3 \choose 2} = 3$ pairwise sets.
+
+- LotArea ~ GrLivArea
+- LotArea ~ SalePrice
+- GrLivArea ~ SalePrice
+
+##### Reference
+- [Hypothesis Testing: Correlations](https://courses.lumenlearning.com/boundless-statistics/chapter/hypothesis-testing-correlations/).
+
+```{r}
+alpha <- 0.80
+cor_LotArea_GrLivArea <- cor.test(train$LotArea, train$GrLivArea, conf.level = alpha)
+cor_LotArea_SalePrice <- cor.test(train$LotArea, train$SalePrice, conf.level = alpha)
+cor_GrLivArea_SalePrice <- cor.test(train$GrLivArea, train$SalePrice, conf.level = alpha)
+cor_LotArea_GrLivArea
+cor_LotArea_SalePrice
+cor_GrLivArea_SalePrice
+```
+
+#### Discuss the meaning of your analysis
+*Would you be worried about familywise error? Why or why not?*
+
+The issue of familywise error pertains to multiple hypothesis tests. When testing multiple hypotheses, the chance of observing rare events increases, which increases the likelihood of Type I errors.
+
+If this were a study under our review, we would be concerned with the weak choice of confidence interval. However, these correlations lie far from an $r$ value of 0, so the likelihood of familywise error is low.
+
+It is interesting to observe the results using a more narrow confidence interval and application of the Bonferroni Correction.
+
+```{r}
+alpha <- 0.95
+m <- 3 # Hypothesis count
+cor_LotArea_GrLivArea <- cor.test(train$LotArea, train$GrLivArea, conf.level = alpha / m)
+cor_LotArea_SalePrice <- cor.test(train$LotArea, train$SalePrice, conf.level = alpha / m)
+cor_GrLivArea_SalePrice <- cor.test(train$GrLivArea, train$SalePrice, conf.level = alpha / m)
+cor_LotArea_GrLivArea
+cor_LotArea_SalePrice
+cor_GrLivArea_SalePrice
+```
+
+The confidence intervals still lie far from 0 with p-values approaching 0. We conclude that there are significant correlations between these quantitative variables.
+
+##### Reference
+- [Family-wise error rate on Wikipedia](https://en.wikipedia.org/wiki/Family-wise_error_rate).
+- [Bonferroni correction](https://en.wikipedia.org/wiki/Bonferroni_correction)
+
+### 2.2: 5 points - Linear Algebra and Correlation
+- *Invert your correlation matrix from above. (This is known as the precision matrix and contains variance inflation factors on the diagonal.)*
+```{r}
+train_cor
+train_cor_inv <- solve(train_cor)
+train_cor_inv
+```
+- *Multiply the correlation matrix by the precision matrix, and then multiply the precision matrix by the correlation matrix.*
+```{r}
+train_cor %*% train_cor_inv
+train_cor_inv %*% train_cor
+```
+- *Conduct LU decomposition on the matrix.*
+```{r}
+factor_lu <- function(A) {
+	# Accept a matrix, A, and factor it into lower and upper
+	# triangular matrices.
+	# Assumptions:
+	#   A is square.
+	#   A row reduces to U in row echelon form without row permutation.
+	
+	L <- diag(nrow(A))
+	for (j in 1:(ncol(A) - 1)) {
+		# print(paste("j:", j))
+		i <- j
+		# print(paste("i:", i))
+		for (k in i:(nrow(A) - 1)) {
+			# print(paste("k:", k))
+			multiplier <- -(A[k + 1, j] / A[i, j])
+			A[k + 1, ] <- multiplier * A[i, ] + A[k + 1, ]
+			L[k + 1, j] <- -multiplier
+		}
+	}
+	
+	return(list("L" = L, "U" = A))
+}
+
+factor_lu(train_cor)
+```
+
+### 2.3: 5 points - Calculus-Based Probability & Statistics
+*Many times, it makes sense to fit a closed form distribution to data.*
+
+- *Select a variable in the Kaggle.com training dataset that is skewed to the right, shift it so that the minimum value is absolutely above zero if necessary.*
+```{r}
+par(mfrow = c(1, 2))
+boxplot(train$GrLivArea)
+hist(train$GrLivArea)
+min(train$GrLivArea)
+```
+
+GrLivArea is skewed to the right and its minimum is 334.
+
+- *Then load the MASS package and run `fitdistr` to fit an exponential probability density function. (See [https://stat.ethz.ch/R-manual/R-devel/library/MASS/html/fitdistr.html](https://stat.ethz.ch/R-manual/R-devel/library/MASS/html/fitdistr.html)).*
+```{r}
+train_GrLivArea_fit <- fitdistr(x = train$GrLivArea, densfun = "exponential")
+```
+- *Find the optimal value of $\lambda$ for this distribution, and then take 1000 samples from this exponential distribution using this value (e.g., `rexp(1000, $\lambda$)`).*
+```{r}
+lambda <- train_GrLivArea_fit$estimate
+lambda
+train_GrLivArea_exp <- rexp(1000, lambda)
+```
+- *Plot a histogram and compare it with a histogram of your original variable.*
+
+We overlaid the histogram of GrLivArea in pink and the Exponential Distribution in blue. They are both right-skewed, but we don't see what is meaningful about this simulation. The simulation is displaced, but even if we shift it to the right, the two curves don't match well.
+
+```{r}
+hist(train$GrLivArea, col = rgb(255, 192, 203, maxColorValue = 255, alpha = 100),
+     main = "Comparison of GrLivArea and Exponential Distribution",
+     xlab = "")
+hist(train_GrLivArea_exp, add = T, col = rgb(50, 153, 204, maxColorValue = 255, alpha = 100))
+```
+- *Using the exponential pdf, find the 5th and 95th percentiles using the cumulative distribution function (CDF).*
+
+The question is ambiguous, indicating to use both the exponential PDF and the CDF. We obtain the quantiles using `qexp()` and supply the value for the exponential distribution's rate $\lambda$ which we computed when simulating GRLivArea.
+
+```{r}
+hist(train_GrLivArea_exp)
+qexp(c(0.05, 0.95), lambda)
+```
+
+- *Also generate a 95% confidence interval from the empirical data, assuming normality.*
+
+This question, too, is ambiguous, omitting specification of the point estimate. We compute the confidence interval for the mean.
+
+```{r}
+CI(train$GrLivArea, ci = 0.95)
+```
+
+- *Finally, provide the empirical 5th percentile and 95th percentile of the data.  Discuss.*
+```{r}
+hist(train$GrLivArea)
+quantile(train$GrLivArea, c(0.05, 0.95))
+```
+
+The simulation omits the left tail of the empirical data and the 0.95 percentiles don't match. It appears such simulation requires a form of additional normalization.
+
+### 2.4: 10 points - Modeling
+*Build some type of multiple regression model and submit your model to the competition board. Provide your complete model summary and results with analysis.  Report your Kaggle.com user name and score.*
+
+We used forward selection to evaluate the performance of predictors and arrived at this model.
+
+**Note**: The model is sensitive to new factor levels. After performing prediction, we removed some categorical variables.
+
+```{r}
+model <- SalePrice ~ LotArea + LotShape + Neighborhood + OverallQual + YearBuilt + YearRemodAdd + MasVnrType + Fireplaces + GarageCars + FullBath + HalfBath + BedroomAbvGr + KitchenAbvGr + TotRmsAbvGrd + BsmtFinSF1 + TotalBsmtSF + X1stFlrSF + GrLivArea + Exterior2nd
+data <- train
+
+summary(lm(model, data))
+```
+
+```{r}
+require(car)
+require(lmtest)
+require(Hmisc)
+require(ResourceSelection)
+
+#specify model, data, and level
+#model <- SalePrice ~ GrLivArea + TotRmsAbvGrd
+#data <- train
+level<-.95
+
+#function
+regressit <- function(model,data,level) #model is the functional relationship among variables
+{
+#	kdepairs(data) #scatterplot
+	lm.fit <- lm(model, data, y = TRUE) #runregression
+	confint(lm.fit, level = level ) #confidenceintervals
+	r1 <- summary(lm.fit) #regression summary
+	r2 <- anova(lm.fit) #ANOVA tableforregression
+	r3 <- coefficients(lm.fit) #coefficients
+	r4 <- lm.fit$residuals #residuals
+	r5 <- shapiro.test(r4) #test for normality of residuals
+	r6 <- bptest(lm.fit)  #Breusch-Pagan-Godfrey-Test for homoscedasticity, lmtest
+	r7a <- ncvTest(lm.fit) #non-constant variance test for homoscedasticity
+	r7 <- dwtest(lm.fit) #independence of residuals #test for independence of errors
+	#r8 <- runs.test(lm.fit$residuals) #test for randomness of errors, lawstat
+	#r9 <- vif(lm.fit) #look at collinearity, car package
+	me <- mean(lm.fit$residuals)
+	mad <- mean(abs(lm.fit$residuals))
+	mse <- mean(lm.fit$residuals^2)
+	rmse <- sqrt(mse)
+	mpe <- 100*mean(lm.fit$residuals / lm.fit$y)
+	mape <- 100*mean(abs(lm.fit$residuals) / lm.fit$y)
+	aic <- AIC(lm.fit)
+	bic <- BIC(lm.fit)
+	all <- c(me,mad,rmse,mpe,mape,aic,bic)
+	names(all) <- c("ME","MAD","RMSE","MPE","MAPE", "AIC","BIC")
+	#names(r9) <- c("VIF")
+	barplot_all <- barplot(all)
+	par(mfrow = c(2,2))
+	diagnostics <- plot(lm.fit)
+	#rlist <- list(r1,r2,r3,r4,r5,r6,r7,r7a,r9,all)
+	rlist <- list(lm.fit, r1,r2,r3,r5,r6,r7,r7a,all) #Omit residuals
+	return(rlist)
+}
+```
+
+Here is a more extensive report, though understanding of the interpretation of some of these metrics will wait for now.
+
+```{r}
+set.seed(2020)
+lm_results <- regressit(model,data,level)
+```
+
+
+#### Summary
+```{r}
+print(lm_results[[2]])
+```
+#### Analysis
+- There is some bias in the residuals, with a median value of 189.
+- F statistic. The value (34.57) is distant from 0 and its p-value is near zero. We reject the null hypothesis, which states the variability in the data is due to chance.
+- $R^2$. The value of 0.878 means that the model explains 28% of the variability in the data.
+- Residual standard error. The model is off, on average by 30440 dollars.
+- The ratio for the estimate of the intercept to its standard error is `r -4.335e+04 / 4.577e+04`, below the desired range of 5-10 which indicates instability.
+- The diagnostic plot Residuals vs. Fitted shows a good result for the model. The line is flat with no discernable pattern until some outlier values at the high end.
+- The Normal Q-Q plot reveals some non-linearity above 2 standard deviations.
+- The Scale-Location plot shows mostly consistent variance. Again, there is a departure at the high end.
+- The Residuals vs Leverage plate reveals a few outlier values that exert influence on the regression. They might be data quality issues. If not, they might merit scrubbing to improve the predictability of the model.
+
+#### Prediction
+It was interesting to discover that our predictions had missing values. For now, we imputed those with the mean prediction.
+
+```{r}
+set.seed(2020)
+lm.fit <- lm_results[[1]]
+predictions <- predict(lm.fit, test)
+
+pred_mean <- mean(predictions, na.rm = T)
+is_predictions_na <- is.na(predictions)
+predictions[is_predictions_na] <- pred_mean
+
+submission <- as.data.frame(cbind(Id = test[1], SalePrice = predictions))
+write.csv(x = submission, file = "submission.csv", row.names = F, quote = F)
+```
+
+#### Kaggle
+- User name: pnojai
+- Score: 0.16412
+- Position on leaderboard: 3604
