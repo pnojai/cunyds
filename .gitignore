@@ -19,3 +19,5 @@ DATA607/spampred/data/
 DATA605/Discussion/Week06/.#jjeffryes_week06.txt
 
 *.html
+
+.ipynb_checkpoints/*
